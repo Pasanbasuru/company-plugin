@@ -6,33 +6,10 @@
     "name": "Your Company"
   },
   "dependencies": [
-    {
-      "name": "superpowers",
-      "marketplace": "superpowers-dev"
-    },
-    {
-      "name": "frontend-design",
-      "marketplace": "claude-plugins-official"
-    },
-    {
-      "name": "postman",
-      "marketplace": "claude-plugins-official"
-    },
-    {
-      "name": "prisma",
-      "marketplace": "claude-plugins-official"
-    },
-    {
-      "name": "deploy-on-aws",
-      "marketplace": "claude-plugins-official"
-    },
-    {
-      "name": "semgrep",
-      "marketplace": "claude-plugins-official"
-    },
-    {
-      "name": "aikido-security",
-      "marketplace": "claude-plugins-official"
-    }
+    { "name": "superpowers", "marketplace": "superpowers-dev" },
+    { "name": "frontend-design", "marketplace": "claude-plugins-official" },
+    { "name": "prisma", "marketplace": "claude-plugins-official" },
+    { "name": "deploy-on-aws", "marketplace": "claude-plugins-official" },
+    { "name": "semgrep", "marketplace": "claude-plugins-official" }
   ]
 }
