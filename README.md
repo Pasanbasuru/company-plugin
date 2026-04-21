@@ -10,30 +10,52 @@ A single root-level Claude Code plugin for your company ecosystem.
 - optional React Native mobile apps
 
 ## Included skills
-### Common / full-stack
-- architecture-guard
-- change-risk-evaluation
-- integration-contract-safety
-- state-integrity-check
-- infra-safe-change
-- observability-first-debugging
-- auth-and-permissions-safety
-- secrets-and-config-safety
-- rollback-planning
-- queue-and-retry-safety
-- test-strategy-enforcement
-- regression-risk-check
-- coverage-gap-detection
 
-### Web/full-stack specific
-- frontend-implementation-guard
-- nextjs-app-structure-guard
-- nestjs-service-boundary-guard
-- prisma-data-access-guard
-- aws-deploy-safety
+Every skill assumes the shared [`_baseline`](skills/_baseline/SKILL.md) for TypeScript strictness, security-by-default, observability, testing, accessibility, performance, and resilience. Skills only document what they add on top.
 
-### Mobile
-- mobile-implementation-guard
+See [the skill authoring guide](docs/superpowers/skill-authoring-guide.md) for the template.
+
+### Shared foundation
+- `_baseline` — cross-cutting standards referenced by every other skill
+
+### Architecture & structure
+- `architecture-guard`
+- `nextjs-app-structure-guard`
+- `nestjs-service-boundary-guard`
+- `frontend-implementation-guard`
+- `mobile-implementation-guard`
+
+### Data
+- `prisma-data-access-guard`
+- `state-integrity-check`
+
+### Integration & async
+- `integration-contract-safety`
+- `queue-and-retry-safety`
+- `resilience-and-error-handling`
+
+### Security & config
+- `auth-and-permissions-safety`
+- `secrets-and-config-safety`
+
+### Quality
+- `typescript-rigor`
+- `test-strategy-enforcement`
+- `coverage-gap-detection`
+- `regression-risk-check`
+
+### Frontend quality
+- `accessibility-guard`
+- `performance-budget-guard`
+
+### Ops & risk
+- `change-risk-evaluation`
+- `rollback-planning`
+- `infra-safe-change`
+- `aws-deploy-safety`
+- `cicd-pipeline-safety`
+- `supply-chain-and-dependencies`
+- `observability-first-debugging`
 
 ## Included agent
 - security-reviewer
