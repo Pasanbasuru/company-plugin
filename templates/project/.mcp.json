@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "echo",
+      "args": ["Replace with project GitHub MCP server command"]
+    },
+    "ci-cd": {
+      "command": "echo",
+      "args": ["Replace with project CI/CD MCP server command"]
+    },
+    "observability": {
+      "command": "echo",
+      "args": ["Replace with project observability MCP server command"]
+    },
+    "cloud": {
+      "command": "echo",
+      "args": ["Replace with project cloud MCP server command"]
+    },
+    "database": {
+      "command": "echo",
+      "args": ["Replace with project database MCP server command"]
+    }
+  }
+}
