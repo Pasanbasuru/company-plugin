@@ -1,7 +1,7 @@
 {
   "name": "company-plugin",
   "description": "Company-wide Claude Code plugin for full-stack React/Next.js + Node/NestJS + Prisma/Postgres + AWS projects, with optional mobile guardrails for React Native.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Your Company"
   },
