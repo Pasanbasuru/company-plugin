@@ -1,4 +1,5 @@
 ---
+name: regression-risk-check
 description: Use when a PR touches shared utilities, high-traffic endpoints, data-layer code, or migration-bearing files — to assess blast radius of regressions. Do NOT use for overall release risk (use `change-risk-evaluation`) or missing tests (use `coverage-gap-detection`). Covers blast-radius analysis, call-site scanning, cross-feature impact.
 ---
 

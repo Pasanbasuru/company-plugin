@@ -1,4 +1,5 @@
 ---
+name: coverage-gap-detection
 description: Use when asked "are we testing the right things" or after a feature is complete but before merge, to find critical untested paths. Do NOT use for test authoring patterns (use `test-strategy-enforcement`). Covers critical-path identification, missing negative tests, untested error branches, edge-case discovery.
 ---
 

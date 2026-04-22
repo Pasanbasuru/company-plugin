@@ -1,4 +1,5 @@
 ---
+name: mobile-implementation-guard
 description: Use when writing or reviewing React Native + Expo mobile code — screens, navigation, native module usage, OTA updates. Do NOT use for web React (use `frontend-implementation-guard`). Covers RN/Expo structure, navigation patterns, native module boundaries, EAS Build / EAS Update, platform-specific behaviour, offline UX.
 ---
 

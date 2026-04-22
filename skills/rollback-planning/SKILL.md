@@ -1,4 +1,5 @@
 ---
+name: rollback-planning
 description: Use when a change is rated medium or higher risk, or touches data / infrastructure / contracts. Do NOT use for trivial changes behind a feature flag that defaults off. Covers rollback path, forward-fix vs rollback, data-change reversibility, feature-flag kill switches, time-to-rollback.
 ---
 
