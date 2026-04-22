@@ -10,6 +10,10 @@ allowed-tools: Read, Grep, Glob, Bash
 
 The CI pipeline is a production system. Its failures become silent regressions — a flipped tag poisons every subsequent deploy, a leaked secret persists in logs long after rotation, and a `pull_request_target` misconfiguration hands untrusted code the keys to your cloud account. This skill applies whenever a GitHub Actions workflow file, reusable workflow, environment configuration, or branch protection rule is created or modified. It does not own what the deploy does once it reaches AWS (use `aws-deploy-safety`) or how third-party dependencies are kept current (use `supply-chain-and-dependencies`); it owns pipeline integrity from trigger to artifact.
 
+## Assumes `_baseline`. Adds:
+
+CI/CD pipeline integrity — OIDC-based AWS credential issuance, action SHA pinning, environment-scoped secrets, required-check enforcement, fork PR isolation, and build artifact traceability.
+
 ## Core rules
 
 1. **AWS access uses OIDC via `aws-actions/configure-aws-credentials`, never long-lived `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets.** — *Why:* long-lived keys are static credentials that persist in GitHub's encrypted secret store indefinitely; they rotate manually, appear in support requests and CI logs when misconfigured, and their blast radius is bounded only by the IAM policy attached — which is often wider than intended. OIDC issues a short-lived token scoped to a single workflow run; the token expires automatically, cannot be extracted from the run, and the IAM role's trust policy can enforce `sub` conditions that restrict which repo, branch, and environment can assume it.

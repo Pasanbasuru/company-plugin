@@ -4,6 +4,10 @@ description: Use when a PR touches shared utilities, high-traffic endpoints, dat
 
 A change's risk is defined by what else it touches. This skill makes that concrete.
 
+## Assumes `_baseline`. Adds:
+
+Blast-radius analysis — importer graph enumeration, change classification (internal/API-compat/breaking/behavioural), query-plan regression detection, and spooky-action-at-a-distance surface identification.
+
 ## Core rules
 
 **Rule 1 — Map every importer before claiming the change is isolated.**

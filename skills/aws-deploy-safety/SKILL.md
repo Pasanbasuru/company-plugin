@@ -10,6 +10,10 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Make AWS deploys boring — safe defaults, predictable rollout, fast recovery. This skill applies at the moment a change is pushed toward a running service: a new task definition revision, a Lambda `$LATEST` promotion, an App Runner deployment, or a secrets reference swap. It does not replace infrastructure provisioning review (`infra-safe-change`) or pipeline integrity checks (`cicd-pipeline-safety`); it owns the deploy mechanics layer between the two.
 
+## Assumes `_baseline`. Adds:
+
+AWS-specific deploy mechanics — rolling vs blue/green strategy, Lambda alias traffic shifting, health check readiness design, expand/contract migrations, and CloudWatch log retention at deploy time.
+
 ## Core rules
 
 1. **Task and function execution roles are distinct; neither grants `*` actions.** — *Why:* a single overpermissioned role means a compromised container or function can read every secret, write to every bucket, and call every API in the account. Separating task role (what the app needs) from execution role (what ECS/Lambda needs to start the container — ECR pull, Secrets Manager fetch, CloudWatch Logs write) limits blast radius to one surface.

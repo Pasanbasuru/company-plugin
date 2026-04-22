@@ -12,6 +12,10 @@ Debug production by reading the system, not by guessing. And write code that can
 
 Apply this skill when you are investigating a live issue, reviewing a handler that sits in a hot path, or writing new code that will run in a shared environment. The approach is always: look at what the system is telling you first, form a small set of hypotheses from the evidence, then act.
 
+## Assumes `_baseline`. Adds:
+
+Debugging discipline and culture — structured logging depth, correlation IDs end-to-end, alarm/runbook design, metrics that matter (p95/p99 over p50), and a systematic debugging playbook for production incidents.
+
 ## Core rules
 
 1. **Start with logs → metrics → traces. Do not reach for `console.log` patches in prod.** — *Why:* every redeployment to add instrumentation introduces risk and delays diagnosis by the time it takes to build and deploy. Your structured logs, metrics, and traces should already contain the answer; the discipline is learning to read them.

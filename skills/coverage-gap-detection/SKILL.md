@@ -4,6 +4,10 @@ description: Use when asked "are we testing the right things" or after a feature
 
 Coverage % lies. This skill finds the paths that *should* have tests and don't.
 
+## Assumes `_baseline`. Adds:
+
+Coverage gap analysis — critical-path identification, missing negative/authorization/boundary tests, concurrency coverage, and UI state branch testing beyond the baseline testing floor.
+
 ## Core rules
 
 1. **Critical paths have integration tests, not just unit tests.**

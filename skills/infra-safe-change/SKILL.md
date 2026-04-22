@@ -9,6 +9,10 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Infra changes land all at once and often can't be undone quickly. A `terraform apply` that deletes an RDS instance or wipes a DynamoDB table is not recoverable in minutes — it may not be recoverable at all without a backup restore. This skill catches destructive plans before apply, enforces remote state discipline, and holds IAM changes to the least-privilege bar. It is Terraform-primary but the principles apply equally to CDK and CloudFormation stacks.
 
+## Assumes `_baseline`. Adds:
+
+IaC review discipline — destructive plan detection, remote state locking, IAM least-privilege enforcement, networking blast-radius assessment, drift detection, and stateful-resource lifecycle guards.
+
 ## Core rules
 
 1. **Every `terraform plan` is read fully before apply — destructive actions (`-`/`forces replacement`) block merge without explicit written justification.**

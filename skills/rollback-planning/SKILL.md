@@ -4,6 +4,10 @@ description: Use when a change is rated medium or higher risk, or touches data /
 
 Every risky change has a written rollback — before it ships, not during the incident.
 
+## Assumes `_baseline`. Adds:
+
+Rollback design discipline — rollback mechanism taxonomy (flag/deploy/migration/contract), data migration reversibility requirements, feature-flag kill-switch design, time-to-rollback measurement, dual-support windows, and high-risk staging rehearsal.
+
 ## Core rules
 
 1. **Rollback path is written before merge.** A change with no rollback path is either trivial or not mergeable.

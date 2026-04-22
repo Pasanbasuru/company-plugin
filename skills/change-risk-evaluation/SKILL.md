@@ -12,6 +12,10 @@ Give an approver a one-page read on risk — not "is the code good", but "what h
 
 This skill is deliberately scoped to top-level risk posture. It feeds from `regression-risk-check` (blast-radius inputs), hands off to `rollback-planning` (reverse path), and defers to `observability-first-debugging` for deep monitoring guidance. It does not duplicate PR code review.
 
+## Assumes `_baseline`. Adds:
+
+Top-level change risk posture — risk rating rubric, deploy strategy selection, monitoring signal naming, rollback trigger specification, and stakeholder notification requirements.
+
 ## Core rules
 
 1. **Produce a risk rating (low / med / high / critical) with explicit justification tied to specific change characteristics.** — *Why:* a rating without justification is indistinguishable from a vibes assessment; reviewers cannot challenge or calibrate it, and on-call engineers cannot use it to set alert thresholds or escalation timelines.

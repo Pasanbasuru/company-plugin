@@ -10,6 +10,10 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Every `pnpm add` is a supply-chain decision. A dependency ships its entire transitive closure into your production bundle, its `postinstall` script runs with full filesystem access on every developer machine and CI runner, and its maintainers can push a new version at any time. This skill applies whenever a dependency is added, upgraded, or removed; whenever a lockfile is regenerated; when a CVE report surfaces; or when a license audit is needed. It does not own how CI pipelines are structured (use `cicd-pipeline-safety`) or how bundle size is budgeted (use `performance-budget-guard`); it owns the policy from `pnpm add` to merge.
 
+## Assumes `_baseline`. Adds:
+
+Dependency supply-chain policy — lockfile discipline, SCA in CI, version pinning rules, new-dependency evaluation criteria, licence enforcement, peer-dep resolution, and postinstall script auditing.
+
 ## Core rules
 
 1. **A lockfile (`pnpm-lock.yaml`) exists, is committed to the repository, and `pnpm install --frozen-lockfile` is used in every CI job that installs dependencies.** — *Why:* without a committed lockfile, two different CI runs of the same commit can resolve different transitive dependency versions — a silent non-determinism that makes reproducing bugs nearly impossible. `--frozen-lockfile` turns a version mismatch into a hard CI failure rather than a silent drift.

@@ -12,6 +12,10 @@ Software fails. Networks partition, third-party services degrade, edge cases rea
 
 Apply this skill whenever you touch a `fetch` call, an HTTP client, an SDK integration, a `try/catch` block, a React component that can throw, or any function that returns a recoverable failure alongside a success path.
 
+## Assumes `_baseline`. Adds:
+
+In-process resilience patterns — explicit timeouts, exponential backoff with jitter, idempotency keys for external POSTs, circuit breakers with fallbacks, React error boundaries, typed error contracts, and graceful degradation strategies.
+
 ## Core rules
 
 1. **Every network call has an explicit timeout.** No call uses the default (infinite) timeout. — *Why:* a slow upstream will exhaust the thread pool, connection pool, or Lambda concurrency and turn a partial outage into a total one. Tail latency is not an edge case; it is a normal operating condition at scale.

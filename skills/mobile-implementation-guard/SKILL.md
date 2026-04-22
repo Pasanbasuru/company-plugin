@@ -6,6 +6,10 @@ description: Use when writing or reviewing React Native + Expo mobile code — s
 
 **Purpose:** Keep the mobile app's structure predictable, native boundaries thin, and updates safe on both stores.
 
+## Assumes `_baseline`. Adds:
+
+React Native and Expo-specific implementation guards — managed vs bare workflow discipline, centralised navigation architecture, native module adapter pattern, offline UX requirements, and EAS Build/Update safety constraints.
+
 ---
 
 ## Core Rules
