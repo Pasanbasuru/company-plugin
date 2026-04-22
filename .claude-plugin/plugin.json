@@ -1,12 +1,12 @@
 {
   "name": "company-plugin",
   "description": "Company-wide Claude Code plugin for full-stack React/Next.js + Node/NestJS + Prisma/Postgres + AWS projects, with optional mobile guardrails for React Native.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {
     "name": "Your Company"
   },
   "dependencies": [
-    { "name": "superpowers", "marketplace": "superpowers-dev" },
+    { "name": "superpowers", "marketplace": "claude-plugins-official" },
     { "name": "frontend-design", "marketplace": "claude-plugins-official" },
     { "name": "prisma", "marketplace": "claude-plugins-official" },
     { "name": "deploy-on-aws", "marketplace": "claude-plugins-official" },
