@@ -1,6 +1,6 @@
 ---
 name: change-risk-evaluation
-description: Use at PR time to produce a top-level risk posture for a change — the ticket an on-call or lead reads before approving. Do NOT use for code-level review (that's the domain skills). Covers overall risk rating, deploy strategy, monitoring plan, stakeholder list.
+description: Use when evaluating the blast radius of a planned change at PR time — produces the top-level risk posture an on-call or lead reads before approving. Do NOT use for code-level review (that's the domain skills). Covers overall risk rating, deploy strategy, monitoring plan, stakeholder list.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
