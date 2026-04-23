@@ -4,6 +4,11 @@ const TRIGGER_VERBS = [
   "creating", "editing", "reviewing", "verifying", "debugging",
   "deploying", "refactoring", "auditing", "testing", "designing",
   "scaffolding", "validating", "analyzing", "implementing", "fixing",
+  "enforcing", "ensuring", "protecting", "preventing", "guarding",
+  "blocking", "catching", "evaluating", "assessing", "checking",
+  "monitoring", "observing", "tracing", "handling", "managing",
+  "planning", "rolling", "migrating", "structuring", "organizing",
+  "securing", "hardening",
 ];
 const STACK_KEYWORDS: Record<string, string[]> = {
   nextjs: ["next", "app router"],
