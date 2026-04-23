@@ -23,13 +23,15 @@ export function checkFrontmatter(skill: SkillFile): CheckResult {
       message: "Missing or empty `name` field",
       fix: "Add a kebab-case `name:` field matching the skill directory",
     });
-  } else if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(fm.name) || fm.name.length < 3) {
+  } else if (
+    !/^(_[a-z][a-z0-9-]{2,}|[a-z][a-z0-9]*(-[a-z0-9]+)+)$/.test(fm.name)
+  ) {
     findings.push({
       line: 1,
       severity: "FAIL",
       category: "frontmatter",
-      message: `\`name\` '${fm.name}' is not a valid kebab-case identifier (>=3 chars)`,
-      fix: "Use lowercase kebab-case matching the skill directory, e.g. 'my-skill'",
+      message: `\`name\` '${fm.name}' is not a valid identifier (use kebab-case like 'my-skill', or underscore-prefixed '_template' for baselines)`,
+      fix: "Use lowercase kebab-case matching the skill directory, or '_name' for templates/baselines",
     });
   }
 

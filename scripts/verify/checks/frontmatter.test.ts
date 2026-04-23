@@ -39,6 +39,18 @@ describe("checkFrontmatter", () => {
     expect(result.severity).toBe("CONCERN");
   });
 
+  it("PASS for underscore-prefixed template names like _baseline", () => {
+    const skill = build(`name: _baseline\ndescription: Use when authoring a new skill and you need a minimal template as a starting point with all required sections in place.`);
+    const result = checkFrontmatter(skill);
+    expect(result.severity).toBe("PASS");
+  });
+
+  it("FAIL when name is too short (e.g. 'x')", () => {
+    const skill = build(`name: x\ndescription: Use when doing a valid and sufficiently long description for discoverability here.`);
+    const result = checkFrontmatter(skill);
+    expect(result.severity).toBe("FAIL");
+  });
+
   it("FAIL when frontmatter missing entirely", () => {
     const skill = parseSkill("/fake/SKILL.md", "# no frontmatter\n");
     const result = checkFrontmatter(skill);
