@@ -1,2 +1,6 @@
 # Accidental shell crash dumps
 bash.exe.stackdump
+node_modules
+dist
+coverage
+.vitest/
