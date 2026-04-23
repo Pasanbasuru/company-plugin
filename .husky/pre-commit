@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^skills/[^/]+/SKILL\.md$' || true)
+[ -z "$staged" ] && exit 0
+
+echo "→ skill-verification (fast mode) on staged SKILL.md files"
+pnpm verify $staged
