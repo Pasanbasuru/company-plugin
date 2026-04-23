@@ -8,9 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Debug production by reading the system, not by guessing. And write code that can be debugged that way. When something breaks at 3 AM the only reliable evidence is what the system emitted: structured log lines, metric time-series, and distributed traces. Code that emits rich, structured, correlated signals lets you reconstruct what happened in minutes. Code that emits free-text strings or nothing forces you to redeploy with extra `console.log` calls — which is both slow and risky.
-
-Apply this skill when you are investigating a live issue, reviewing a handler that sits in a hot path, or writing new code that will run in a shared environment. The approach is always: look at what the system is telling you first, form a small set of hypotheses from the evidence, then act.
+Debug production by reading the system, not by guessing — and write code that can be debugged that way. At 3 AM the only reliable evidence is what the system emitted: structured logs, metric time-series, distributed traces. Rich, correlated signals let you reconstruct what happened in minutes; free-text strings force you to redeploy with extra `console.log` calls, which is slow and risky. Apply when investigating a live issue, reviewing a hot-path handler, or writing code for a shared environment.
 
 ## Assumes `_baseline`. Adds:
 
@@ -18,19 +16,13 @@ Debugging discipline and culture — structured logging depth, correlation IDs e
 
 ## Core rules
 
-1. **Start with logs → metrics → traces. Do not reach for `console.log` patches in prod.** — *Why:* every redeployment to add instrumentation introduces risk and delays diagnosis by the time it takes to build and deploy. Your structured logs, metrics, and traces should already contain the answer; the discipline is learning to read them.
-
-2. **Every log line is structured JSON with `requestId`, `service`, `level`, and relevant domain fields — never free-text strings alone.** — *Why:* free-text strings are greppable for single queries but require custom parsing for every filter, aggregation, or alert. Structured fields can be indexed, filtered by value, and used in metric filters without post-processing.
-
-3. **A single request gets a correlation ID at the edge; every downstream log, trace span, and outbound fetch carries it.** — *Why:* without a correlation ID you cannot reconstruct the full lifecycle of a single request across services. You are forced to correlate by timestamp alone, which fails under any concurrency.
-
-4. **Metrics exist for every handler: latency histogram, error rate, throughput. Alerts are based on p95/p99 and error rate, not p50.** — *Why:* p50 (median) latency hides tail suffering. Users in the 95th or 99th percentile experience real degradation while p50 looks fine. Alerting on the median systematically under-pages the on-call.
-
-5. **Traces span across services. Critical paths — checkout, auth, payment — are instrumented end to end.** — *Why:* a slow response often has its root cause in a downstream service. Without traces you see the symptom (slow response at the edge) but not the cause (slow database query in the order service). Distributed tracing connects the dots.
-
-6. **Alarms have runbooks. An alarm that fires without a runbook is an incident amplifier.** — *Why:* at 3 AM, an on-call engineer who does not know what an alarm means and has no starting point will either page more people unnecessarily or take the wrong action under pressure. A runbook converts alarm noise into actionable procedure.
-
-7. **Error reports include: what the user was doing, request ID, timestamp, input shape (non-PII), and the downstream error cause chain.** — *Why:* without these five elements, a bug report is a riddle. With them, a reproduction path and a fix are usually 30 minutes of work. The cause chain — especially the original upstream error, not just "something failed" — is the most commonly missing piece.
+1. **Start with logs → metrics → traces. Do not reach for `console.log` patches in prod.** — *Why:* redeploying to add instrumentation adds risk and delay; structured logs/metrics/traces should already contain the answer.
+2. **Every log line is structured JSON with `requestId`, `service`, `level`, and relevant domain fields — never free-text strings alone.** — *Why:* structured fields can be indexed, filtered, and used in metric filters without custom parsing.
+3. **A single request gets a correlation ID at the edge; every downstream log, trace span, and outbound fetch carries it.** — *Why:* without a correlation ID you cannot reconstruct a single request's lifecycle across services; timestamp-only correlation fails under concurrency.
+4. **Metrics exist for every handler: latency histogram, error rate, throughput. Alerts are based on p95/p99 and error rate, not p50.** — *Why:* p50 hides tail suffering; users in the 95th/99th percentile experience real degradation while the median looks fine.
+5. **Traces span across services. Critical paths — checkout, auth, payment — are instrumented end to end.** — *Why:* a slow response often has its root cause in a downstream service; without traces you see the symptom but not the cause.
+6. **Alarms have runbooks. An alarm that fires without a runbook is an incident amplifier.** — *Why:* at 3 AM, an on-call who does not know what an alarm means will either over-page or take wrong action under pressure.
+7. **Error reports include: what the user was doing, request ID, timestamp, input shape (non-PII), and the downstream error cause chain.** — *Why:* the cause chain is the most commonly missing piece and the difference between a 30-minute fix and a riddle.
 
 ## Red flags
 
@@ -61,16 +53,13 @@ logger.error(
   {
     requestId:  ctx.requestId,
     service:    'checkout',
-    userId:     userId,
-    orderId:    orderId,
+    userId,
+    orderId,
     errorCode:  error.code,
     durationMs: Date.now() - startTime,
   },
   'Checkout failed — payment declined',
 );
-// Emits: {"level":"error","requestId":"req-abc123","service":"checkout",
-//          "userId":"usr-456","orderId":"ord-789","errorCode":"CARD_DECLINED",
-//          "durationMs":312,"msg":"Checkout failed — payment declined"}
 ```
 
 ### Correlation ID middleware propagated into downstream fetch vs missing
@@ -126,7 +115,7 @@ AlarmDescription: |
 
 ## Structured logging (Pino) setup
 
-Pino is a low-overhead JSON logger for Node.js. It serialises log objects synchronously in the hot path and delegates I/O to a worker thread (`pino-pretty` in development, a transport in production). The key configuration choices are: always output JSON in production, bind a child logger per request, and never use `console.log` anywhere in shared code.
+Pino is a low-overhead JSON logger: serialises synchronously in the hot path, delegates I/O to a worker. Key choices: always JSON in production, one child logger per request, never `console.log` in shared code.
 
 **Base logger configuration (`src/logger.ts`):**
 
@@ -194,33 +183,13 @@ export function getRequestContext(): RequestContext {
 }
 ```
 
-**Using the child logger in a service:**
-
-```typescript
-import { getRequestContext } from './request-context';
-
-async function processOrder(orderId: string): Promise<void> {
-  const { log } = getRequestContext();
-
-  log.info({ orderId }, 'Processing order');
-
-  try {
-    await chargePayment(orderId);
-    log.info({ orderId }, 'Payment charged');
-  } catch (err) {
-    log.error({ orderId, err }, 'Payment charge failed');
-    throw err;
-  }
-}
-```
-
-Every log line automatically carries `requestId`, `service`, `env`, and any fields added to the child. No manually threading a logger parameter through every function call.
+Using the child logger downstream: `const { log } = getRequestContext(); log.info({ orderId }, 'Processing order');` — every line automatically carries `requestId`, `service`, `env`, and any child fields. No threading a logger through every function call.
 
 ## Correlation IDs end-to-end
 
-A correlation ID is a UUID generated at the entry point of a request (API gateway, load balancer, or the first service to receive the call) and carried through every subsequent operation: downstream HTTP calls, queue messages, database query comments, and trace spans. It is the single thread you pull to reconstruct everything that happened for one user action.
+A correlation ID is a UUID generated at the request entry point (API gateway, load balancer, or first service) and carried through every downstream op: HTTP calls, queue messages, DB query comments, trace spans. It is the single thread you pull to reconstruct one user action.
 
-**The `AsyncLocalStorage` pattern** is the Node.js-idiomatic way to avoid threading the ID through every function argument. The middleware from the logging section establishes the context; anywhere downstream can call `getRequestContext()` to retrieve it.
+**The `AsyncLocalStorage` pattern** avoids threading the ID through every function argument: middleware establishes the context; anywhere downstream calls `getRequestContext()`.
 
 **Propagating into downstream HTTP fetches:**
 
@@ -285,13 +254,13 @@ export async function handler(event: SQSEvent): Promise<void> {
 }
 ```
 
-**W3C `traceparent` for OpenTelemetry compatibility.** If your stack uses OpenTelemetry, propagate the standard `traceparent` header instead of (or in addition to) `x-request-id`. The OTel SDK's `propagation.inject(context, headers)` call writes the header automatically when you use the HTTP instrumentation library.
+**W3C `traceparent` for OpenTelemetry compatibility.** With OTel, propagate the standard `traceparent` header instead of (or alongside) `x-request-id`. OTel's `propagation.inject(context, headers)` writes it automatically via the HTTP instrumentation library.
 
 ## Metrics that matter
 
-Instrument every handler with the four golden signals: latency, traffic, errors, and saturation. CloudWatch, Datadog, and Prometheus all accept these; the patterns below use CloudWatch metric filters for AWS-native stacks, but the concepts are universal.
+Instrument every handler with the four golden signals: latency, traffic, errors, saturation. CloudWatch, Datadog, and Prometheus all accept these; patterns below use CloudWatch EMF but concepts are universal.
 
-**Emitting structured metrics via embedded metric format (CloudWatch EMF):**
+**Emitting structured metrics via CloudWatch EMF:**
 
 ```typescript
 import { createMetricsLogger, Unit } from 'aws-embedded-metrics';
@@ -316,26 +285,9 @@ export async function checkoutHandler(req: Request, res: Response): Promise<void
 }
 ```
 
-**CloudWatch metric filter to extract from Pino JSON logs (Infrastructure as Code):**
+Alternatively extract metrics from Pino JSON logs via a `AWS::Logs::MetricFilter` with `FilterPattern: '{ $.level = "error" && $.service = "checkout" }'` and dimensions keyed on `$.errorCode`.
 
-```yaml
-# Extracts errorCode field from structured logs to build an error-by-code dimension
-CheckoutErrorMetricFilter:
-  Type: AWS::Logs::MetricFilter
-  Properties:
-    LogGroupName: !Ref CheckoutLogGroup
-    FilterPattern: '{ $.level = "error" && $.service = "checkout" }'
-    MetricTransformations:
-      - MetricName: CheckoutErrorCount
-        MetricNamespace: MyApp/Checkout
-        MetricValue: '1'
-        DefaultValue: 0
-        Dimensions:
-          - Key: errorCode
-            Value: $.errorCode
-```
-
-**Histogram percentiles matter more than averages.** Averages mask bimodal distributions. A p99 of 2 000 ms is invisible if the average is 120 ms because 99% of requests are fast. Always publish p50, p95, and p99. In CloudWatch, use `PERCENTILE` statistics on the duration metric.
+**Percentiles over averages.** Averages mask bimodal distributions — a p99 of 2 000 ms is invisible if the average is 120 ms. Always publish p50, p95, p99. In CloudWatch, use `PERCENTILE` statistics.
 
 **What to measure on every handler at minimum:**
 
@@ -348,9 +300,9 @@ CheckoutErrorMetricFilter:
 
 ## Tracing critical paths
 
-Distributed tracing connects log lines across service boundaries by attaching a `traceId` and `spanId` to every operation. Pino logs that include `traceId` can be correlated with spans in Jaeger, AWS X-Ray, or Datadog APM, giving you a waterfall view of where time was spent across the entire call chain.
+Distributed tracing connects log lines across services by attaching `traceId`/`spanId` to every op. Pino logs that include `traceId` can be correlated with spans in Jaeger, AWS X-Ray, or Datadog APM for a waterfall view of where time went.
 
-**OpenTelemetry setup for Node.js (SDK initialisation before any other imports):**
+**OpenTelemetry setup for Node.js (SDK init before any other imports):**
 
 ```typescript
 // src/tracing.ts — import this as the very first module in src/main.ts
@@ -424,11 +376,11 @@ export function getTraceContext(): { traceId: string; spanId: string } {
 const log = logger.child({ requestId, ...getTraceContext() });
 ```
 
-With this setup, every log line carries `traceId` and `spanId`, and clicking a log line in CloudWatch Logs Insights can jump directly to the corresponding trace in your APM tool.
+Every log line now carries `traceId` and `spanId`; clicking a log line in CloudWatch Logs Insights can jump to the corresponding trace in your APM tool.
 
 ## Alarm design + runbooks
 
-An alarm without a runbook creates panic, not resolution. An alarm on the wrong signal creates alarm fatigue. Good alarm design means: alert on symptoms that user are actually experiencing (not just internal noise), and give every alarm a runbook that starts the on-call engineer within 60 seconds of waking up.
+An alarm without a runbook creates panic; an alarm on the wrong signal creates fatigue. Alert on symptoms users experience (not internal noise), and give every alarm a runbook that orients the on-call within 60 seconds of waking up.
 
 **Alarm tiers:**
 
@@ -463,52 +415,15 @@ new Alarm(this, 'CheckoutP99LatencyAlarm', {
 }).addAlarmAction(new SnsAction(oncallTopic));
 ```
 
-**Runbook template:**
-
-```markdown
-# Runbook: checkout-p99-latency-high
-
-## What fired
-p99 checkout latency > 1 000 ms sustained for 5 minutes.
-
-## Impact
-Users in the slowest percentile experience checkout taking > 1 s.
-Conversion rate typically drops 7% per additional second of latency.
-
-## Dashboards
-- [Checkout overview](https://cloudwatch.aws.amazon.com/...#dashboards:name=Checkout)
-- [Downstream service health](https://datadog.internal/dashboards/downstream-health)
-
-## Investigation steps
-1. Check the Checkout dashboard — is p50 also elevated? If yes, systemic issue.
-   If no, tail-only slowness — check DB query times and payment provider latency.
-2. Check CloudWatch Logs Insights for recent errors:
-   `filter service="checkout" and level="error" | stats count() by errorCode`
-3. Check payment provider status page: https://status.stripe.com
-4. Check RDS slow query log for queries > 500 ms in the last 30 min.
-5. Check recent deployments in the deploy log: https://deploys.internal/checkout
-
-## Mitigation options
-- If payment provider: enable the `checkout-payment-fallback` feature flag to
-  route to secondary provider.
-- If database: scale up read replicas or enable query cache.
-- If deploy-related: roll back using `./scripts/rollback.sh checkout`.
-
-## Escalation
-If not resolved in 30 min, page the checkout team lead.
-```
-
-Every runbook must include: what fired, the user impact, links to dashboards, numbered investigation steps, at least one mitigation option, and an escalation path.
+**Runbook sections (required):** what fired; user impact; dashboard links; numbered investigation steps (check p50 co-movement, Logs Insights error-by-code, downstream status pages, recent deploys); mitigation options (feature-flag fallback, scale read replicas, rollback); escalation path (team lead after 30 min).
 
 ## Debugging playbook
 
-When an issue is reported in production, work through these steps in order. Do not skip ahead to forming a fix before completing at least the first three steps.
+Work these steps in order. Do not skip ahead to a fix before completing at least steps 1–3.
 
-**Step 1 — Define the blast radius.**
-Before touching anything, answer: how many users are affected, which features, since when? Check your error-rate dashboard and look for the inflection point. Is it all users or a subset (specific region, specific account tier, specific browser)?
+**Step 1 — Define the blast radius.** How many users, which features, since when? Check the error-rate dashboard for the inflection point. All users or a subset (region, tier, browser)?
 
-**Step 2 — Read the logs.**
-Query the structured logs for the time window and affected service. Use the `requestId` of a known-bad request if you have one, or filter by `level=error` and `service=<affected>`. Look for: error codes, cause chains, unexpected fields, and any pattern in the affected requests (same `userId` prefix, same `skuId`, same downstream endpoint).
+**Step 2 — Read the logs.** Query structured logs for the time window and affected service. Use a known-bad `requestId` if you have one, or filter by `level=error` and `service=<affected>`. Look for error codes, cause chains, unexpected fields, and patterns in affected requests (same `userId` prefix, `skuId`, downstream endpoint).
 
 ```
 # CloudWatch Logs Insights query for the affected window
@@ -519,20 +434,15 @@ fields @timestamp, requestId, errorCode, durationMs, @message
 | limit 50
 ```
 
-**Step 3 — Read the metrics.**
-Pull the p99 latency, error rate, and throughput graphs for the affected handler for the last 2 hours. Look for: correlation with a deploy (vertical annotation), step-function change (suggesting a config change), or gradual degradation (suggesting resource exhaustion or a slow leak).
+**Step 3 — Read the metrics.** Pull p99 latency, error rate, and throughput for the affected handler over the last 2 h. Look for correlation with a deploy (vertical annotation), step-function change (config change), or gradual degradation (resource exhaustion/leak).
 
-**Step 4 — Pull a trace.**
-Take one `requestId` from step 2 and find its trace in your APM tool. The waterfall will show which downstream call was slow or failed. Common culprits: a database query that suddenly has a bad plan, a downstream service that started timing out, or a new code path that calls an additional external service.
+**Step 4 — Pull a trace.** Take one `requestId` from step 2 and find its trace. The waterfall shows which downstream call was slow or failed. Common culprits: bad DB query plan, downstream timeout, new code path calling an extra external service.
 
-**Step 5 — Form hypotheses (maximum three).**
-Based on steps 1–4, write down no more than three hypotheses ordered by probability. Be specific: "The payment provider's `/charges` endpoint is returning 503 since 14:32 UTC" is a hypothesis. "Something is wrong with payments" is not.
+**Step 5 — Form hypotheses (max three).** Ordered by probability. Be specific: "Payment provider `/charges` returning 503 since 14:32 UTC" is a hypothesis; "something wrong with payments" is not.
 
-**Step 6 — Verify, then fix.**
-Test the most likely hypothesis with the minimal action (check the payment provider's status page, look for a matching deploy in the deploy log, query a specific metric). Only after confirming a hypothesis should you propose a fix. State clearly what is *verified* versus *assumed* when presenting the fix.
+**Step 6 — Verify, then fix.** Test the most likely hypothesis with the minimal action (status page, deploy log, specific metric query). Propose a fix only after confirming. State clearly what is *verified* vs *assumed*.
 
-**Step 7 — Post-mortem signal.**
-After the incident, ensure the log/metric/trace gap that made diagnosis harder than it needed to be is filed as a task. Observability improves incrementally; every incident should leave the system more observable than it found it.
+**Step 7 — Post-mortem signal.** File the log/metric/trace gap that made diagnosis harder than needed. Every incident leaves the system more observable than it found it.
 
 ## Interactions with other skills
 
@@ -548,7 +458,7 @@ Produce a markdown report with these sections:
 
 1. **Summary** — one line: pass / concerns / blocking issues.
 2. **Handler inventory** — for each HTTP handler or queue consumer: file:line, has structured logs (yes/no), emits latency metric (yes/no), emits error metric (yes/no), correlation ID propagated (yes/no).
-3. **Findings** — per issue: *File:line, severity (low/med/high), rule violated, what's wrong, recommended fix.*
+3. **Findings** — per issue: *File:line, severity (blocking | concern | info), rule violated, what's wrong, recommended fix.*
 4. **Safer alternative** — for each observability gap flagged in Findings, propose a lower-risk mitigation before reaching for new log lines. If structured logs are unavailable on the hot path, prefer a targeted deploy-tracking dashboard or existing metric drill-down over adding ad-hoc logs. Prefer existing traces/spans over new print-style logs when debugging request flow, and prefer re-using an already-emitted correlation ID over introducing a new one.
 5. **Alarm coverage** — list alarms found in IaC; for each: metric, threshold, statistic (p50/p95/p99/avg), runbook link present (yes/no).
 6. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
