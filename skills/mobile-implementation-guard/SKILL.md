@@ -13,7 +13,7 @@ React Native and Expo-specific implementation guards — managed vs bare workflo
 
 ---
 
-## Core Rules
+## Core rules
 
 1. **Use Expo managed workflow unless a specific native feature requires bare; document the reason if bare.**
    *Why:* Managed workflow gives free OTA updates, predictable SDK upgrades, and no Xcode/Android Studio maintenance. Dropping to bare for a feature that could be handled by an Expo SDK package adds permanent maintenance burden and breaks OTA for native-touching changes.
@@ -38,7 +38,7 @@ React Native and Expo-specific implementation guards — managed vs bare workflo
 
 ---
 
-## Red Flags
+## Red flags
 
 | Signal | Risk |
 |---|---|
@@ -261,7 +261,7 @@ iOS info.plist usage description strings must be accurate and specific. Apple re
 
 ---
 
-## Review Checklist
+## Review checklist
 
 ### Summary
 One-line verdict on the mobile implementation's structural health — managed workflow discipline, navigation centralisation, adapter boundaries, offline UX, and OTA safety.
@@ -288,7 +288,9 @@ For each rule, mark **PASS**, **CONCERN**, or **NOT APPLICABLE**.
 - [ ] EAS Update runtime version policy defined; no native changes shipped via OTA
 - [ ] Permissions requested at point of use with rationale UI preceding the OS dialog
 
-**Hands off to:**
-- `state-integrity-check` — offline sync conflict resolution logic
-- `integration-contract-safety` — API contract changes affecting mobile payloads
-- `accessibility-guard` — TalkBack / VoiceOver / dynamic type concerns
+## Interactions with other skills
+
+- **REQUIRED BACKGROUND:** `_baseline` — structural expectations shared with all domain skills.
+- **Hands off to:** `state-integrity-check` — offline sync conflict resolution logic.
+- **Hands off to:** `integration-contract-safety` — API contract changes affecting mobile payloads.
+- **Hands off to:** `accessibility-guard` — TalkBack / VoiceOver / dynamic type concerns.
