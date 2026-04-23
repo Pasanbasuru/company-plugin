@@ -8,9 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Software fails. Networks partition, third-party services degrade, edge cases reach production at 3 AM, and tail latency is always worse than median. Code that assumes the happy path breaks users when assumptions are violated. This skill prescribes the patterns that make code fail *well*: bounded waits, safe retries, fast-fail under load, isolated failure surfaces, and typed error contracts that force the caller to handle every outcome.
-
-Apply this skill whenever you touch a `fetch` call, an HTTP client, an SDK integration, a `try/catch` block, a React component that can throw, or any function that returns a recoverable failure alongside a success path.
+Software fails — networks partition, third-party services degrade, tail latency is always worse than median. Code that assumes the happy path breaks users. This skill prescribes the patterns that make code fail *well*: bounded waits, safe retries, fast-fail under load, isolated failure surfaces, and typed error contracts that force callers to handle every outcome. Apply whenever you touch a `fetch` call, HTTP client, SDK integration, `try/catch`, a React component that can throw, or any function returning recoverable failure.
 
 ## Assumes `_baseline`. Adds:
 
@@ -18,21 +16,14 @@ In-process resilience patterns — explicit timeouts, exponential backoff with j
 
 ## Core rules
 
-1. **Every network call has an explicit timeout.** No call uses the default (infinite) timeout. — *Why:* a slow upstream will exhaust the thread pool, connection pool, or Lambda concurrency and turn a partial outage into a total one. Tail latency is not an edge case; it is a normal operating condition at scale.
-
-2. **Retries use exponential backoff with full jitter, a max-attempts cap, and a max-delay cap. Not all errors are retryable — 4xx responses (except 408 and 429) are not.** — *Why:* naive fixed-interval retries produce thundering herds that hammer a recovering service; jitter spreads load. Retrying a 400 Bad Request is pointless and wastes quota; retrying a 503 is correct. Cap the delay to avoid multi-minute waits that degrade user experience beyond recovery.
-
-3. **External POSTs include an idempotency key so a retry does not duplicate the side effect.** The key must be stable across retries for the same logical operation. — *Why:* a network timeout on a POST may mean the server received and processed the request before the connection dropped. Retrying without an idempotency key charges the card twice, creates duplicate orders, or sends duplicate notifications.
-
-4. **Third-party integrations sit behind a circuit breaker. When the circuit is open, the call fast-fails with a fallback or a user-visible degraded state rather than queuing up slow failures.** — *Why:* without a circuit breaker, every request to a failed integration pays the full timeout cost before failing. At high request rates this fills the event loop with pending timers and degrades every feature in the application, not just the one using the broken integration.
-
-5. **React error boundaries wrap individual feature surfaces. A crashed feature does not crash the page or the app.** — *Why:* a single unguarded `throw` inside a React subtree unmounts the entire component tree above it. Users see a blank screen instead of a partially functional page. Feature-level boundaries contain the blast radius and allow recovery UI (retry button, fallback content) per feature.
-
-6. **Errors are typed — either `Result<T, E>` discriminated unions for recoverable failures or a typed exception hierarchy for bugs and unrecoverable states. `catch (e: unknown)` always narrows before accessing properties.** — *Why:* an untyped `catch` block that logs and moves on silently hides the failure from the caller. Typed errors force the caller to handle every outcome; narrowing before access prevents `Cannot read properties of undefined` crashes inside error handlers.
-
-7. **User-facing error messages are actionable and never leak internals.** Messages tell users what to do ("Try again", "Contact support with reference XYZ") — not what went wrong internally. Stack traces, database errors, and internal service names never reach the browser. — *Why:* leaked internals are an information disclosure vulnerability and a poor user experience simultaneously. An actionable message reduces support load.
-
-8. **Background work has a supervisor or lifecycle owner — no fire-and-forget promises.** `void someAsyncFn()` is banned. Either `await` the call, attach a `.catch` with structured logging, or enqueue the work through a durable mechanism. — *Why:* an unhandled promise rejection in Node.js terminates the process in newer runtimes. Even where it doesn't, a silently swallowed failure looks like success to every monitoring tool.
+1. **Every network call has an explicit timeout.** No call uses the default (infinite) timeout. — *Why:* a slow upstream exhausts the thread pool, connection pool, or Lambda concurrency, turning a partial outage into a total one.
+2. **Retries use exponential backoff with full jitter, a max-attempts cap, and a max-delay cap. Not all errors are retryable — 4xx (except 408 and 429) are not.** — *Why:* fixed-interval retries produce thundering herds; jitter spreads load. Retrying a 400 wastes quota; retrying a 503 is correct.
+3. **External POSTs include an idempotency key so a retry does not duplicate the side effect.** Stable across retries for the same logical op. — *Why:* a POST timeout may mean the server processed the request before the connection dropped; retrying without a key charges twice or creates duplicates.
+4. **Third-party integrations sit behind a circuit breaker. When open, calls fast-fail with a fallback or a user-visible degraded state.** — *Why:* without a breaker, every call to a failed integration pays the full timeout cost, filling the event loop and degrading every feature, not just the one using the broken integration.
+5. **React error boundaries wrap individual feature surfaces. A crashed feature does not crash the page or the app.** — *Why:* an unguarded `throw` unmounts the entire tree above. Feature-level boundaries contain the blast radius and allow per-feature recovery UI.
+6. **Errors are typed — `Result<T, E>` for recoverable failures or a typed exception hierarchy for bugs. `catch (e: unknown)` always narrows before accessing properties.** — *Why:* untyped catches hide failures; typed errors force callers to handle every outcome; narrowing prevents `Cannot read properties of undefined` crashes inside error handlers.
+7. **User-facing error messages are actionable and never leak internals.** Tell users what to do ("Try again", "Contact support with ref XYZ"). Stack traces, DB errors, service names never reach the browser. — *Why:* leaked internals are an information-disclosure vulnerability and a poor user experience.
+8. **Background work has a supervisor or lifecycle owner — no fire-and-forget promises.** `void someAsyncFn()` is banned. `await`, attach `.catch` with structured logging, or enqueue via a durable mechanism. — *Why:* unhandled promise rejections terminate newer Node runtimes; silently swallowed failures look like success to monitoring.
 
 ## Red flags
 
@@ -119,40 +110,19 @@ export async function lookupCustomerTier(customerId: string): Promise<string> {
 
 ### Error boundary per feature vs single app-level boundary
 
-Bad — one boundary at the root; any component crash blanks the entire page:
+Bad — one root boundary blanks the page on any crash: `<ErrorBoundary fallback={<p>Something went wrong</p>}>{Header, MainContent, RecommendationPanel, Footer}</ErrorBoundary>`.
+
+Good — each independent feature wraps its own boundary so failures are isolated:
 
 ```tsx
-// BAD: one boundary at the app root — a crash in <RecommendationPanel>
-// unmounts the entire app and shows a blank error screen
-function App() {
-  return (
-    <ErrorBoundary fallback={<p>Something went wrong</p>}>
-      <Header />
-      <MainContent />
-      <RecommendationPanel />  {/* crashes here → whole app unmounts */}
-      <Footer />
-    </ErrorBoundary>
-  );
-}
-```
-
-Good — each independent feature has its own boundary; failures are isolated:
-
-```tsx
-// GOOD: each feature boundary is independent; a crash in one panel
-// shows that panel's error UI while the rest of the page remains functional
 import { ErrorBoundary } from 'react-error-boundary';
 
 function App() {
   return (
     <>
       <Header />
-      <ErrorBoundary fallback={<MainContentError />}>
-        <MainContent />
-      </ErrorBoundary>
-      <ErrorBoundary fallback={<RecommendationFallback />}>
-        <RecommendationPanel />
-      </ErrorBoundary>
+      <ErrorBoundary fallback={<MainContentError />}><MainContent /></ErrorBoundary>
+      <ErrorBoundary fallback={<RecommendationFallback />}><RecommendationPanel /></ErrorBoundary>
       <Footer />
     </>
   );
@@ -161,9 +131,7 @@ function App() {
 
 ## Timeouts
 
-Every call to an external system must have a finite timeout. "External" includes HTTP APIs, gRPC services, database queries, Redis commands, S3 operations, and DNS lookups. "Finite" means you set it explicitly — never rely on a framework or SDK default.
-
-The canonical Node.js / browser pattern uses `AbortController`:
+Every call to an external system needs a finite timeout — explicitly set, never SDK defaults. "External" = HTTP, gRPC, DB queries, Redis, S3, DNS. Canonical Node/browser pattern uses `AbortController`:
 
 ```typescript
 export async function fetchWithTimeout(
@@ -191,17 +159,13 @@ export async function fetchWithTimeout(
 }
 ```
 
-`AbortSignal.timeout(ms)` is available in Node 17.3+ and modern browsers as a shorthand — but it does not cancel the `clearTimeout` side of the timer, so an explicit `AbortController` pattern is clearer in long-lived server code. Always clear the timer in a `finally` block to prevent memory leaks.
+`AbortSignal.timeout(ms)` (Node 17.3+) is a shorthand but doesn't cancel the timer, so explicit `AbortController` is clearer in long-lived server code. Always `clearTimeout` in `finally`.
 
-**Choosing timeout values.** The timeout must be below the caller's own timeout (the one your caller set on you), minus processing overhead. A common layering: API gateway → 30 s, service-to-service → 10 s, database query → 5 s. Anything tighter than 500 ms risks false timeouts under normal load spikes. Anything looser than 30 s means a failing dependency holds a request open for half a minute.
-
-**Different timeouts for different operations.** Read operations (GET) can tolerate shorter timeouts than write operations (POST/PUT) because writes may need time to persist. Search endpoints that fan out to multiple indices may need longer timeouts than point-lookup endpoints. Set these per call-site, not globally.
+**Choosing values.** Timeout must be below the caller's, minus processing overhead. Typical layering: API gateway 30 s, service-to-service 10 s, DB query 5 s. < 500 ms risks false timeouts; > 30 s ties up requests too long. Set per call-site; reads can tolerate shorter than writes; fan-out endpoints need longer than point-lookups.
 
 ## Retry with backoff + jitter
 
-Retries are appropriate for transient failures: network timeouts, 503 Service Unavailable, 429 Too Many Requests, and 408 Request Timeout. They are not appropriate for client errors (400, 401, 403, 404, 422) — these will not succeed on retry and burning quota attempting them is wasteful.
-
-The canonical implementation uses exponential backoff with **full jitter** (randomize the entire delay, not just a fraction of it):
+Retries fit transient failures (network timeouts, 503, 429, 408) — not client errors (400, 401, 403, 404, 422). Canonical implementation: exponential backoff with **full jitter** (randomize the entire delay, not just a fraction):
 
 ```typescript
 export type RetryOptions = {
@@ -252,15 +216,15 @@ export function isRetryableHttpError(err: unknown): boolean {
 }
 ```
 
-**Why full jitter beats equal jitter.** Equal jitter adds a random fraction to the exponential base (`base + rand * base`). Full jitter samples uniformly between zero and the cap. At high concurrency, equal jitter still clusters many retries near `base`. Full jitter maximally desynchronizes them. AWS's "Exponential Backoff And Jitter" blog post (2015) remains the definitive reference.
+**Full jitter beats equal jitter** — equal jitter (`base + rand * base`) still clusters retries near `base` at high concurrency; full jitter samples uniformly in `[0, cap]`, maximally desynchronising. (AWS "Exponential Backoff And Jitter", 2015.)
 
-**Respecting `Retry-After`.** When a 429 response carries a `Retry-After` header (seconds or HTTP-date), use that value as the delay instead of the computed backoff. Ignoring it wastes your rate-limit budget on retries that will also be rejected.
+**Respect `Retry-After`.** Use the header value as the delay when a 429 carries one; ignoring it wastes rate-limit budget.
 
-**Idempotency and retries.** Retries are only safe when the operation is idempotent or when the side effect has not yet occurred. For external POSTs, attach an idempotency key (see the next section) before retrying. For database writes, rely on `ON CONFLICT DO NOTHING` or `upsert`. Never retry a non-idempotent operation without an idempotency mechanism.
+**Idempotency is a precondition for retries.** POSTs need an idempotency key (next section); DB writes rely on `ON CONFLICT DO NOTHING` or `upsert`. Never retry a non-idempotent op without an idempotency mechanism.
 
 ## Idempotency in external POSTs
 
-When a POST request times out or the connection drops, the server may or may not have processed it. Retrying without an idempotency key risks executing the side effect twice: charging the card, sending the email, creating the record. An idempotency key is a client-generated stable identifier for the logical operation that the server uses to deduplicate.
+A POST timeout may mean the server processed the request before the connection dropped. An idempotency key is a client-generated stable identifier the server uses to deduplicate retries — preventing double charges, duplicate emails, duplicate records.
 
 ```typescript
 import { randomUUID } from 'crypto';
@@ -296,21 +260,19 @@ const result = await retryWithBackoff(
 );
 ```
 
-The key must be **stable across retries** for the same logical operation and **unique across different operations**. A UUID generated once before the retry loop satisfies both requirements. A UUID generated fresh inside `fn` would be different on each attempt, defeating deduplication entirely.
+The key must be **stable across retries** for the same logical op and **unique across different ops**. A UUID generated once before the retry loop satisfies both; one generated inside `fn` defeats deduplication.
 
-**Server-side contract.** Relying on idempotency keys requires server support. Before integrating, verify that the target service documents idempotency key semantics: which endpoints support it, how long keys are retained, and whether a key collision between different operations returns an error or silently reuses the stored result. Stripe, Braintree, and most modern payment processors offer this. Internal services that do not support it must be made idempotent at the database layer (unique constraint, conditional write) before wrapping in a retry loop.
+**Server-side contract.** Requires server support — verify the target service documents semantics (supported endpoints, retention, collision behaviour). Stripe, Braintree, most modern payment processors offer this. Internal services without it must be made idempotent at the DB layer (unique constraint, conditional write) before wrapping in a retry loop.
 
-**Key scope and TTL.** Keys are scoped to a single operation type — a key used for a charge should not be reused for a refund of the same amount. Most servers expire keys after 24 hours to 7 days. If a user explicitly requests the same operation again (e.g., submits the form a second time), generate a new key.
+**Scope and TTL.** Keys are scoped to a single op type (don't reuse a charge key for a refund). Servers typically expire keys after 24 h – 7 d. If a user explicitly re-submits, generate a new key.
 
 ## Circuit breakers
 
-A circuit breaker is a proxy that tracks the failure rate of a downstream dependency and stops forwarding calls when the failure rate crosses a threshold, giving the dependency time to recover. In the open state, calls fast-fail (typically in under 1 ms) rather than waiting out the timeout. After a reset interval, the breaker transitions to half-open and allows a probe request through; if it succeeds, the circuit closes.
+A circuit breaker tracks failure rate and stops forwarding calls when the rate crosses a threshold, letting the dependency recover. Three states:
 
-The three states — closed, open, half-open — map directly to the dependency's health:
-
-- **Closed:** normal operation; all calls are forwarded; failures are counted.
-- **Open:** dependency is unhealthy; all calls fast-fail with the fallback; no load is sent.
-- **Half-open:** a single probe call is allowed; success → closed; failure → open again.
+- **Closed:** normal; forward all; count failures.
+- **Open:** fast-fail via fallback; no load sent; wait for reset interval.
+- **Half-open:** one probe allowed; success → closed; failure → open.
 
 **Using opossum (Node.js):**
 
@@ -341,103 +303,17 @@ inventoryBreaker.on('halfOpen', () => logger.info('inventory circuit half-open p
 inventoryBreaker.on('close',    () => logger.info('inventory circuit closed — recovered'));
 ```
 
-**Inline circuit breaker without a library.** For environments where adding a dependency is not possible, a minimal state-machine circuit breaker can be implemented inline:
+**Inline without a library.** A minimal state-machine (closed/open/half-open) tracks `failureCount` and `nextAttemptAt`; on `fire`, skip to fallback if `open && now < nextAttemptAt`, otherwise try and update state on success/failure. Use opossum in production — the inline pattern is only for dependency-restricted environments.
 
-```typescript
-type BreakerState = 'closed' | 'open' | 'half-open';
+**Placement.** One breaker per dependency, not per call site — features sharing a dependency share a breaker so failures observed by any feature count toward tripping. Per-call-site breakers trip too slowly.
 
-class SimpleCircuitBreaker {
-  private state:         BreakerState = 'closed';
-  private failureCount:  number = 0;
-  private nextAttemptAt: number = 0;
-
-  constructor(
-    private readonly threshold:    number,  // failures before opening
-    private readonly resetTimeout: number,  // ms before trying half-open
-  ) {}
-
-  async fire<T>(fn: () => Promise<T>, fallback: () => T): Promise<T> {
-    if (this.state === 'open') {
-      if (Date.now() < this.nextAttemptAt) return fallback();
-      this.state = 'half-open';
-    }
-
-    try {
-      const result = await fn();
-      this.onSuccess();
-      return result;
-    } catch (err) {
-      this.onFailure();
-      return fallback();
-    }
-  }
-
-  private onSuccess(): void {
-    this.failureCount = 0;
-    this.state        = 'closed';
-  }
-
-  private onFailure(): void {
-    this.failureCount++;
-    if (this.state === 'half-open' || this.failureCount >= this.threshold) {
-      this.state         = 'open';
-      this.nextAttemptAt = Date.now() + this.resetTimeout;
-    }
-  }
-}
-```
-
-**Circuit breaker placement.** One breaker instance per downstream dependency, not per call site. If three features call the same CRM service, they should share one breaker so that failures observed by one feature count toward opening the circuit for all three. A per-call-site breaker requires 100% failure rate in *that call site alone* to trip — too slow.
-
-**Fallbacks.** Every circuit breaker must have a fallback. Common patterns: return a cached value, return a safe default (empty list, zero stock, "unknown" label), or render a degraded UI state. If no meaningful fallback exists, the fallback should throw a typed `CircuitOpenError` rather than returning incorrect data silently.
+**Fallbacks.** Every breaker must have one: cached value, safe default (empty list, zero stock, "unknown"), or degraded UI. If no meaningful fallback exists, throw a typed `CircuitOpenError` rather than returning incorrect data silently.
 
 ## React error boundaries
 
-React renders synchronously; an unhandled `throw` during render, `useLayoutEffect`, or a lifecycle method unwinds the component tree to the nearest error boundary class component. Without a boundary, the throw propagates to the React root, which unmounts the entire application and renders nothing.
+React renders synchronously; an unhandled `throw` during render or a lifecycle method unwinds the tree to the nearest class-based boundary. Without one, the throw propagates to the root, which unmounts the entire app.
 
-**Class component boundary (required by React):**
-
-```tsx
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-
-interface Props {
-  fallback: ReactNode | ((error: Error, reset: () => void) => ReactNode);
-  children: ReactNode;
-  onError?: (error: Error, info: ErrorInfo) => void;
-}
-
-interface State {
-  error: Error | null;
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
-
-  static getDerivedStateFromError(error: Error): State {
-    return { error };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo): void {
-    this.props.onError?.(error, info);
-    // Log to your error tracking service (Sentry, Datadog, etc.)
-    reportError(error, { componentStack: info.componentStack });
-  }
-
-  reset = (): void => this.setState({ error: null });
-
-  render(): ReactNode {
-    if (this.state.error) {
-      const { fallback } = this.props;
-      return typeof fallback === 'function'
-        ? fallback(this.state.error, this.reset)
-        : fallback;
-    }
-    return this.props.children;
-  }
-}
-```
-
-**Using `react-error-boundary` library (recommended for new code):**
+React requires the boundary to be a class (`getDerivedStateFromError` + `componentDidCatch`); use the `react-error-boundary` library rather than hand-rolling:
 
 ```tsx
 import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary';
@@ -476,15 +352,15 @@ function RecommendationContent() {
 }
 ```
 
-**Boundaries do not catch async errors.** An `async` function that throws outside of a React lifecycle (e.g., inside a `useEffect` callback that is not awaited properly) will not be caught by an error boundary. Use `useErrorBoundary().showBoundary(err)` to route async errors to the nearest boundary. Alternatively, set the component state to an error value and render the fallback from within `render`.
+**Boundaries don't catch async errors.** Throws inside `useEffect` callbacks or unhandled async flows bypass boundaries. Use `useErrorBoundary().showBoundary(err)` or set component state to an error value and render the fallback.
 
-**Granularity guidance.** Place a boundary at each independent feature surface: a feed, a sidebar widget, a modal, a form. Do not place one at every leaf component — that is excessive and hides aggregate failures. Do not rely on a single root boundary — that blanks the entire page on any component error. A practical rule: if the feature can meaningfully degrade without breaking the core page flow, it gets its own boundary.
+**Granularity.** One boundary per independent feature surface (feed, sidebar widget, modal, form). Not at every leaf (hides aggregate failures), not only at root (blanks the page on any error). Rule: if the feature can meaningfully degrade without breaking core page flow, it gets its own boundary.
 
 ## Typed errors (Result vs exception hierarchy)
 
-Two complementary patterns cover the full spectrum of failure modes.
+Two complementary patterns.
 
-**`Result<T, E>` for recoverable, expected failures.** Business rules that fail, not-found lookups, validation errors, and quota exhaustion are all outcomes the caller can and should handle. Returning `Result` makes every failure case part of the function signature — callers cannot accidentally ignore them.
+**`Result<T, E>` for recoverable, expected failures** — business rule failures, not-found lookups, validation errors, quota exhaustion. Returning `Result` makes every failure case part of the signature so callers can't ignore them.
 
 ```typescript
 // Define the type once; import it everywhere
@@ -506,23 +382,13 @@ async function fetchProduct(productId: string): Promise<Result<Product, FetchPro
     return { ok: true, value: await res.json() };
   } catch (err) {
     if (err instanceof TimeoutError) return { ok: false, error: { code: 'NETWORK_TIMEOUT' } };
-    throw err;  // unexpected — let it propagate as an exception
+    throw err;  // unexpected — let it propagate
   }
 }
-
-// Call site — TypeScript forces handling both branches
-const result = await fetchProduct(id);
-if (!result.ok) {
-  switch (result.error.code) {
-    case 'NOT_FOUND':      return show404(result.error.productId);
-    case 'UPSTREAM_ERROR': return showServiceError(result.error.status);
-    case 'NETWORK_TIMEOUT': return showRetryPrompt();
-  }
-}
-const product = result.value;  // narrowed to Product here
+// Call site: `if (!result.ok) switch (result.error.code) { ... }` — TS narrows `result.value` to Product on the happy path.
 ```
 
-**Typed exception hierarchy for bugs and unrecoverable states.** Infrastructure outages, programming errors, and precondition violations that indicate a bug in the caller are better modelled as typed exceptions. They propagate naturally without requiring every intermediate function to relay the `Result`:
+**Typed exception hierarchy for bugs and unrecoverable states.** Infrastructure outages, programming errors, precondition violations. They propagate naturally without requiring every intermediate function to relay a `Result`:
 
 ```typescript
 export class AppError extends Error {
@@ -547,13 +413,13 @@ function handleError(err: unknown): void {
 }
 ```
 
-**Choosing between them.** Use `Result` when the caller must handle every failure path and when the failure is a normal (if undesirable) outcome. Use typed exceptions when the failure indicates something the call stack above should handle generically (global error handler, error boundary) rather than at the immediate call site. Mixing both is correct and common: a function returns `Result` for expected failures and throws typed exceptions for unexpected ones, as shown in `fetchProduct` above.
+**Choosing.** `Result` when the caller must handle every path and failure is a normal outcome. Typed exceptions when the call stack above should handle it generically (global handler, error boundary). Mixing is correct and common — `fetchProduct` above returns `Result` for expected failures, throws for unexpected ones.
 
 ## Graceful degradation patterns
 
-Graceful degradation means the system provides reduced but correct functionality when a dependency is unavailable, rather than failing entirely. The goal is to protect user experience and revenue-critical paths from non-critical dependencies.
+Reduced but correct functionality when a dependency is unavailable — protecting user experience and revenue-critical paths from non-critical dependencies.
 
-**Pattern 1: Cache-and-serve-stale.** Responses from third-party or slow services are cached (Redis, in-memory LRU). When the live call fails or the circuit is open, the cache entry is served even if it is past its TTL. Flag the response as stale if the caller needs to know.
+**Pattern 1: Cache-and-serve-stale.** Cache third-party/slow responses (Redis, in-memory LRU). When the live call fails or the circuit is open, serve the cache entry even past TTL. Flag stale if callers need to know.
 
 ```typescript
 async function getProductRating(productId: string): Promise<Rating> {
@@ -572,23 +438,9 @@ async function getProductRating(productId: string): Promise<Rating> {
 }
 ```
 
-**Pattern 2: Feature flags as a kill switch.** Wrap integrations that are non-critical to the core flow behind a feature flag. Flipping the flag disables the integration instantly without a deploy. This is especially valuable for new integrations that haven't been battle-tested in production.
+**Pattern 2: Feature flags as a kill switch.** Wrap non-critical integrations behind a flag: `if (!flags.isEnabled('loyalty-enrichment')) return order;` disables them without a deploy — valuable for new, unbattle-tested integrations. On breaker open, return the un-enriched value and continue.
 
-```typescript
-async function enrichOrderWithLoyaltyPoints(order: Order): Promise<Order> {
-  if (!featureFlags.isEnabled('loyalty-points-enrichment')) {
-    return order;  // skip gracefully — flag off means integration is disabled
-  }
-  try {
-    const points = await loyaltyBreaker.fire(order.customerId);
-    return { ...order, loyaltyPoints: points };
-  } catch {
-    return order;  // degrade: order without loyalty points is still a valid order
-  }
-}
-```
-
-**Pattern 3: Partial response.** An API that aggregates data from multiple sources should return the data it has and mark missing sections, rather than failing the entire response because one upstream is down. Use `null`, an empty array, or a typed sentinel to indicate missing sections.
+**Pattern 3: Partial response.** An API aggregating multiple sources returns what it has and marks missing sections (`null`, empty array, typed sentinel) rather than failing the entire response because one upstream is down.
 
 ```typescript
 type DashboardData = {
@@ -612,18 +464,15 @@ async function getDashboard(userId: string): Promise<DashboardData> {
 }
 ```
 
-`Promise.allSettled` is the correct primitive here — unlike `Promise.all`, it does not short-circuit on the first rejection. Each call can fail independently without taking down the others.
+`Promise.allSettled` (not `Promise.all`) is the right primitive — no short-circuit on first rejection.
 
-**Pattern 4: Read-only mode.** When write dependencies (database primary, payment processor) are unavailable, shift the application to a read-only state: present cached content, disable mutating operations with a clear UI indication, and queue mutations for later processing. This is higher complexity but appropriate for applications where revenue continuity during write outages matters.
+**Pattern 4: Read-only mode.** When write dependencies (DB primary, payment processor) are unavailable, shift the app read-only: present cached content, disable mutations with UI indication, queue mutations for later. Higher complexity, appropriate where revenue continuity during write outages matters.
 
 ## Interactions with other skills
 
-- **Owns:** in-process resilience patterns — timeouts, retry, circuit breakers, error boundaries, typed errors, and graceful degradation for application code.
-- **Hands off to:** `queue-and-retry-safety` — queue-level retry semantics and at-least-once delivery.
-- **Hands off to:** `observability-first-debugging` — what and how to log when failures occur and how to trace them.
-- **Hands off to:** `integration-contract-safety` — how the upstream's contract (schema, versioning, SLA) shapes the retry and timeout strategy.
-- **Does not duplicate:** `frontend-implementation-guard` — component structure rules.
-- **Does not duplicate:** `queue-and-retry-safety` — DLQ and visibility-timeout patterns.
+- **Owns:** in-process resilience — timeouts, retry, circuit breakers, error boundaries, typed errors, graceful degradation.
+- **Hands off to:** `queue-and-retry-safety` (queue-level retry, at-least-once delivery); `observability-first-debugging` (what/how to log failures and trace them); `integration-contract-safety` (how upstream contracts shape retry/timeout strategy).
+- **Does not duplicate:** `frontend-implementation-guard` (component structure); `queue-and-retry-safety` (DLQ, visibility timeout).
 
 ## Review checklist
 
@@ -631,7 +480,7 @@ Produce a markdown report with these sections:
 
 1. **Summary** — one line: pass / concerns / blocking issues.
 2. **External call inventory** — for each network call: file:line, has timeout (yes/no), has retry (yes/no), idempotency key present for POSTs (yes/no/N/A).
-3. **Findings** — per issue: *File:line, severity (low/med/high), rule violated, what's wrong, recommended fix*.
+3. **Findings** — per issue: *File:line, severity (blocking | concern | info), rule violated, what's wrong, recommended fix*.
 4. **Safer alternative** — for each finding, propose a resilience-specific safer path rather than just "add a try/catch." Examples: prefer circuit breakers with fallback values over unbounded retries for 3rd-party API hiccups; prefer explicit timeout + graceful-degradation handler over fail-open defaults; prefer typed error hierarchies with narrowed `catch (e: unknown)` over stringly-typed `error.message` checks; prefer a supervised background task (AbortController + logged failure) over fire-and-forget `void promise`; prefer an idempotency-key-guarded retry over at-most-once POSTs that silently double-charge on transient 5xx.
 5. **Checklist coverage** — for each of the 8 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: Every network call has an explicit timeout
