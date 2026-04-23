@@ -182,22 +182,41 @@ The notification list is also the call list if the rollback trigger fires. Verif
 
 ## Review checklist
 
-Produce a risk report with these sections. Mark each field COMPLETE, INCOMPLETE, or NOT APPLICABLE. An INCOMPLETE field blocks approval.
+Produce a markdown report with the four sections below.
 
-| Field | Status | Notes |
+### Summary
+
+One line stating the overall risk posture (e.g., "Medium-risk API field addition; feature-flag rollout, rollback < 2 min; approve pending support-lead acknowledgement").
+
+### Findings
+
+List each gap or concern as a row with `file:line`, severity (`blocker` / `concern` / `nit`), category (rating, affected-scope, deploy-strategy, monitoring, rollback, stakeholders), and the concrete fix.
+
+| file:line | severity | category | fix |
+|---|---|---|---|
+| PR description:L12 | blocker | monitoring | Name the CloudWatch alarm and threshold instead of "we'll watch prod". |
+
+### Safer alternative
+
+Prefer a phased rollout (canary to 1 % to 10 % to 100 %, with a minimum observation window at each step) over an all-at-once deploy for any change touching a revenue path, authentication, or a shared data schema. Prefer a feature flag with a tested kill switch over a git-revert rollback whenever the behaviour can be gated — flag-toggle rollback is typically under two minutes, revert-and-redeploy is typically eight minutes or more. If the current plan is straight-through for a medium-or-above change, restate the plan as a phased rollout and justify why the lower-risk strategy is not feasible.
+
+### Checklist coverage
+
+Mark each Core rule `PASS`, `CONCERN`, or `NOT APPLICABLE` against the risk report under review.
+
+| Rule | Status | Notes |
 |---|---|---|
-| Risk rating with explicit justification | | |
-| Affected user segments listed by name | | |
-| Affected downstream services listed by name | | |
-| Affected business processes listed by name | | |
-| Deploy strategy named and justified against rating | | |
-| Monitoring signals named with dashboard/alarm links | | |
-| Rollback trigger named with threshold and procedure | | |
-| Estimated time-to-rollback stated | | |
-| Stakeholder list complete with acknowledgements (high/critical) | | |
+| 1. Risk rating with explicit justification | | |
+| 2. Affected users, services, and business processes named | | |
+| 3. Deploy strategy named and justified against rating | | |
+| 4. Monitoring signals named with dashboard/alarm links | | |
+| 5. Rollback trigger named with threshold and time-to-rollback | | |
+| 6. Stakeholders notified before deploy (with acknowledgements for high/critical) | | |
 
-**Interactions:**
+## Interactions with other skills
+
 - **Owns:** top-level risk posture.
-- **Feeds from:** `regression-risk-check` for blast-radius inputs and importer counts.
-- **Hands off to:** `rollback-planning` for full reverse-path design; `observability-first-debugging` for deep monitoring guidance.
+- **REQUIRED BACKGROUND:** superpowers:regression-risk-check
+- **Hands off to:** rollback-planning
+- **Hands off to:** observability-first-debugging
 - **Does not duplicate:** PR code review; domain skill findings (typescript-rigor, prisma-data-access-guard, etc.).

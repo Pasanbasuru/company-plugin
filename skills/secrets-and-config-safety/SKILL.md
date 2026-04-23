@@ -299,10 +299,16 @@ export async function getParametersByPath(path: string): Promise<Record<string, 
 Produce a markdown report with these sections:
 
 1. **Summary** — one line: pass / concerns / blocking issues.
-2. **Findings** — per issue: *File:line, severity (low/med/high), category, what's wrong, recommended fix*.
-3. **Env var inventory** — list every `process.env.X` access found. For each: is it covered by the startup validation schema? Mark PASS / CONCERN / UNVALIDATED.
-4. **`NEXT_PUBLIC_*` inventory** — list every `NEXT_PUBLIC_*` variable added or modified. For each: confirm it is intentionally public. Mark PASS / CONCERN.
-5. **Checklist coverage** — for each of the 7 core rules below, mark: PASS / CONCERN / NOT APPLICABLE.
+2. **Findings** — per issue: *file:line, severity (low/med/high), category, fix*. Fold env-var and `NEXT_PUBLIC_*` inventory observations in here as individual findings rather than separate tables. Examples:
+   - `src/config.ts:12, high, unvalidated-env, DATABASE_URL read via process.env without a schema check — fix: parse via zod in lib/env.server.ts and import env.DATABASE_URL instead.`
+   - `src/lib/stripe.ts:8, high, next-public-leak, NEXT_PUBLIC_STRIPE_SECRET_KEY inlined into client bundle — fix: rename to STRIPE_SECRET_KEY and move access to a Server Action.`
+   - `apps/web/next.config.ts:14, med, next-public-review, NEXT_PUBLIC_API_BASE_URL added — fix: confirm intentional public exposure in PR; acceptable for public API base URL.`
+   - `src/payments/stripe.ts:3, med, rotation-blind, stripe client constructed at module load with process.env.STRIPE_SECRET_KEY — fix: fetch via getSecret() with 5-min TTL cache.`
+3. **Safer alternative** — propose the secrets-specific higher-leverage move when the diff touches credentials or rotating config. Examples:
+   - "Prefer Secrets Manager references in the ECS task definition (`secrets:` block) over `environment:` env vars for rotating credentials — the platform resolves the ARN at task start and rotation propagates without a redeploy."
+   - "Prefer Parameter Store SecureString + a scoped KMS grant over plaintext `.env` files checked into the repo — gets audit history, per-environment overrides, and encryption at rest for free."
+   - "Prefer moving the secret read into a Server Action and returning only the non-sensitive result to the client over adding `NEXT_PUBLIC_*` to silence a client-component error."
+4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: Secrets sourced from Secrets Manager or deploy-time injection — not committed
    - Rule 2: `.env.example` committed; real `.env` files gitignored and not shared
    - Rule 3: Env vars validated with Zod at startup; service exits fast on misconfiguration

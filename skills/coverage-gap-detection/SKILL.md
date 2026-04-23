@@ -303,19 +303,50 @@ When a concurrent test is genuinely impractical (e.g., the operation requires ex
 
 ---
 
-## Interactions
+## Interactions with other skills
 
 - **Owns:** gap-finding for existing code.
-- **Hands off to:** `test-strategy-enforcement` for *how* to write the missing tests; `regression-risk-check` for whether a gap is a merge blocker.
+- **REQUIRED SUB-SKILL:** `company-plugin:test-strategy-enforcement` — coverage decisions only make sense through the strategy lens (which layer owns which test); consult it to translate every CONCERN into the correct test shape.
+- **Hands off to:** `regression-risk-check` for blocker-level coverage gaps — when a gap touches a critical path (auth, payment, data mutation) and must block merge.
 - **Does not duplicate:** line-coverage tooling (`vitest --coverage`). High line coverage is a prerequisite, not a substitute, for the analysis this skill performs.
 
 ---
 
 ## Review checklist
 
-For each of the 7 core rules, record one of: **PASS** / **CONCERN** / **NOT APPLICABLE**.
+When invoked in review mode, produce a markdown report with exactly these four sections.
 
-For each CONCERN, name the specific test that should exist — not just "add more tests", but:
-> `it('throws Forbidden when a viewer calls deletePost', ...)`
+### Summary
 
-A CONCERN without a named test is not actionable.
+One line stating whether coverage is adequate for merge, and the count of CONCERN-level gaps.
+
+### Findings
+
+One bullet per gap, in the form:
+`<file>:<line> — <severity: blocker | concern | nit> — <category: critical-path | error-branch | authz | boundary-input | boundary-time | concurrency | ui-state> — <fix: the specific missing test, e.g. it('throws Forbidden when a viewer calls deletePost', ...)>`
+
+A finding without a named test is not actionable — rewrite it until the `it(...)` string is concrete.
+
+### Safer alternative
+
+Coverage-specific alternatives the reviewer should recommend when they spot the pattern:
+- Prefer **property-based tests** (fast-check, fuzzing) for business-rule coverage over snapshot tests that only pin today's output.
+- Prefer **integration tests against a real Postgres** for repository code over mocked unit tests that cannot catch wiring or transaction-boundary bugs.
+- Prefer **boundary-value tables** (empty, null, max-length, exact-boundary) driven by `it.each` over a single mid-range happy-path assertion.
+- Prefer **fake-timer boundary tests** (one-second-before, at, one-second-after) over mid-range time assertions that hide off-by-one bugs.
+
+### Checklist coverage
+
+Map each of the 7 Core rules to `PASS / CONCERN / NOT APPLICABLE`. Every row must be filled.
+
+| # | Core rule | Verdict |
+|---|---|---|
+| 1 | Critical paths have integration tests, not just unit tests | PASS / CONCERN / NOT APPLICABLE |
+| 2 | Every `catch` branch and every error return has at least one test | PASS / CONCERN / NOT APPLICABLE |
+| 3 | Every authorization decision has a "denied" test as well as a "permitted" test | PASS / CONCERN / NOT APPLICABLE |
+| 4 | Input validation is tested at the boundary — not just valid mid-range inputs | PASS / CONCERN / NOT APPLICABLE |
+| 5 | Time-sensitive logic has tests at the boundary times | PASS / CONCERN / NOT APPLICABLE |
+| 6 | Concurrency-sensitive logic has a concurrent test or a documented justification for skipping it | PASS / CONCERN / NOT APPLICABLE |
+| 7 | UI empty state, loading state, and error state all have rendering tests | PASS / CONCERN / NOT APPLICABLE |
+
+Every CONCERN row must correspond to at least one entry in the Findings section.

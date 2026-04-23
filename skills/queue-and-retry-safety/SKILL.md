@@ -296,8 +296,14 @@ Standard SQS queues deliver messages in approximately FIFO order under normal co
 Produce a markdown report with these sections:
 
 1. **Summary** — one line: pass / concerns / blocking issues.
-2. **Consumer inventory** — for each consumer: name, queue, whether it is idempotent (naturally / via key / not at all).
-3. **Findings** — per issue: *File:line, severity (low/med/high), rule violated, what's wrong, recommended fix*.
+2. **Findings** — per issue: *file:line, severity (low/med/high), category (idempotency / DLQ / visibility / ordering / schema / correlation), fix*. Include per-consumer observations here as examples, e.g.:
+   - `apps/orders/src/consumers/order-placed.ts:42, high, idempotency, consumer processes OrderPlaced from SQS standard queue with no idempotency key visible — add INSERT ... ON CONFLICT DO NOTHING on a processed_events table keyed by orderId before chargeCustomer.`
+   - `infra/cdk/lib/payments-stack.ts:118, high, DLQ, payments-queue has a DLQ but no CloudWatch alarm on ApproximateNumberOfMessagesVisible — add an alarm at threshold 1.`
+   - `apps/reports/src/consumers/export.ts:30, med, visibility, generateLargeReport may exceed the 30s visibility timeout with no ChangeMessageVisibility heartbeat — either raise the timeout to cover P99 or add a 25s heartbeat interval.`
+3. **Safer alternative** — queue-specific guidance for the specific risk found. Examples:
+   - For ordered-critical domains (state machines, per-entity event streams): prefer SQS FIFO with `MessageGroupId` + content-based deduplication over a standard queue plus hand-rolled app-level idempotency — the FIFO 5-minute dedup window catches publisher-side duplicates before they ever reach the consumer.
+   - For poison-message-prone domains (schema drift from third-party publishers, financial side effects): prefer manual triage + redrive over automatic DLQ redrive — a redrive Lambda that replays without human review will re-run the same failing message once the root cause is still present, doubling the blast radius.
+   - For long-running jobs: prefer raising the queue-level visibility timeout to cover P99 processing time over relying solely on `ChangeMessageVisibility` heartbeats — a heartbeat that stops (process crash, event-loop starvation) still loses the lease, whereas a generous base timeout survives those failures.
 4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: Every consumer is idempotent (naturally or via stored key)
    - Rule 2: Every queue has a DLQ; every DLQ has a CloudWatch alarm

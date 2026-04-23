@@ -340,10 +340,43 @@ Drift in IAM policies is particularly dangerous. A policy that drifted from leas
 
 ## Review checklist
 
-- [ ] Every destructive action (`-`, `-/+`) in the plan is annotated with justification, confirmation that no data loss occurs, and a recovery plan.
-- [ ] `prevent_destroy = true` is present on all stateful resources (RDS, DynamoDB, S3 buckets with data).
-- [ ] Remote backend is configured (S3 + DynamoDB or Terraform Cloud). No local state in CI.
-- [ ] Every IAM `Action` is scoped to exact actions; every `Resource` is scoped to an ARN, not `*`.
-- [ ] No secrets in IaC variables or state — only Secrets Manager/Parameter Store references.
-- [ ] Networking changes have been reviewed by someone who can describe the blast radius.
-- [ ] Drift detection is scheduled; any detected drift is resolved or formally accepted before this change lands.
+When invoked in review mode, emit a markdown report with these four sections.
+
+### Summary
+
+One line: overall verdict (GREEN / YELLOW / RED) and the headline risk for this IaC change.
+
+### Findings
+
+One bullet per finding in the form `file:line, severity, category, fix`.
+
+- `<path>:<line>, <blocker|major|minor>, <destructive-plan|state-backend|iam|networking|stateful-guard|secrets|drift>, <one-sentence fix>`
+- Every destructive action (`-`, `-/+`) in the plan must appear here with justification, no-data-loss confirmation, and recovery plan — or be called out as missing.
+- `prevent_destroy = true` absent on a stateful resource (RDS, DynamoDB, S3 with data) is a blocker.
+- Remote backend missing or using local state in CI is a blocker.
+- IAM `Action: "*"` or `Resource: "*"` is a blocker unless explicitly justified.
+- Secret literals in IaC variables or state (not Secrets Manager / Parameter Store references) is a blocker.
+- Networking changes without a reviewer who can describe the blast radius is a major finding.
+- Unresolved drift (unmanaged, managed+drifted, or deleted-outside-Terraform) is a major finding.
+
+### Safer alternative
+
+Propose the least-disruptive path that preserves the intent. For IaC, prefer in this order:
+
+- Prefer `terraform plan -out=tfplan.binary` artifacts reviewed in the PR (with `terraform show -json` destructive-action extract) over post-apply verification — the review gate must run on the exact plan that will be applied.
+- Prefer separate state files per environment and per service (`<env>/<service>/terraform.tfstate`) over workspace switches for blast-radius isolation.
+- Prefer a two-commit process (remove `prevent_destroy` / `deletion_protection` in one PR, apply the destructive change in a second PR) over bundling lifecycle-guard removal with the change itself.
+- Prefer `terraform state mv` over destroy + create when refactoring module addresses for stateful resources.
+- Prefer IAM Access Analyzer-generated policies scoped to observed CloudTrail calls over hand-written wildcard grants.
+
+### Checklist coverage
+
+Map each Core rule to `PASS / CONCERN / NOT APPLICABLE` with a one-line reason.
+
+- Rule 1 (plan read fully, destructive actions justified): PASS / CONCERN / NOT APPLICABLE — <reason>
+- Rule 2 (remote, versioned, locked state): PASS / CONCERN / NOT APPLICABLE — <reason>
+- Rule 3 (IAM least privilege, no `*` on Action/Resource): PASS / CONCERN / NOT APPLICABLE — <reason>
+- Rule 4 (networking blast-radius review): PASS / CONCERN / NOT APPLICABLE — <reason>
+- Rule 5 (drift reconciled or documented): PASS / CONCERN / NOT APPLICABLE — <reason>
+- Rule 6 (`prevent_destroy` on stateful resources + manual override process): PASS / CONCERN / NOT APPLICABLE — <reason>
+- Rule 7 (no secrets in state; Secrets Manager / Parameter Store references only): PASS / CONCERN / NOT APPLICABLE — <reason>

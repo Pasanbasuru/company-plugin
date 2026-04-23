@@ -353,6 +353,7 @@ For TypeScript-level mocking in unit tests, prefer `vi.fn()` with explicit retur
 
 ## Interactions with other skills
 
+- **REQUIRED SUB-SKILL:** superpowers:test-driven-development — TDD is the upstream discipline; this skill adds pyramid / layer-split / flake-hygiene rules on top.
 - **Owns:** test strategy and patterns — pyramid shape, tooling, flake hygiene, data management, mock discipline.
 - **Hands off to:** `coverage-gap-detection` for identifying which paths need tests; `regression-risk-check` for assessing blast radius of a change.
 - **Does not duplicate:** `prisma-data-access-guard`'s migration testing concerns — this skill focuses on how to structure the test, not on Prisma query correctness.
@@ -363,7 +364,12 @@ Produce a markdown report with these sections:
 
 1. **Summary** — one line: pass / concerns / blocking issues.
 2. **Findings** — per issue: *File:line, severity (low/med/high), category, what's wrong, recommended fix*.
-3. **Checklist coverage** — for each rule below, mark: PASS / CONCERN / NOT APPLICABLE.
+3. **Safer alternative** — for each concern, suggest the lower-risk test pattern:
+   - Prefer Testcontainers-backed integration tests over mocked Prisma/DB repository tests for data-access code.
+   - Prefer contract tests (Pact) at the integration layer over e2e tests that exercise the whole stack for API contract validation.
+   - Prefer fake timers (`vi.useFakeTimers()` + `advanceTimersByTime`) and deterministic clocks over `setTimeout`/sleep-based waits for flake hygiene.
+   - Prefer seed factories (Fishery) with realistic distributions over ad-hoc JSON fixtures for data-dependent tests.
+4. **Checklist coverage** — for each rule below, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: Unit tests are pure — no DB, no network, no filesystem; each < 50 ms
    - Rule 2: Integration tests use Testcontainers Postgres — no mocked Prisma, no mocked Nest controllers
    - Rule 3: E2E tests (Playwright) cover critical journeys only — not edge cases

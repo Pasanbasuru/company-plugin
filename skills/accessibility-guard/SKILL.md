@@ -432,3 +432,40 @@ Produce a markdown report with these sections:
    - Rule 6: `prefers-reduced-motion` is respected for all significant animations.
    - Rule 7: Non-text content has `aria-label` / `alt` or is `aria-hidden`.
    - Rule 8: Custom widgets follow WAI-ARIA APG patterns; no invented ARIA.
+
+## Interactions with other skills
+
+- **Owns:** accessibility compliance (WCAG 2.2 AA, keyboard, focus, ARIA, contrast, reduced-motion).
+- **Hands off to:** `frontend-implementation-guard` for component structure, `performance-budget-guard` for motion-vs-performance tradeoffs.
+- **Does not duplicate:** `_baseline`'s accessibility floor; this skill enforces it in concrete review.
+
+## Review checklist
+
+### Summary
+
+One line: pass / concerns / blocking issues. Name the reviewed surface (component, route, flow) and the overall verdict in a single sentence so a reader can scan the result without reading further.
+
+### Findings
+
+One bullet per finding, in this shape:
+
+- `path/to/file.tsx:42` — **severity** (blocking | concern | info) — *category* (keyboard | semantics | labels | contrast | focus-management | motion | alt-text | aria-pattern) — what is wrong, recommended fix.
+
+Flag every `outline: none` without replacement, every input without a programmatic label, every `<div onClick>` masquerading as a button, every modal without focus trap/restore, and every missing `aria-live` region with its exact `file:line`.
+
+### Safer alternative
+
+Prefer semantic HTML over ARIA roles wherever possible — a native `<button>`, `<a>`, `<label>`, or `<dialog>` carries keyboard behaviour, role announcement, and focus handling for free, whereas `role="button"` on a `<div>` forces you to re-implement each of those manually and get every edge case right. Prefer a visible `:focus-visible` ring (with `outline-offset` or a `box-shadow` at 3:1 contrast) plus a skip-to-main-content link over removing focus outlines or constructing a keyboard trap that invisibly confines users. For custom widgets, prefer a vetted headless library (Radix UI, Headless UI, React Aria) that implements the WAI-ARIA APG pattern correctly over a hand-rolled combobox, dialog, or tabs that will miss arrow-key semantics, focus restoration, or `aria-activedescendant` bookkeeping.
+
+### Checklist coverage
+
+Mark each Core rule as PASS / CONCERN / NOT APPLICABLE with a short justification.
+
+- Rule 1 — Keyboard-reachable in logical tab order with visible focus indicator: PASS / CONCERN / NOT APPLICABLE.
+- Rule 2 — Semantic HTML before ARIA; no `<div>` acting as button/link: PASS / CONCERN / NOT APPLICABLE.
+- Rule 3 — Inputs have associated `<label>`; errors linked via `aria-describedby` and announced via `aria-live`: PASS / CONCERN / NOT APPLICABLE.
+- Rule 4 — Colour contrast meets 4.5:1 (body text) and 3:1 (large text and UI components): PASS / CONCERN / NOT APPLICABLE.
+- Rule 5 — Focus is managed on route change, modal open/close, and async content insertion: PASS / CONCERN / NOT APPLICABLE.
+- Rule 6 — `prefers-reduced-motion` is respected for every animation or transition larger than a small fade: PASS / CONCERN / NOT APPLICABLE.
+- Rule 7 — Non-text content has `aria-label` / `alt` or is marked `aria-hidden="true"`: PASS / CONCERN / NOT APPLICABLE.
+- Rule 8 — Custom widgets follow the WAI-ARIA Authoring Practices pattern; no invented ARIA: PASS / CONCERN / NOT APPLICABLE.

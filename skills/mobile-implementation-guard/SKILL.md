@@ -263,6 +263,21 @@ iOS info.plist usage description strings must be accurate and specific. Apple re
 
 ## Review Checklist
 
+### Summary
+One-line verdict on the mobile implementation's structural health — managed workflow discipline, navigation centralisation, adapter boundaries, offline UX, and OTA safety.
+
+### Findings
+List each concern as `file:line, severity, category, fix`. Severity is `blocker | major | minor`. Category is one of `workflow | navigation | adapter | platform | offline | eas-update | permissions`. Fix is a one-line actionable remediation.
+
+Example: `src/screens/ProfileScreen.tsx:42, blocker, adapter, move expo-image-picker call into src/adapters/cameraAdapter.ts and import the adapter instead`.
+
+List every direct screen-to-screen import found. List every native API call that appears outside an adapter. These are blocking concerns.
+
+### Safer alternative
+Prefer Expo managed workflow over bare for apps without hard native dependencies — it preserves OTA for JS-only fixes and eliminates Xcode/Gradle maintenance. For bug fixes that do not touch native modules, prefer EAS Update over a binary-store release where acceptable, so users receive the fix within minutes instead of store-review days. If a native module seems required, check for an Expo SDK equivalent (camera, notifications, location, secure store, file system, sqlite, haptics, sharing) before ejecting to bare or adding a custom native module.
+
+### Checklist coverage
+
 For each rule, mark **PASS**, **CONCERN**, or **NOT APPLICABLE**.
 
 - [ ] Expo managed workflow in use, or bare workflow justified and documented
@@ -272,8 +287,6 @@ For each rule, mark **PASS**, **CONCERN**, or **NOT APPLICABLE**.
 - [ ] Every screen has a documented offline state (cached read, queued write, or explicit error)
 - [ ] EAS Update runtime version policy defined; no native changes shipped via OTA
 - [ ] Permissions requested at point of use with rationale UI preceding the OS dialog
-
-List every direct screen-to-screen import found. List every native API call that appears outside an adapter. These are blocking concerns.
 
 **Hands off to:**
 - `state-integrity-check` — offline sync conflict resolution logic

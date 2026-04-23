@@ -619,8 +619,11 @@ async function getDashboard(userId: string): Promise<DashboardData> {
 ## Interactions with other skills
 
 - **Owns:** in-process resilience patterns — timeouts, retry, circuit breakers, error boundaries, typed errors, and graceful degradation for application code.
-- **Hands off to:** `queue-and-retry-safety` for queue-level retry semantics and at-least-once delivery; `observability-first-debugging` for what and how to log when failures occur and how to trace them; `integration-contract-safety` for how the upstream's contract (schema, versioning, SLA) shapes the retry and timeout strategy.
-- **Does not duplicate:** `frontend-implementation-guard`'s component structure rules, or `queue-and-retry-safety`'s DLQ and visibility-timeout patterns.
+- **Hands off to:** `queue-and-retry-safety` — queue-level retry semantics and at-least-once delivery.
+- **Hands off to:** `observability-first-debugging` — what and how to log when failures occur and how to trace them.
+- **Hands off to:** `integration-contract-safety` — how the upstream's contract (schema, versioning, SLA) shapes the retry and timeout strategy.
+- **Does not duplicate:** `frontend-implementation-guard` — component structure rules.
+- **Does not duplicate:** `queue-and-retry-safety` — DLQ and visibility-timeout patterns.
 
 ## Review checklist
 
@@ -629,7 +632,8 @@ Produce a markdown report with these sections:
 1. **Summary** — one line: pass / concerns / blocking issues.
 2. **External call inventory** — for each network call: file:line, has timeout (yes/no), has retry (yes/no), idempotency key present for POSTs (yes/no/N/A).
 3. **Findings** — per issue: *File:line, severity (low/med/high), rule violated, what's wrong, recommended fix*.
-4. **Checklist coverage** — for each of the 8 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
+4. **Safer alternative** — for each finding, propose a resilience-specific safer path rather than just "add a try/catch." Examples: prefer circuit breakers with fallback values over unbounded retries for 3rd-party API hiccups; prefer explicit timeout + graceful-degradation handler over fail-open defaults; prefer typed error hierarchies with narrowed `catch (e: unknown)` over stringly-typed `error.message` checks; prefer a supervised background task (AbortController + logged failure) over fire-and-forget `void promise`; prefer an idempotency-key-guarded retry over at-most-once POSTs that silently double-charge on transient 5xx.
+5. **Checklist coverage** — for each of the 8 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: Every network call has an explicit timeout
    - Rule 2: Retries use exponential backoff with jitter, max-attempts cap, and correct retryability check
    - Rule 3: External POSTs include a stable idempotency key

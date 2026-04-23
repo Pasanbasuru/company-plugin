@@ -227,7 +227,41 @@ Estimated time-to-rollback should be recorded after rehearsal and included in th
 
 ---
 
+## Interactions with other skills
+
+- **Owns:** the reverse path for every risky change — rollback procedure, data backfill, feature-flag kill-switch.
+- **Hands off to:** `change-risk-evaluation` for overall risk rating of the change.
+- **Hands off to:** `aws-deploy-safety` for deploy-mechanic specifics (ECS task-def revision, Lambda alias retarget, health-check gates).
+- **Hands off to:** `infra-safe-change` for IaC rollback (Terraform/CloudFormation state reversal, drift handling).
+- **Hands off to:** `regression-risk-check` for blast-radius input feeding the rollback decision.
+- **Does not duplicate:** `aws-deploy-safety`'s deploy steps; this skill owns the *reversal*, not the deploy.
+
+---
+
 ## Review checklist
+
+Produce the report in the following four sections.
+
+### Summary
+
+One line stating whether the change has a credible, rehearsed rollback path or not.
+
+### Findings
+
+List each issue as `file:line, severity, category, fix`.
+
+- `file:line` — concrete location in the diff or repo (e.g. `prisma/migrations/20260422_drop_legacy/migration.sql:12`).
+- `severity` — `blocker` / `major` / `minor`.
+- `category` — one of `rollback-path`, `migration-reversibility`, `feature-flag`, `time-to-rollback`, `contract-dual-support`, `rehearsal`.
+- `fix` — the specific change required before merge.
+
+### Safer alternative
+
+Rollback-specific alternative to the riskiest element of the change. Prefer additive+feature-flag rollouts over destructive migrations when rollback-in-5-minutes is required; prefer expand/contract over in-place schema rewrites; prefer dual-support contract windows over big-bang producer/consumer cutovers; prefer LaunchDarkly-style external flag toggles over env-var-baked artifacts when the kill switch must flip without a deploy.
+
+### Checklist coverage
+
+Mark each Core rule as `PASS` / `CONCERN` / `NOT APPLICABLE` with a one-line justification, backed by the items below.
 
 - [ ] Rollback path is documented before merge (not "TBD").
 - [ ] If data migration: `down` migration exists and has been run locally against a copy of the schema.

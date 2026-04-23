@@ -437,7 +437,11 @@ Produce a markdown report with these sections:
 
 1. **Summary** — one line: pass / concerns / blocking issues.
 2. **Findings** — per issue: *file:line, severity (low/med/high), category, what is wrong, recommended fix*.
-3. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
+3. **Safer alternative** — when a finding flags a risky pattern, prefer the lower-risk substitute. Typical substitutions:
+   - Prefer GitHub OIDC federation to AWS IAM over long-lived access keys in repo secrets.
+   - Prefer pinned SHA-based action references over `@vN` tag-based references for third-party actions.
+   - Prefer `pull_request_target` with explicit permissions gating over `pull_request` + `secrets` for fork-PR workflows that need credentials.
+4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: OIDC used for AWS access; no long-lived `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets
    - Rule 2: All third-party `uses:` references pinned to a full 40-character SHA
    - Rule 3: Secrets scoped to GitHub environments; no production credentials at repository level

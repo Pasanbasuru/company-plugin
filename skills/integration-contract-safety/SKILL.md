@@ -488,9 +488,9 @@ describe('Orders API v2 contract', () => {
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
-2. **Contract change classification** — for every changed interface, endpoint, webhook, or event: classify as *additive*, *breaking*, or *behavioural*; list affected consumers by name.
-3. **Findings** — per issue: *File:line, severity (low/med/high), category, what's wrong, recommended fix*.
+1. **Summary** — one line describing overall contract health and whether any blocking issues exist.
+2. **Findings** — per issue: *file:line, severity: blocking | concern | info, category, fix*. Also tag each finding's contract change class (*additive* / *breaking* / *behavioural*) and name affected consumers inline in the fix column.
+3. **Safer alternative** — prefer additive schema evolution (new optional fields, tolerant readers) over breaking changes paired with version bumps; prefer consumer-driven contracts (Pact) over producer-owned OpenAPI specs for inter-service APIs where consumers are known; prefer explicit `schemaVersion` + deprecation headers over silent removal.
 4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: Breaking changes have a major version bump or a documented migration window
    - Rule 2: Additive changes verified as safe for all known consumers

@@ -156,9 +156,59 @@ When any of the above surfaces is touched, the regression-risk assessment must s
 
 ---
 
+## Interactions with other skills
+
+- **Owns:** blast-radius analysis, importer graph enumeration, change classification, query-plan regression detection, spooky-action surface identification.
+- **Hands off to:** change-risk-evaluation for overall release risk (go/no-go, rollout strategy, deployment coordination beyond blast radius).
+- **Hands off to:** coverage-gap-detection for test coverage gaps (what tests are missing for the enumerated importers and behavioural change classes).
+- **Hands off to:** rollback-planning for reverse-path and revert strategy when blast radius is high.
+- **Does not duplicate:** queue-and-retry-safety's async blast-radius concerns — cross-check when event emitters or message bus handlers are touched.
+
+---
+
 ## Review checklist
 
-For each rule, record PASS, CONCERN, or NOT APPLICABLE.
+Produce a markdown report with the four sections below.
+
+### Summary
+
+One line stating the changed file(s), classification, and overall blast-radius verdict (contained / moderate / high).
+
+### Findings
+
+One row per observation in the form `file:line, severity, category, fix`.
+
+- `severity`: `blocker | concern | note`
+- `category`: `importer-coverage | classification | api-breaking | behavioural | query-plan | spooky-action`
+- `fix`: the concrete remediation (e.g., "add explicit `en-GB` locale at call site", "add `CREATE INDEX CONCURRENTLY`", "split into shim + migration").
+
+Example row: `src/utils/formatDate.ts:42, concern, behavioural, add before/after unit test asserting en-GB fallback for unset LOCALE`.
+
+> Note — Blast-radius report format. For each changed file, Findings rows should be backed by the following evidence fields captured in review notes or the PR body:
+>
+> ```
+> Changed file: <path>
+> Importers: <count> (<list or "see PR body">)
+> Classification: <internal | API-compat | breaking | behavioural>
+> Blast radius: <contained | moderate | high>
+> Data-layer impact: <none | schema change | query-plan regression risk>
+> Spooky-action surfaces: <none | <list of surfaces>>
+> ```
+>
+> This is a reference format, not a replacement for the four-section report.
+
+### Safer alternative
+
+State the lowest-blast-radius path that still achieves the change's goal. Regression-specific patterns:
+
+- Prefer feature flags with percentage rollout over big-bang deploys for blast-radius-sensitive changes, so behavioural regressions are bounded to a cohort and reversible without a revert.
+- Prefer a backward-compatible shim (keep the old signature, delegate to the new one, deprecate) over a direct API-breaking change when the importer count exceeds the contained threshold.
+- Prefer adding a new function alongside the old one over mutating an existing behavioural contract, then migrate consumers incrementally with tests per consumer.
+- Prefer `CREATE INDEX CONCURRENTLY` and `NOT VALID` + `VALIDATE CONSTRAINT` patterns over lock-taking migrations on production tables.
+
+### Checklist coverage
+
+Record `PASS / CONCERN / NOT APPLICABLE` for each Core rule with a one-line justification.
 
 | Rule | Status | Notes |
 |---|---|---|
@@ -168,15 +218,3 @@ For each rule, record PASS, CONCERN, or NOT APPLICABLE.
 | 4. Behavioural equivalence evidenced by tests or documented invariant | | |
 | 5. Query-plan diff or benchmark provided (data-layer changes only) | | |
 | 6. Spooky-action surfaces checked and declared clear or flagged | | |
-
-**Blast-radius report format:**
-
-```
-Changed file: <path>
-Importers: <count> (<list or "see PR body">)
-Classification: <internal | API-compat | breaking | behavioural>
-Blast radius: <contained | moderate | high>
-Data-layer impact: <none | schema change | query-plan regression risk>
-Spooky-action surfaces: <none | <list of surfaces>>
-Hand-off: <change-risk-evaluation for overall risk | rollback-planning for reverse path | coverage-gap-detection for test surface>
-```

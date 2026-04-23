@@ -276,7 +276,9 @@ Log metric filters and alarms (e.g. alerting on `ERROR` count exceeding a thresh
 ## Interactions with other skills
 
 - **Owns:** AWS-level deploy mechanics — rolling strategy, alias traffic shifting, health check wiring, migration sequencing, secrets injection at deploy time, log retention at deploy time.
-- **Hands off to:** `infra-safe-change` for provisioning the underlying resources (VPC, subnets, ECS cluster, Lambda function declaration, Secrets Manager secret creation); `secrets-and-config-safety` for how the application code fetches and uses secrets at runtime; `rollback-planning` for the rollback trigger criteria and the runbook path.
+- **Hands off to:** infra-safe-change for provisioning the underlying resources (VPC, subnets, ECS cluster, Lambda function declaration, Secrets Manager secret creation).
+- **Hands off to:** secrets-and-config-safety for how the application code fetches and uses secrets at runtime.
+- **Hands off to:** rollback-planning for the rollback trigger criteria and the runbook path.
 - **Does not duplicate:** CI pipeline concerns (action pinning, OIDC, branch protection) — those belong to `cicd-pipeline-safety`.
 
 ## Review checklist
@@ -285,7 +287,8 @@ Produce a markdown report with these sections:
 
 1. **Summary** — one line: pass / concerns / blocking issues.
 2. **Findings** — per issue: *resource/file, severity (low/med/high), category, what is wrong, recommended fix*.
-3. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
+3. **Safer alternative** — if applicable, name an alternative approach and why the current one is riskier. Examples: prefer blue/green (CodeDeploy) over in-place ECS rolling updates for stateful or payment-handling workloads; prefer Secrets Manager rotation with short-lived fetched values over long-lived secret references baked into task definition revisions; prefer pre-creating the Lambda CloudWatch Logs group in IaC over letting the Lambda service auto-create it with no retention policy.
+4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.
    - Rule 1: Task role and execution role are separate; neither has `*` actions
    - Rule 2: Secrets injected via Secrets Manager ARN, not plaintext in `environment`
    - Rule 3: `minimumHealthyPercent` / `maximumPercent` set explicitly; circuit breaker enabled; blue/green used where risk warrants

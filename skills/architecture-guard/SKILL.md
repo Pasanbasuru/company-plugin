@@ -81,6 +81,8 @@ Introduce a single `@acme/contracts` (or `@acme/shared-types`) package at the fo
 
 Services that currently import from each other (`import { CreateOrderDto } from '@acme/order-service/src/...'`) must be migrated: the DTO moves to `@acme/contracts`, both services import from there, and the direct service-to-service import is deleted. The HTTP/event contract semantics (versioning, evolution) are the responsibility of `integration-contract-safety`, not this skill.
 
+**Does not duplicate:** integration-contract-safety
+
 ## Adding a new package (checklist)
 
 1. Create the folder with `package.json` (name under `@acme/` scope prefix), `tsconfig.json`, and a one-paragraph `README.md` explaining the package's single responsibility.
@@ -103,7 +105,9 @@ Run all three during a new-package PR and in the pre-merge CI pipeline. A single
 ## Interactions with other skills
 
 - **Owns:** cross-package / cross-app structure, dependency direction, public-package API surface.
-- **Hands off to:** `nextjs-app-structure-guard` for intra-Next.js file structure; `nestjs-service-boundary-guard` for intra-NestJS module boundaries; `integration-contract-safety` for the actual HTTP/event contract semantics across services.
+- **Hands off to:** nextjs-app-structure-guard for intra-Next.js file structure
+- **Hands off to:** nestjs-service-boundary-guard for intra-NestJS module boundaries
+- **Hands off to:** integration-contract-safety for the actual HTTP/event contract semantics across services
 - **Does not duplicate:** `integration-contract-safety`'s contract-versioning concerns — this skill owns where types live; that skill owns how they evolve over the wire.
 
 ## Review checklist (invoke when reviewing existing code)
