@@ -22,16 +22,34 @@ export function checkReviewChecklist(skill: SkillFile): CheckResult {
     return { name: "review-checklist", severity: "PASS", findings };
   }
 
-  for (const sub of SUBSECTIONS) {
-    if (!new RegExp(`###\\s+${sub}\\b`).test(section)) {
-      findings.push({
-        line: null,
-        severity: "CONCERN",
-        category: "review-checklist",
-        message: `Review checklist missing subsection: ${sub}`,
-        fix: `Add '### ${sub}' inside the Review checklist section`,
-      });
-    }
+  const contentLines = section
+    .split("\n")
+    .slice(1) // drop the '## Review checklist' heading line
+    .filter((l) => l.trim().length > 0);
+  const hasAllSubsections = SUBSECTIONS.every((sub) =>
+    new RegExp(`###\\s+${sub}\\b`).test(section),
+  );
+  const hasSanctionedLabels = SANCTIONED_LABELS.some((label) =>
+    new RegExp(`\\b${label}\\b`).test(section),
+  );
+  const isStub = contentLines.length < 5;
+
+  if (isStub) {
+    findings.push({
+      line: null,
+      severity: "CONCERN",
+      category: "review-checklist",
+      message: "Review checklist section is stub-like (<5 content lines)",
+      fix: "Expand with per-rule verdicts (PASS/CONCERN/NOT APPLICABLE) or the four-subsection shape (Summary / Findings / Safer alternative / Checklist coverage)",
+    });
+  } else if (!hasAllSubsections && !hasSanctionedLabels) {
+    findings.push({
+      line: null,
+      severity: "CONCERN",
+      category: "review-checklist",
+      message: "Review checklist lacks both four-subsection shape and sanctioned labels",
+      fix: "Add '### Summary / ### Findings / ### Safer alternative / ### Checklist coverage', OR include per-rule PASS/CONCERN/NOT APPLICABLE markers",
+    });
   }
 
   for (const forbidden of FORBIDDEN_LABELS) {

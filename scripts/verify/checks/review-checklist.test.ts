@@ -32,11 +32,25 @@ describe("checkReviewChecklist", () => {
     expect(result.severity).toBe("PASS");
   });
 
-  it("CONCERN when Safer alternative missing", () => {
+  it("PASS when only three of four subheadings but sanctioned labels present", () => {
     const body = FOUR_SECTION.replace(/### Safer alternative[\s\S]*?(?=###)/, "");
     const skill = parseSkill("/fake/SKILL.md", body);
     const result = checkReviewChecklist(skill);
+    expect(result.severity).toBe("PASS");
+  });
+
+  it("CONCERN when Review checklist section is stub-like", () => {
+    const body = `---\nname: s\ndescription: Use when X.\n---\n\n## Review checklist\n\n- be careful\n`;
+    const skill = parseSkill("/fake/SKILL.md", body);
+    const result = checkReviewChecklist(skill);
     expect(result.severity).toBe("CONCERN");
+  });
+
+  it("PASS for a flat list with sanctioned labels (no subheadings)", () => {
+    const body = `---\nname: s\ndescription: Use when X.\n---\n\n## Review checklist\n\n- Rule 1: PASS\n- Rule 2: CONCERN\n- Rule 3: NOT APPLICABLE\n- Rule 4: PASS\n- Rule 5: PASS\n`;
+    const skill = parseSkill("/fake/SKILL.md", body);
+    const result = checkReviewChecklist(skill);
+    expect(result.severity).toBe("PASS");
   });
 
   it("CONCERN when non-sanctioned grading label used (e.g. BLOCKING)", () => {
