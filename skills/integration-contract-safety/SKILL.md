@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Prevent silent breaking changes across service boundaries — consumers find out in production otherwise. This skill governs every point where code crosses a team or service line: REST/HTTP APIs, webhooks, async event payloads, and machine-readable schema files. It prescribes how to distinguish additive changes from breaking ones, how to version and sign payloads, and how to keep contract tests wired in CI so breakage is caught before deployment.
+Prevent silent breaking changes across service boundaries — consumers find out in production otherwise. Governs every point where code crosses a team or service line: REST/HTTP APIs, webhooks, async event payloads, and machine-readable schema files. Prescribes how to distinguish additive from breaking changes, version and sign payloads, and keep contract tests wired in CI so breakage is caught before deployment.
 
 ## Assumes `_baseline`. Adds:
 
@@ -184,7 +184,7 @@ async function handleOrderShipped(raw: unknown) {
 
 ## Breaking vs additive change taxonomy
 
-A change is **breaking** when any existing consumer, following the published contract, will encounter a runtime error or silently incorrect behaviour after the change is deployed. A change is **additive** when every existing consumer continues to work correctly without modification.
+A change is **breaking** when any existing consumer following the published contract will encounter a runtime error or silently incorrect behaviour after deployment. **Additive** = every existing consumer continues to work without modification.
 
 **Definitively breaking:**
 - Removing a field from a response or event payload.
@@ -213,7 +213,7 @@ Before claiming a change is additive, answer: does every known consumer use a to
 
 ## OpenAPI workflow
 
-The OpenAPI spec is the contract document; the implementation must conform to it, not the other way around.
+The OpenAPI spec is the contract; the implementation conforms to it, not the other way around.
 
 **Schema-first approach:**
 
@@ -299,11 +299,9 @@ components:
 
 ## Webhook signing and verification
 
-Webhooks are outbound HTTP POST requests from your service to a consumer's URL. Because the consumer's endpoint is publicly reachable, any actor that discovers it can POST arbitrary payloads. Signature verification is the only reliable defence.
+Webhook endpoints are publicly reachable, so any actor that discovers the URL can POST arbitrary payloads. Signature verification is the only reliable defence.
 
-**HMAC-SHA256 pattern (Node.js `node:crypto`):**
-
-The producer signs the raw request body concatenated with a timestamp. The consumer recomputes the HMAC and compares using a constant-time function to prevent timing-oracle attacks.
+**HMAC-SHA256 pattern:** producer signs the raw body concatenated with a timestamp; consumer recomputes the HMAC and compares via a constant-time function to prevent timing-oracle attacks.
 
 ```ts
 // producer.ts — sign before sending
@@ -338,7 +336,7 @@ The consumer implementation is shown in the Good vs bad section above. Key point
 
 ## Event schema versioning
 
-Asynchronous event systems (EventBridge, SQS, Kafka, internal pub/sub) decouple producers and consumers at the cost of synchronous contract enforcement. Schema versioning is the mechanism that makes this safe.
+Async event systems (EventBridge, SQS, Kafka, pub/sub) decouple producers and consumers at the cost of synchronous contract enforcement. Schema versioning closes that gap.
 
 **Key principles:**
 
@@ -359,7 +357,7 @@ Asynchronous event systems (EventBridge, SQS, Kafka, internal pub/sub) decouple 
 
 ## Deprecation strategy
 
-A deprecation is a promise to consumers: this feature works today and will be removed on a known future date. Fulfil that promise by making deprecations observable and actionable.
+A deprecation is a promise: this feature works today and will be removed on a known future date. Make deprecations observable and actionable.
 
 **HTTP API deprecations:**
 
@@ -406,11 +404,9 @@ export class DeprecationInterceptor implements NestInterceptor {
 
 ## Contract testing
 
-Contract tests verify that the producer and consumer agree on a shared contract, independently of each other's implementation. They catch schema drift earlier and more cheaply than end-to-end integration tests.
+Contract tests verify producer and consumer agree on a shared contract, independent of each other's implementation — catching schema drift earlier and cheaper than end-to-end integration tests.
 
-**Approach 1 — Pact (consumer-driven contract testing):**
-
-Pact generates a "pact file" from consumer tests that records exactly which interactions the consumer depends on. The producer verifies the pact file in its own CI pipeline, ensuring it can satisfy every consumer's expectations without requiring a running consumer service.
+**Approach 1 — Pact (consumer-driven):** Pact generates a pact file from consumer tests recording the exact interactions the consumer depends on. The producer verifies the pact file in its own CI, satisfying every consumer's expectations without a running consumer service.
 
 ```ts
 // consumer.pact.spec.ts (Jest + @pact-foundation/pact)
