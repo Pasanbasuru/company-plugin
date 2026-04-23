@@ -30,4 +30,28 @@ describe("parseSkill", () => {
     const bad = `---\nname: : : broken\n---\nbody\n`;
     expect(() => parseSkill("/fake/path/SKILL.md", bad)).toThrow();
   });
+
+  it("handles CRLF line endings (Windows)", () => {
+    const crlf = "---\r\nname: my-skill\r\ndescription: Use when X.\r\n---\r\n\r\n# Heading\r\n";
+    const parsed = parseSkill("/fake/SKILL.md", crlf);
+    expect(parsed.frontmatter).toEqual({ name: "my-skill", description: "Use when X." });
+    expect(parsed.body).toContain("# Heading");
+  });
+
+  it("treats empty frontmatter block as missing", () => {
+    const parsed = parseSkill("/fake/SKILL.md", "---\n---\n\nbody\n");
+    expect(parsed.frontmatter).toBeNull();
+    expect(parsed.body).toContain("body");
+  });
+
+  it("throws on array (list) frontmatter", () => {
+    const arr = "---\n- foo\n- bar\n---\nbody\n";
+    expect(() => parseSkill("/fake/SKILL.md", arr)).toThrow(/YAML list/);
+  });
+
+  it("strips BOM before parsing", () => {
+    const bom = "﻿---\nname: my-skill\ndescription: Use when X.\n---\n\nbody\n";
+    const parsed = parseSkill("/fake/SKILL.md", bom);
+    expect(parsed.frontmatter).toEqual({ name: "my-skill", description: "Use when X." });
+  });
 });
