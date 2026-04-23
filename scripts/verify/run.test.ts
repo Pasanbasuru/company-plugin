@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { runChecks, formatReport, verdictFor } from "./run.js";
 import { parseSkill } from "./parse.js";
 
@@ -63,5 +65,30 @@ describe("runChecks", () => {
     expect(verdictFor([{ name: "a", severity: "PASS", findings: [] }])).toBe("GREEN");
     expect(verdictFor([{ name: "a", severity: "CONCERN", findings: [] }])).toBe("YELLOW");
     expect(verdictFor([{ name: "a", severity: "FAIL", findings: [] }])).toBe("RED");
+  });
+});
+
+const fx = (name: string) => resolve(`scripts/fixtures/${name}/SKILL.md`);
+
+describe("fixtures E2E", () => {
+  it("good-skill → GREEN", () => {
+    const skill = parseSkill(fx("good-skill"), readFileSync(fx("good-skill"), "utf8"));
+    expect(runChecks(skill).verdict).toBe("GREEN");
+  });
+  it("bad-weak-description → YELLOW or RED", () => {
+    const skill = parseSkill(fx("bad-weak-description"), readFileSync(fx("bad-weak-description"), "utf8"));
+    expect(runChecks(skill).verdict).not.toBe("GREEN");
+  });
+  it("bad-no-interactions → RED", () => {
+    const skill = parseSkill(fx("bad-no-interactions"), readFileSync(fx("bad-no-interactions"), "utf8"));
+    expect(runChecks(skill).verdict).toBe("RED");
+  });
+  it("bad-prose-handoff → YELLOW", () => {
+    const skill = parseSkill(fx("bad-prose-handoff"), readFileSync(fx("bad-prose-handoff"), "utf8"));
+    expect(runChecks(skill).verdict).toBe("YELLOW");
+  });
+  it("bad-oversize → RED", () => {
+    const skill = parseSkill(fx("bad-oversize"), readFileSync(fx("bad-oversize"), "utf8"));
+    expect(runChecks(skill).verdict).toBe("RED");
   });
 });
