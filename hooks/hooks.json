@@ -6,6 +6,20 @@
           {
             "type": "command",
             "command": "mkdir -p .claude && printf 'session_start %s\n' \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" >> .claude/plugin-hook.log"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/inject-skills-reminder.mjs\" SessionStart"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/inject-skills-reminder.mjs\" UserPromptSubmit"
           }
         ]
       }

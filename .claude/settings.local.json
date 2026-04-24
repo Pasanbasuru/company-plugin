@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude plugin *)",
+      "Bash(git checkout *)",
+      "Bash(pnpm --version)",
+      "Bash(npm --version)",
+      "Bash(pnpm tsx *)",
+      "Bash(pnpm vitest *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(grep -E \"^\\(tsx|vitest\\)$\")",
+      "Bash(pnpm exec *)",
+      "Bash(pnpm test *)",
+      "Bash(git config *)",
+      "Bash(git check-attr *)",
+      "Bash(node *)",
+      "PowerShell($f = \"skills\\\\_baseline\\\\SKILL.md\"; $bytes = [System.IO.File]::ReadAllBytes\\($f\\); $crlf = 0; $lf = 0; for \\($i = 0; $i -lt $bytes.Length; $i++\\) { if \\($bytes[$i] -eq 10\\) { if \\($i -gt 0 -and $bytes[$i-1] -eq 13\\) { $crlf++ } else { $lf++ } } }; Write-Host \"$f - CRLF:$crlf LF-only:$lf\")"
+    ]
+  }
+}
