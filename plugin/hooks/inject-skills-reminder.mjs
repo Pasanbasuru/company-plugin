@@ -51,7 +51,7 @@ for (const entry of readdirSync(skillsDir, { withFileTypes: true })) {
 skills.sort((a, b) => a.name.localeCompare(b.name));
 
 const rosterLines = skills.map(
-  (s) => `- **company-plugin:${s.name}** — ${s.description}`,
+  (s) => `- **global-plugin:${s.name}** — ${s.description}`,
 );
 
 const header =
@@ -64,9 +64,9 @@ ${header}
 
 ## The rule
 
-Before writing code, editing files, or dispatching a subagent in this project, check the roster below and invoke every company-plugin skill that could apply — even at 1% relevance. Use the \`Skill\` tool with the fully qualified name \`company-plugin:<skill-name>\`.
+Before writing code, editing files, or dispatching a subagent in this project, check the roster below and invoke every global-plugin skill that could apply — even at 1% relevance. Use the \`Skill\` tool with the fully qualified name \`global-plugin:<skill-name>\`.
 
-These skills extend (not replace) \`superpowers:*\`. Invoke BOTH where relevant — e.g. \`superpowers:test-driven-development\` PLUS \`company-plugin:test-strategy-enforcement\`.
+These skills extend (not replace) \`superpowers:*\`. Invoke BOTH where relevant — e.g. \`superpowers:test-driven-development\` PLUS \`global-plugin:test-strategy-enforcement\`.
 
 ## Subagent propagation (critical)
 
@@ -74,7 +74,7 @@ These skills extend (not replace) \`superpowers:*\`. Invoke BOTH where relevant 
 
 Whenever you dispatch a subagent via the \`Agent\` tool (including superpowers workflows: brainstorming → writing-plans → executing-plans → subagent-driven-development → requesting-code-review), you MUST embed this instruction into the subagent's prompt:
 
-> "This project uses company-plugin. Before/while doing your task, invoke every relevant \`company-plugin:*\` skill from the roster. The roster is listed in a SessionStart system-reminder in your context."
+> "This project uses global-plugin. Before/while doing your task, invoke every relevant \`global-plugin:*\` skill from the roster. The roster is listed in a SessionStart system-reminder in your context."
 
 Without that line in the dispatch prompt, the subagent will not invoke company skills.
 
@@ -84,7 +84,7 @@ ${rosterLines.join("\n")}
 
 ## Priority
 
-User instructions (CLAUDE.md, direct requests) > company-plugin skills = superpowers skills > default behavior. When a superpowers skill and a company-plugin skill both apply, run both; they are complementary, not competing.
+User instructions (CLAUDE.md, direct requests) > global-plugin skills = superpowers skills > default behavior. When a superpowers skill and a global-plugin skill both apply, run both; they are complementary, not competing.
 </EXTREMELY_IMPORTANT>`;
 
 const payload = {

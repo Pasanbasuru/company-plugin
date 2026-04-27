@@ -67,7 +67,7 @@ Create `package.json`:
 
 ```json
 {
-  "name": "company-plugin",
+  "name": "global-plugin",
   "version": "0.2.2",
   "private": true,
   "type": "module",
@@ -699,7 +699,7 @@ describe("checkMarkers", () => {
   });
 
   it("accepts 'REQUIRED BACKGROUND' and 'Does not duplicate' markers", () => {
-    const skill = withInteractions("- **REQUIRED BACKGROUND:** superpowers:x\n- **Does not duplicate:** company-plugin:y");
+    const skill = withInteractions("- **REQUIRED BACKGROUND:** superpowers:x\n- **Does not duplicate:** global-plugin:y");
     const result = checkMarkers(skill);
     expect(result.severity).toBe("PASS");
   });
@@ -732,9 +732,9 @@ const SANCTIONED = [
   /\*\*Does not duplicate:\*\*/,
 ];
 const PROSE_PATTERNS = [
-  { re: /\bsee\s+(?:superpowers:|company-plugin:)/i, label: "'see <skill>'" },
-  { re: /\buse\s+(?:superpowers:|company-plugin:)/i, label: "'use <skill>'" },
-  { re: /\bfeeds? from\s+(?:superpowers:|company-plugin:)/i, label: "'feeds from <skill>'" },
+  { re: /\bsee\s+(?:superpowers:|global-plugin:)/i, label: "'see <skill>'" },
+  { re: /\buse\s+(?:superpowers:|global-plugin:)/i, label: "'use <skill>'" },
+  { re: /\bfeeds? from\s+(?:superpowers:|global-plugin:)/i, label: "'feeds from <skill>'" },
 ];
 
 export function checkMarkers(skill: SkillFile): CheckResult {
@@ -1293,7 +1293,7 @@ alt.
 
 ## Interactions with other skills
 - **REQUIRED BACKGROUND:** superpowers:brainstorming
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification
 ```
 
 - [ ] **Step 3: Create `bad-weak-description` fixture**
@@ -1327,7 +1327,7 @@ x
 - rule: PASS
 
 ## Interactions with other skills
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification
 ```
 
 - [ ] **Step 4: Create `bad-no-interactions` fixture**
@@ -1417,7 +1417,7 @@ x
 - rule: PASS
 
 ## Interactions with other skills
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification
 
 EOF
   for i in $(seq 1 500); do echo "filler line $i"; done
@@ -1535,7 +1535,7 @@ description: Use when creating a new skill, editing an existing skill, or scaffo
 
 # skill-authoring
 
-Wraps `superpowers:writing-skills` with company conventions for the `company-plugin`.
+Wraps `superpowers:writing-skills` with company conventions for the `global-plugin`.
 
 ## When to use
 - Creating a new skill in `skills/<name>/SKILL.md`
@@ -1545,7 +1545,7 @@ Wraps `superpowers:writing-skills` with company conventions for the `company-plu
 ## Core rules
 
 1. **Description MUST have trigger signals.** Start with `Use when ...`. Add `TRIGGER when:` / `SKIP when:` for sharp discrimination. No vague verbs ("handles", "manages", "deals with").
-2. **Interactions section is mandatory.** Every skill declares at least one `**REQUIRED BACKGROUND:**`, `**REQUIRED SUB-SKILL:**`, `**Hands off to:**`, or `**Does not duplicate:**` tying it into the superpowers or company-plugin graph.
+2. **Interactions section is mandatory.** Every skill declares at least one `**REQUIRED BACKGROUND:**`, `**REQUIRED SUB-SKILL:**`, `**Hands off to:**`, or `**Does not duplicate:**` tying it into the superpowers or global-plugin graph.
 3. **Review checklist uses the four-section shape.** Sections: `Summary`, `Findings` (table: file:line, severity, category, fix), `Safer alternative`, `Checklist coverage` (labels: `PASS / CONCERN / NOT APPLICABLE`).
 4. **Size budget.** 200–400 lines preferred, 500 hard ceiling. Over → split.
 5. **Stack-relevant triggers.** Stack-specific skills (Next.js, NestJS, Prisma, AWS, React Native) name the stack in the description so Claude can match against user prompts.
@@ -1565,7 +1565,7 @@ Wraps `superpowers:writing-skills` with company conventions for the `company-plu
 1. Run `superpowers:brainstorming` to pin down the skill's purpose and attach point.
 2. Follow `superpowers:writing-skills` for file layout and metadata.
 3. Apply company conventions from the Core rules above.
-4. Hand off to `company-plugin:skill-verification` before committing.
+4. Hand off to `global-plugin:skill-verification` before committing.
 
 ## Good vs bad
 
@@ -1587,7 +1587,7 @@ Good:
 ```
 ## Interactions with other skills
 - **REQUIRED SUB-SKILL:** superpowers:test-driven-development
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification
 ```
 
 ## Review checklist
@@ -1614,7 +1614,7 @@ If the skill re-implements a superpowers primitive, replace with a sub-skill mar
 - **REQUIRED SUB-SKILL:** superpowers:writing-skills
 - **REQUIRED BACKGROUND:** superpowers:brainstorming
 - **REQUIRED BACKGROUND:** agent-development
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification
 ````
 
 - [ ] **Step 2: Self-verify**
@@ -1787,19 +1787,19 @@ git commit -m "chore: bump version to 0.3.0 for new skill-authoring + skill-veri
 Outside this repo, in a fresh test project:
 
 ```bash
-claude plugin install /path/to/company-plugin
-claude plugin enable company-plugin
+claude plugin install /path/to/global-plugin
+claude plugin enable global-plugin
 ```
 
 Restart Claude Code session.
 
 - [ ] **Step 2: Verify discovery**
 
-In a fresh Claude Code session, type a prompt such as: "I want to review the Next.js App Router structure of this project." Expected: Claude surfaces `company-plugin:nextjs-app-structure-guard` (or proposes invoking it) — confirming discoverability works.
+In a fresh Claude Code session, type a prompt such as: "I want to review the Next.js App Router structure of this project." Expected: Claude surfaces `global-plugin:nextjs-app-structure-guard` (or proposes invoking it) — confirming discoverability works.
 
 - [ ] **Step 3: Verify authoring flow**
 
-Type: "I want to create a new skill for reviewing GraphQL schemas." Expected: Claude surfaces `company-plugin:skill-authoring`.
+Type: "I want to create a new skill for reviewing GraphQL schemas." Expected: Claude surfaces `global-plugin:skill-authoring`.
 
 - [ ] **Step 4: Record findings**
 

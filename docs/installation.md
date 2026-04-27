@@ -32,11 +32,11 @@ Then inside Claude Code:
 - `/help`
 - `/agents`
 - `/mcp`
-- `/company-plugin:architecture-guard`
-- `/company-plugin:frontend-implementation-guard`
+- `/global-plugin:architecture-guard`
+- `/global-plugin:frontend-implementation-guard`
 
 For React Native projects, also use:
-- `/company-plugin:mobile-implementation-guard`
+- `/global-plugin:mobile-implementation-guard`
 
 ## Project setup
 Copy these into a new project:

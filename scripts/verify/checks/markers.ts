@@ -7,9 +7,9 @@ const SANCTIONED = [
   /\*\*Does not duplicate:\*\*/,
 ];
 const PROSE_PATTERNS = [
-  { re: /\bsee\s+(?:superpowers:|company-plugin:)/i, label: "'see <skill>'" },
-  { re: /\buse\s+(?:superpowers:|company-plugin:)/i, label: "'use <skill>'" },
-  { re: /\bfeeds? from\s+(?:superpowers:|company-plugin:)/i, label: "'feeds from <skill>'" },
+  { re: /\bsee\s+(?:superpowers:|global-plugin:)/i, label: "'see <skill>'" },
+  { re: /\buse\s+(?:superpowers:|global-plugin:)/i, label: "'use <skill>'" },
+  { re: /\bfeeds? from\s+(?:superpowers:|global-plugin:)/i, label: "'feeds from <skill>'" },
 ];
 
 function extractInteractionsSection(body: string): string | null {

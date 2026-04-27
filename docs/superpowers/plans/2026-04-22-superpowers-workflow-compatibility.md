@@ -6,7 +6,7 @@
 
 **Goal:** Produce an audited + company-extended workflow reference, a gitignored skills-categorization scratchpad, a workflow-compatibility test template, and per-skill audit reports for all 26 skills.
 
-**Architecture:** Preserve-and-extend (Approach B) — layer 1 is a strict transcription of superpowers 5.0.7 diagrams; layer 2 shows where company-plugin skills attach. Parallel subagent fan-out for diagram audits (4 agents) and skill audits (26 agents). Everything else written inline.
+**Architecture:** Preserve-and-extend (Approach B) — layer 1 is a strict transcription of superpowers 5.0.7 diagrams; layer 2 shows where global-plugin skills attach. Parallel subagent fan-out for diagram audits (4 agents) and skill audits (26 agents). Everything else written inline.
 
 **Tech Stack:** Markdown, Mermaid (inline in markdown), text files, `.gitignore`. No code beyond shell for verification.
 
@@ -19,7 +19,7 @@
 
 - [ ] **Step 1: Check whether `.gitignore` exists**
 
-Run: `ls -la "C:/Home/Basuru/Solto/company-plugin/.gitignore"`
+Run: `ls -la "C:/Home/Basuru/Solto/global-plugin/.gitignore"`
 Expected: "No such file" or a file listing.
 
 - [ ] **Step 2: Write `.gitignore` with reference/working-file entries**
@@ -39,7 +39,7 @@ bash.exe.stackdump
 
 - [ ] **Step 3: Verify `git status` reflects the ignore**
 
-Run: `cd "C:/Home/Basuru/Solto/company-plugin" && git status --short`
+Run: `cd "C:/Home/Basuru/Solto/global-plugin" && git status --short`
 Expected: `superpowers.md` no longer appears as `??`. `bash.exe.stackdump` no longer appears. (The `.gitignore` itself appears as `??` — that's expected, the user commits it later.)
 
 ---
@@ -54,7 +54,7 @@ Each agent audits 2 diagrams from `superpowers.md` against the superpowers 5.0.7
 
 Agent prompt template (filled per diagram pair):
 
-> Audit Diagrams <N1> and <N2> in `C:/Home/Basuru/Solto/company-plugin/superpowers.md` against the actual superpowers 5.0.7 source at `C:/Users/basuru/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/`.
+> Audit Diagrams <N1> and <N2> in `C:/Home/Basuru/Solto/global-plugin/superpowers.md` against the actual superpowers 5.0.7 source at `C:/Users/basuru/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/`.
 >
 > For each diagram, verify:
 > 1. Every labelled `skill`/`agent`/`hook`/`artifact` node exists in the source (give path).
@@ -92,7 +92,7 @@ Check that every diagram has either a PASS verdict or a concrete diff list. If a
 Structure:
 
 ```markdown
-# Superpowers Workflows — as they run with company-plugin loaded
+# Superpowers Workflows — as they run with global-plugin loaded
 
 Source of truth: superpowers v5.0.7 at
 `C:/Users/basuru/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/`.
@@ -102,7 +102,7 @@ Diagrams here are audited against that source (see docs/superpowers/specs/2026-0
 
 Each file has:
 - **Layer 1 — superpowers core flow** (nodes coloured `extPlugin` / amber).
-- **Layer 2 — where company-plugin skills attach** (company nodes coloured `companyPlugin` / teal). Absent when no company-plugin skill applies.
+- **Layer 2 — where global-plugin skills attach** (company nodes coloured `companyPlugin` / teal). Absent when no global-plugin skill applies.
 - **Compatibility notes** — what a new skill attached to this workflow must not do.
 
 ## Shape legend
@@ -121,7 +121,7 @@ Each file has:
 | Class          | Meaning                                  | Colour          |
 |----------------|------------------------------------------|-----------------|
 | `extPlugin`    | Ships from superpowers or other external | amber `#785f28` |
-| `companyPlugin`| Ships from this company-plugin           | teal  `#1f5a5b` |
+| `companyPlugin`| Ships from this global-plugin           | teal  `#1f5a5b` |
 | (none)         | Narrative / state / user action          | plain           |
 
 ## File index
@@ -139,12 +139,12 @@ Each file has:
 
 ## Cheat sheet — "given a prompt, what fires?"
 
-(Reproduce the table from superpowers.md here, updated with company-plugin layer where relevant.)
+(Reproduce the table from superpowers.md here, updated with global-plugin layer where relevant.)
 ```
 
 - [ ] **Step 2: Verify**
 
-Run: `ls -la "C:/Home/Basuru/Solto/company-plugin/docs/superpowers/workflows/README.md"`
+Run: `ls -la "C:/Home/Basuru/Solto/global-plugin/docs/superpowers/workflows/README.md"`
 Expected: File exists, non-empty.
 
 ---
@@ -194,7 +194,7 @@ flowchart TD
 
 ## No layer 2
 
-No company-plugin skill attaches here — this workflow is entirely about the harness injecting the `using-superpowers` gate. Company-plugin skills live downstream and are reached through Workflows 2, 3, 4, 6, 7.
+No global-plugin skill attaches here — this workflow is entirely about the harness injecting the `using-superpowers` gate. Company-plugin skills live downstream and are reached through Workflows 2, 3, 4, 6, 7.
 
 ## Compatibility notes for new skills
 
@@ -215,7 +215,7 @@ Check file exists, mermaid block is intact, origin legend respected.
 
 Layer 1: audited Diagram 2 from superpowers.md.
 
-Layer 2 — company-plugin attach points:
+Layer 2 — global-plugin attach points:
 
 - During `brainstorming` design review: `architecture-guard` (when the design spans modules), `nextjs-app-structure-guard` (for frontend-only designs), `nestjs-service-boundary-guard` (for backend-only designs), `frontend-implementation-guard` (component structure), `mobile-implementation-guard` (RN).
 - During `writing-plans`: data-layer skills (`prisma-data-access-guard`, `state-integrity-check`), integration skills (`integration-contract-safety`, `queue-and-retry-safety`, `resilience-and-error-handling`), security skills (`auth-and-permissions-safety`, `secrets-and-config-safety`).
@@ -295,10 +295,10 @@ Layer 1: audited Diagram 6.
 
 Layer 2:
 
-- Alongside `code-reviewer` agent (dispatched from `requesting-code-review`), the following company-plugin skills may run in parallel to produce domain-risk reports:
+- Alongside `code-reviewer` agent (dispatched from `requesting-code-review`), the following global-plugin skills may run in parallel to produce domain-risk reports:
   - `regression-risk-check` — changed-surface blast radius
   - `change-risk-evaluation` — overall risk posture
-- The `code-reviewer` owns plan alignment. The company-plugin review skills own domain risk. Their outputs sit alongside, not on top.
+- The `code-reviewer` owns plan alignment. The global-plugin review skills own domain risk. Their outputs sit alongside, not on top.
 
 Compatibility notes:
 
@@ -316,7 +316,7 @@ Compatibility notes:
 
 Layer 1: audited Diagram 7.
 
-Layer 2: **company-plugin compatibility test hook** — after the superpowers GREEN phase (agents comply with the new skill under pressure), add a step: "Run `docs/superpowers/testing-skills-against-workflows.md` — the 7-check audit — against every workflow file in `docs/superpowers/workflows/`. Produce a report. A new company-plugin skill cannot be committed until every check is PASS or documented N/A."
+Layer 2: **global-plugin compatibility test hook** — after the superpowers GREEN phase (agents comply with the new skill under pressure), add a step: "Run `docs/superpowers/testing-skills-against-workflows.md` — the 7-check audit — against every workflow file in `docs/superpowers/workflows/`. Produce a report. A new global-plugin skill cannot be committed until every check is PASS or documented N/A."
 
 Compatibility notes:
 
@@ -333,7 +333,7 @@ Compatibility notes:
 
 Layer 1: audited Diagram 8 (the whole map), every superpowers node with `extPlugin`.
 
-Layer 2: same map, annotated with company-plugin skills as a side cluster, lines drawn to the workflow phases they attach to.
+Layer 2: same map, annotated with global-plugin skills as a side cluster, lines drawn to the workflow phases they attach to.
 
 - [ ] **Step 2: Verify**
 
@@ -349,7 +349,7 @@ Layer 2: same map, annotated with company-plugin skills as a side cluster, lines
 Plain text, scannable, covers all 26 skills. Structure:
 
 ```
-SKILLS CATEGORIZATION — company-plugin
+SKILLS CATEGORIZATION — global-plugin
 Date: 2026-04-22
 Purpose: scannable index for Basuru. Not committed.
 
@@ -490,8 +490,8 @@ observability-first-debugging   | 03                 | guide
 
 - [ ] **Step 2: Verify**
 
-Run: `ls -la "C:/Home/Basuru/Solto/company-plugin/skills-categorization.txt"`
-Run: `cd "C:/Home/Basuru/Solto/company-plugin" && git check-ignore -v skills-categorization.txt`
+Run: `ls -la "C:/Home/Basuru/Solto/global-plugin/skills-categorization.txt"`
+Run: `cd "C:/Home/Basuru/Solto/global-plugin" && git check-ignore -v skills-categorization.txt`
 Expected: File exists, gitignore rule matches.
 
 ---
@@ -509,7 +509,7 @@ Structure (following the spec §7):
 # Testing Company-Plugin Skills Against Superpowers Workflows
 
 Companion to `superpowers:writing-skills` and `superpowers:writing-skills/testing-skills-with-subagents.md`.
-Use this AFTER superpowers pressure-testing passes, BEFORE committing a new or edited company-plugin skill.
+Use this AFTER superpowers pressure-testing passes, BEFORE committing a new or edited global-plugin skill.
 
 ## Why this exists
 
@@ -526,7 +526,7 @@ This document closes that gap.
 ## How to run
 
 1. **Static review:** apply C1, C3, C4, C5 by reading the SKILL.md.
-2. **Workflow insertion:** pick each workflow file in `docs/superpowers/workflows/` that your skill attaches to (per the categorization file, Section D). For each, write a 1-paragraph simulation: "The user says X, the agent enters Workflow N, at point P the agent considers invoking your skill." Verify the agent doesn't skip a superpowers gate, doesn't duplicate a superpowers primitive, and doesn't produce output that conflicts with a parallel company-plugin skill.
+2. **Workflow insertion:** pick each workflow file in `docs/superpowers/workflows/` that your skill attaches to (per the categorization file, Section D). For each, write a 1-paragraph simulation: "The user says X, the agent enters Workflow N, at point P the agent considers invoking your skill." Verify the agent doesn't skip a superpowers gate, doesn't duplicate a superpowers primitive, and doesn't produce output that conflicts with a parallel global-plugin skill.
 3. **Pressure scenario (C7):** for discipline-style skills (those with hard rules like "never …"), adapt one of the scenarios from superpowers:testing-skills-with-subagents.md to include a workflow context: "You are in the middle of `brainstorming` on a feature. You are tempted to violate rule R from this skill because Y. What do you do?" Dispatch a subagent; verify compliance.
 
 ## Report format
@@ -540,12 +540,12 @@ Adds "Run the workflow-compatibility audit (this file) and attach the report bef
 ## When to skip
 
 - `_baseline`: not a standalone skill — checks C1 and C6 do not apply (it's never invoked directly).
-- Reference-only skills (none exist in company-plugin today): C2 does not apply.
+- Reference-only skills (none exist in global-plugin today): C2 does not apply.
 ```
 
 - [ ] **Step 2: Verify**
 
-Run: `ls -la "C:/Home/Basuru/Solto/company-plugin/docs/superpowers/testing-skills-against-workflows.md"`
+Run: `ls -la "C:/Home/Basuru/Solto/global-plugin/docs/superpowers/testing-skills-against-workflows.md"`
 Expected: file exists.
 
 ---
@@ -558,15 +558,15 @@ Expected: file exists.
 
 Per-agent prompt template:
 
-> You are auditing ONE company-plugin skill for compatibility with superpowers v5.0.7 workflows. Produce a report in the exact format at the end of this prompt.
+> You are auditing ONE global-plugin skill for compatibility with superpowers v5.0.7 workflows. Produce a report in the exact format at the end of this prompt.
 >
-> **Skill under audit:** `C:/Home/Basuru/Solto/company-plugin/skills/<SKILL-NAME>/SKILL.md`
+> **Skill under audit:** `C:/Home/Basuru/Solto/global-plugin/skills/<SKILL-NAME>/SKILL.md`
 >
 > **Reference material (read if needed):**
-> - Test template: `C:/Home/Basuru/Solto/company-plugin/docs/superpowers/testing-skills-against-workflows.md`
-> - Workflows: `C:/Home/Basuru/Solto/company-plugin/docs/superpowers/workflows/*.md`
-> - Company conventions: `C:/Home/Basuru/Solto/company-plugin/docs/superpowers/skill-authoring-guide.md`
-> - Baseline: `C:/Home/Basuru/Solto/company-plugin/skills/_baseline/SKILL.md`
+> - Test template: `C:/Home/Basuru/Solto/global-plugin/docs/superpowers/testing-skills-against-workflows.md`
+> - Workflows: `C:/Home/Basuru/Solto/global-plugin/docs/superpowers/workflows/*.md`
+> - Company conventions: `C:/Home/Basuru/Solto/global-plugin/docs/superpowers/skill-authoring-guide.md`
+> - Baseline: `C:/Home/Basuru/Solto/global-plugin/skills/_baseline/SKILL.md`
 > - Superpowers source: `C:/Users/basuru/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/` (skim for Iron Laws, TDD, verification, systematic-debugging, writing-skills, using-superpowers, subagent-driven-development).
 >
 > **Run the 7 checks (C1–C7) from the test template.** For each: PASS / CONCERN / FAIL / N/A with one-line rationale. For each CONCERN/FAIL, add a concrete fix recommendation (file:section — exact edit).
@@ -638,7 +638,7 @@ Each summary is a full markdown report. Hold them in working memory for Task 15.
 
 - [ ] **Step 1: Create audit directory**
 
-Run: `mkdir -p "C:/Home/Basuru/Solto/company-plugin/docs/superpowers/audits/2026-04-22"`
+Run: `mkdir -p "C:/Home/Basuru/Solto/global-plugin/docs/superpowers/audits/2026-04-22"`
 
 - [ ] **Step 2: Write each per-skill report**
 
@@ -687,7 +687,7 @@ Fixes are NOT applied in this session. User schedules a follow-up cycle.
 
 - [ ] **Step 4: Verify**
 
-Run: `ls "C:/Home/Basuru/Solto/company-plugin/docs/superpowers/audits/2026-04-22/" | wc -l`
+Run: `ls "C:/Home/Basuru/Solto/global-plugin/docs/superpowers/audits/2026-04-22/" | wc -l`
 Expected: 27 (26 skill reports + SUMMARY.md).
 
 ---
@@ -698,14 +698,14 @@ Expected: 27 (26 skill reports + SUMMARY.md).
 
 - [ ] **Step 1: Verify no commits were made**
 
-Run: `cd "C:/Home/Basuru/Solto/company-plugin" && git log -1 --format=%H`
-Run: `cd "C:/Home/Basuru/Solto/company-plugin" && git status --short | head -50`
+Run: `cd "C:/Home/Basuru/Solto/global-plugin" && git log -1 --format=%H`
+Run: `cd "C:/Home/Basuru/Solto/global-plugin" && git status --short | head -50`
 
 Expected: HEAD unchanged from start of session (still `1206df9`). `git status --short` shows untracked files for every new artifact, plus the new `.gitignore`. No modified tracked files (we didn't touch any).
 
 - [ ] **Step 2: Verify the three ignored files are in fact ignored**
 
-Run: `cd "C:/Home/Basuru/Solto/company-plugin" && git check-ignore -v superpowers.md skills-categorization.txt bash.exe.stackdump`
+Run: `cd "C:/Home/Basuru/Solto/global-plugin" && git check-ignore -v superpowers.md skills-categorization.txt bash.exe.stackdump`
 Expected: all three match `.gitignore` rules.
 
 - [ ] **Step 3: Produce consolidated summary for the user**

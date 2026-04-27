@@ -4,7 +4,7 @@ This file gives guidance to Claude Code when working in this repository.
 
 ## Status
 
-Source repo for `company-plugin`. Consumer-facing plugin runtime lives in `plugin/`. Repo root holds maintainer/build infra only.
+Source repo for `global-plugin`. Consumer-facing plugin runtime lives in `plugin/`. Repo root holds maintainer/build infra only.
 
 ## Repo modes — maintainer vs consumer audit
 

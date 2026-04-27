@@ -56,7 +56,7 @@ flowchart TD
 - **No performative agreement.** `receiving-code-review` forbids phrases like "You're absolutely right!" because review feedback tends to produce sycophantic drift.
 - **Push-back is structurally encouraged** when the reviewer is wrong — via technical reasoning, not capitulation.
 
-## Layer 2 — where company-plugin skills attach
+## Layer 2 — where global-plugin skills attach
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables':{'fontSize':'11px'},'flowchart':{'nodeSpacing':18,'rankSpacing':22,'padding':4,'diagramPadding':4}}}%%
@@ -92,8 +92,8 @@ flowchart LR
 
 ## Compatibility notes
 
-- **The `code-reviewer` owns plan alignment.** Company-plugin review skills own **domain risk**. Their outputs **sit alongside**, not on top. If a company-plugin skill tries to re-grade plan alignment, it duplicates the agent.
-- **Report-shape must match the guide.** `docs/superpowers/skill-authoring-guide.md` specifies a four-section markdown report: Summary, Findings (file:line, severity, category, fix), Safer alternative, Checklist coverage (PASS / CONCERN / NOT APPLICABLE). Every review-mode company-plugin skill must produce this shape.
+- **The `code-reviewer` owns plan alignment.** Company-plugin review skills own **domain risk**. Their outputs **sit alongside**, not on top. If a global-plugin skill tries to re-grade plan alignment, it duplicates the agent.
+- **Report-shape must match the guide.** `docs/superpowers/skill-authoring-guide.md` specifies a four-section markdown report: Summary, Findings (file:line, severity, category, fix), Safer alternative, Checklist coverage (PASS / CONCERN / NOT APPLICABLE). Every review-mode global-plugin skill must produce this shape.
 - **Grading vocabulary is `PASS / CONCERN / NOT APPLICABLE`.** Not GREEN/YELLOW/RED, not OK/WARN/ERROR. The per-skill audit (`docs/superpowers/audits/2026-04-22/*.md`) uses GREEN/YELLOW/RED at the **skill-audit level** (for compatibility verdicts), but individual review checklists inside a SKILL must use the three sanctioned labels.
 - **Review mode is read-only.** A skill in review mode does not call Edit, Write, or Bash for state-changing commands. Only Read, Grep, Glob, Bash for read-only probes.
-- **Push-back on the superpowers reviewer is encouraged** per `receiving-code-review`. A company-plugin skill must not teach the user to "just apply the reviewer's suggestion" — it must defer to the receiver skill's rule that verification comes first.
+- **Push-back on the superpowers reviewer is encouraged** per `receiving-code-review`. A global-plugin skill must not teach the user to "just apply the reviewer's suggestion" — it must defer to the receiver skill's rule that verification comes first.

@@ -70,12 +70,12 @@ flowchart TD
 
 ## Key gates and Iron Laws
 
-- **HARD-GATE:** no code until the spec is approved. This is the gate every company-plugin guard skill must respect.
+- **HARD-GATE:** no code until the spec is approved. This is the gate every global-plugin guard skill must respect.
 - **Worktree required:** no implementation actions until `using-git-worktrees` has run and baseline tests are green.
 - **Execution choice is binary**: `subagent-driven-development` (recommended) or `executing-plans` (alternative). No third path.
 - **Finishing is explicit**: agent presents 4 options; user chooses. Do not auto-merge.
 
-## Layer 2 — where company-plugin skills attach
+## Layer 2 — where global-plugin skills attach
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables':{'fontSize':'11px'},'flowchart':{'nodeSpacing':16,'rankSpacing':22,'padding':4,'diagramPadding':4}}}%%
