@@ -1,6 +1,6 @@
 # global-plugin
 
-Source repo for the `company-plugin` Claude Code plugin.
+Source repo for the `global-plugin` Claude Code plugin.
 
 ## Status
 
@@ -26,9 +26,9 @@ claude --plugin-dir /absolute/path/to/global-plugin/plugin
 
 Inside Claude Code:
 
-- `/help` lists `company-plugin` skills.
+- `/help` lists `global-plugin` skills.
 - `/mcp` lists the (placeholder) MCP servers.
-- `/company-plugin:architecture-guard` triggers a skill.
+- `/global-plugin:architecture-guard` triggers a skill.
 
 ## Maintainer workflow
 

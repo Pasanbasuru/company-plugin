@@ -1,6 +1,6 @@
 ---
 name: _baseline
-description: Use when scaffolding a new company-plugin skill and needing a known-good template that exemplifies all company conventions — frontmatter shape, required sections, sanctioned handoff markers, and the Review checklist structure. Also use when auditing an existing skill and wanting a reference for what a minimal, verifier-GREEN skill looks like.
+description: Use when scaffolding a new global-plugin skill and needing a known-good template that exemplifies all company conventions — frontmatter shape, required sections, sanctioned handoff markers, and the Review checklist structure. Also use when auditing an existing skill and wanting a reference for what a minimal, verifier-GREEN skill looks like.
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob
 
 ## Purpose & scope
 
-This file serves a dual role in the company-plugin library:
+This file serves a dual role in the global-plugin library:
 
 1. **Template** — copy this SKILL.md as the starting point for a new skill. Replace the placeholder text in each section with domain-specific content. The frontmatter, section headings, and Review checklist shape are already verifier-GREEN.
 2. **Shared baseline** — every domain skill in this library opens with `Assumes _baseline. Adds:` and inherits the cross-cutting standards captured below (TypeScript, security, observability, testing, accessibility, performance, resilience). Domain skills do not restate baseline rules; they add to them.
@@ -108,7 +108,7 @@ These are the cross-cutting standards. Domain skills should not restate them.
 ## Interactions with other skills
 
 - **REQUIRED BACKGROUND:** superpowers:writing-skills — upstream authoring conventions for any skill in this library.
-- **Hands off to:** company-plugin:skill-verification — every new or edited skill passes through the verifier before merge.
+- **Hands off to:** global-plugin:skill-verification — every new or edited skill passes through the verifier before merge.
 - **Does not duplicate:** domain skills restate the baseline only when a domain-specific refinement overrides a shared rule.
 
 ## Review checklist

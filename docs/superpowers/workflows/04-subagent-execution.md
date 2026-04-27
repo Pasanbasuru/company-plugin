@@ -62,7 +62,7 @@ flowchart TD
 - **Controller never reads the plan inside subagent prompts.** It extracts task text and hands the subagent only what it needs. This keeps subagent contexts small and independent.
 - **Model tiering** (cheap for mechanical, standard for integration, top-tier for architecture) is an explicit part of the skill.
 
-## Layer 2 — company-plugin guardrail cluster (inside Implementer)
+## Layer 2 — global-plugin guardrail cluster (inside Implementer)
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables':{'fontSize':'11px'},'flowchart':{'nodeSpacing':16,'rankSpacing':22,'padding':4,'diagramPadding':4}}}%%
@@ -106,4 +106,4 @@ flowchart LR
 - **Guardrails fire inside the subagent, not in the controller.** The controller must never read or list them — they should be part of the Implementer's own skill discovery via `using-superpowers`' 1% rule.
 - **No guardrail competes with TDD.** Each guardrail adds domain rules on top of TDD; none of them replaces "write the failing test first".
 - **Guardrail output feeds the spec-reviewer via the code itself.** Guardrails do not emit separate reports to the controller; their work shows up as better code for the spec-reviewer and code-quality-reviewer subagents to read.
-- **A new company-plugin skill targeting this workflow must be addable to the guardrail cluster without modifying the three prompt templates.** If a new skill requires a new prompt field, that is a breaking change and warrants discussion before committing.
+- **A new global-plugin skill targeting this workflow must be addable to the guardrail cluster without modifying the three prompt templates.** If a new skill requires a new prompt field, that is a breaking change and warrants discussion before committing.

@@ -17,9 +17,9 @@ skills_invoked:
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **REQUIRED BACKGROUND for any subagent dispatched off this plan:** invoke every relevant `company-plugin:*` skill from the SessionStart roster (the same way `inject-skills-reminder.mjs` expects). Subagents do NOT inherit parent context — name the skills explicitly when you dispatch.
+> **REQUIRED BACKGROUND for any subagent dispatched off this plan:** invoke every relevant `global-plugin:*` skill from the SessionStart roster (the same way `inject-skills-reminder.mjs` expects). Subagents do NOT inherit parent context — name the skills explicitly when you dispatch.
 
-**Goal:** Move every consumer-facing component of the `company-plugin` into `plugin/` and keep maintainer-only / build-only tooling at the repo root, so a consumer who installs the plugin via marketplace gets *only* the runtime, while contributors keep the full dev harness.
+**Goal:** Move every consumer-facing component of the `global-plugin` into `plugin/` and keep maintainer-only / build-only tooling at the repo root, so a consumer who installs the plugin via marketplace gets *only* the runtime, while contributors keep the full dev harness.
 
 **Architecture:** Mirror the two-mode pattern used in `board-plugin` (`/c/Users/logan/Desktop/projects/org/board-plugin`). Repo root holds dev infra: skill-verifier TypeScript, husky pre-commit, vitest, docs, audits, plans, specs, workflows. The `plugin/` subdir is self-contained (manifest, hooks, skills, MCP config, consumer README) and is the *only* path a marketplace `git-subdir` source would publish.
 
@@ -38,7 +38,7 @@ The following choices are baked into this plan; no decisions are left to the exe
 | 3 | The 38-byte root `settings.json` (`{"agent":"security-reviewer"}`) | Delete | No documented auto-load path; references the agent we're also dropping. |
 | 4 | `agents/security-reviewer.md` | Delete (for now) | Removed entirely; `agents/` dir disappears with it. Plugin ships zero agents. |
 | 5 | `CLAUDE.md` at repo root | Add | Encodes the two-mode rule for future agents working in this repo. |
-| 6 | Stale slash-command namespace in docs (`/company-superpowers-plugin:` → `/company-plugin:`) | Fix in this PR | Pure text replacement; manifest already says `company-plugin`. |
+| 6 | Stale slash-command namespace in docs (`/global-plugin:` → `/global-plugin:`) | Fix in this PR | Pure text replacement; manifest already says `global-plugin`. |
 | 7 | `.claude-plugin/marketplace.json` at repo root | Skip — file as follow-up | Requires real GitHub owner/URL; not committing a placeholder. |
 | 8 | Broken `.mcp.json` echo-placeholder MCP servers | Skip — file as follow-up | Pre-existing; behavior change, out of scope here. |
 | 9 | `skill-verification` CLI unavailable to consumers (`pnpm verify`) | Skip — file as follow-up | Pre-existing; needs design (ship verifier in plugin? rewrite skill text?). |
@@ -192,7 +192,7 @@ Expected: no output, exit 0. (The directory should be empty now that the manifes
 - [ ] **Step 3: Verify the manifest is at the new path**
 
 Run: `head -3 plugin/.claude-plugin/plugin.json`
-Expected: shows `"name": "company-plugin"` line.
+Expected: shows `"name": "global-plugin"` line.
 
 - [ ] **Step 4: Commit**
 
@@ -518,7 +518,7 @@ Replace `README.md` with maintainer-focused content. Target ≤ 80 lines. Sugges
 ```markdown
 # global-plugin
 
-Source repo for the `company-plugin` Claude Code plugin.
+Source repo for the `global-plugin` Claude Code plugin.
 
 ## Status
 
@@ -544,9 +544,9 @@ claude --plugin-dir /absolute/path/to/global-plugin/plugin
 
 Inside Claude Code:
 
-- `/help` lists `company-plugin` skills.
+- `/help` lists `global-plugin` skills.
 - `/mcp` lists the (placeholder) MCP servers.
-- `/company-plugin:architecture-guard` triggers a skill.
+- `/global-plugin:architecture-guard` triggers a skill.
 
 ## Maintainer workflow
 
@@ -578,14 +578,14 @@ Move these sections from the old root README into `plugin/README.md`:
 
 Apply these edits during the move:
 - Drop the "Included agent" section entirely (no agent ships).
-- Replace every `/company-superpowers-plugin:<skill>` with `/company-plugin:<skill>`.
+- Replace every `/global-plugin:<skill>` with `/global-plugin:<skill>`.
 - Update the local-test command to `claude --plugin-dir /absolute/path/to/global-plugin/plugin`.
 - Update the bootstrap-script invocation to `plugin/scripts/bootstrap-new-project.sh /path/to/new-project`.
 
 Suggested skeleton:
 
 ```markdown
-# company-plugin
+# global-plugin
 
 Company-wide guardrails for full-stack React/Next.js + Node/NestJS + Prisma/Postgres + AWS projects.
 
@@ -626,11 +626,11 @@ claude --plugin-dir /absolute/path/to/global-plugin/plugin
 Inside Claude Code:
 - `/help`
 - `/mcp`
-- `/company-plugin:architecture-guard`
-- `/company-plugin:frontend-implementation-guard`
+- `/global-plugin:architecture-guard`
+- `/global-plugin:frontend-implementation-guard`
 
 For React Native projects, also use:
-- `/company-plugin:mobile-implementation-guard`
+- `/global-plugin:mobile-implementation-guard`
 
 ## New project setup
 
@@ -646,7 +646,7 @@ Then replace the placeholder MCP commands in `<new-project>/.mcp.json`.
 Apply the same path/namespace fixes as Step 2:
 
 - Lines 28–32: replace the `claude --plugin-dir` path with `/absolute/path/to/global-plugin/plugin`.
-- Lines 36–38, 42: replace every `/company-superpowers-plugin:` with `/company-plugin:`.
+- Lines 36–38, 42: replace every `/global-plugin:` with `/global-plugin:`.
 - Lines 45–47: change template references from `templates/project/.claude/...` to `plugin/templates/project/.claude/...`.
 
 Optional: also update lines 14–22 to drop dependencies that aren't actually declared in `plugin/.claude-plugin/plugin.json` (currently lists `postman` and `aikido-security` which aren't in the manifest's `dependencies` array).
@@ -681,7 +681,7 @@ This file gives guidance to Claude Code when working in this repository.
 
 ## Status
 
-Source repo for `company-plugin`. Consumer-facing plugin runtime lives in `plugin/`. Repo root holds maintainer/build infra only.
+Source repo for `global-plugin`. Consumer-facing plugin runtime lives in `plugin/`. Repo root holds maintainer/build infra only.
 
 ## Repo modes — maintainer vs consumer audit
 
@@ -758,15 +758,15 @@ claude --plugin-dir /c/Users/logan/Desktop/projects/org/global-plugin/plugin
 
 Run these slash commands:
 
-- `/help` — should list `company-plugin` skills.
-- `/agents` — should list **no** company-plugin agents (the security-reviewer was deleted).
+- `/help` — should list `global-plugin` skills.
+- `/agents` — should list **no** global-plugin agents (the security-reviewer was deleted).
 - `/mcp` — should list 5 MCP servers (placeholder `echo` commands; expected to "work" trivially).
 
-**Specifically watch for:** the `inject-skills-reminder.mjs` hook firing at SessionStart and injecting the company-plugin skills roster as a system-reminder. The roster should list every consumer-facing skill (28 dirs minus `_baseline` which is excluded by the leading-underscore filter).
+**Specifically watch for:** the `inject-skills-reminder.mjs` hook firing at SessionStart and injecting the global-plugin skills roster as a system-reminder. The roster should list every consumer-facing skill (28 dirs minus `_baseline` which is excluded by the leading-underscore filter).
 
 - [ ] **Step 3: Trigger a skill explicitly**
 
-Type: `/company-plugin:architecture-guard`
+Type: `/global-plugin:architecture-guard`
 Expected: skill loads and presents its content.
 
 - [ ] **Step 4: Verify the post-tool-use logger hook**
@@ -842,12 +842,12 @@ Verification only — refactor is complete.
 
 - [ ] **Step 1: File issue: add `.claude-plugin/marketplace.json` for marketplace publishing**
 
-Title: `Add marketplace.json so company-plugin can be installed via marketplace`
+Title: `Add marketplace.json so global-plugin can be installed via marketplace`
 Summary: `board-plugin` publishes via a `.claude-plugin/marketplace.json` at repo root with a `git-subdir` source pointing at `plugin/`. `global-plugin` doesn't have one yet. Adding it requires the GitHub owner/URL the plugin will be published from, plus an owner email. Mirror the structure used in `/c/Users/logan/Desktop/projects/org/board-plugin/.claude-plugin/marketplace.json`.
 
 - [ ] **Step 2: File issue: `.mcp.json` placeholders are non-functional**
 
-Title: `company-plugin .mcp.json registers 5 MCP servers as 'echo' placeholders`
+Title: `global-plugin .mcp.json registers 5 MCP servers as 'echo' placeholders`
 Summary: `plugin/.mcp.json` lists five servers (github, ci-cd, observability, cloud, database) with `"command": "echo"`. Either replace with real commands, replace with empty `mcpServers: {}` and document setup in the consumer README, or document why placeholders are intentional.
 
 - [ ] **Step 3: File issue: `skill-verification` skill instructs consumers to run `pnpm verify`, which only exists in the source repo**
@@ -887,7 +887,7 @@ Tracker entries only.
 - Add `.claude-plugin/marketplace.json` — needs a real GitHub URL; tracked as a follow-up.
 - Fix the `.mcp.json` echo-placeholder commands — pre-existing, behavior change, follow-up.
 - Make `skill-verification`'s fast-mode CLI available to consumers — pre-existing, design work, follow-up.
-- Rename the plugin (manifest's `name: company-plugin` is already correct; only the docs were stale).
+- Rename the plugin (manifest's `name: global-plugin` is already correct; only the docs were stale).
 - Add `tests/`, `evals/`, or the `plans/000-rebuild` patterns from `board-plugin`. Out of scope; file a separate plan if desired.
 - Add a `commands/` directory. The plugin doesn't use it; user-invocable surface is exposed through skills, which is the modern pattern.
 

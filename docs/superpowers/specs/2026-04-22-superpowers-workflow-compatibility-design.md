@@ -8,9 +8,9 @@ Scope: `docs/superpowers/workflows/`, `skills-categorization.txt` (gitignored), 
 
 Produce the artifacts needed to:
 
-1. Give `company-plugin` a **canonical, verified, and living reference** for how `superpowers` v5.0.7 workflows actually fire inside Claude Code.
-2. Give Basuru a **fast-to-scan categorization** of the 27 company-plugin skills.
-3. Give the team a **testing procedure** that verifies new or edited company-plugin skills don't break superpowers workflows (filling the gap in `superpowers:writing-skills`, which tests skills in isolation but not for workflow compatibility).
+1. Give `global-plugin` a **canonical, verified, and living reference** for how `superpowers` v5.0.7 workflows actually fire inside Claude Code.
+2. Give Basuru a **fast-to-scan categorization** of the 27 global-plugin skills.
+3. Give the team a **testing procedure** that verifies new or edited global-plugin skills don't break superpowers workflows (filling the gap in `superpowers:writing-skills`, which tests skills in isolation but not for workflow compatibility).
 4. **Apply that procedure** once across all 26 existing skills (including `_baseline`) so we know where we stand today.
 
 Non-goals for this design: fixing any issues the audit surfaces (that's a follow-up cycle), introducing a diagram-rendering plugin, or modifying `superpowers` itself.
@@ -25,7 +25,7 @@ Non-goals for this design: fixing any issues the audit surfaces (that's a follow
 | Parallelize audits aggressively (subagents, single message fan-out). | User directive |
 | Autonomous execution — no pauses for confirmation between pieces. | Basuru directive (2026-04-22) |
 | Keep diagram tooling simple — stick with existing mermaid-in-markdown convention. | User directive ("keep simple for now") |
-| Respect existing company-plugin skill-authoring conventions (`docs/superpowers/skill-authoring-guide.md`). | repo convention |
+| Respect existing global-plugin skill-authoring conventions (`docs/superpowers/skill-authoring-guide.md`). | repo convention |
 
 ## 3. Why this work is needed
 
@@ -49,11 +49,11 @@ Piece #3 (the testing template) codifies the seven missing checks above. Piece #
 
 ## 4. Approach: preserve + extend (two-layer reference)
 
-Rejected: **(A) Lift-and-shift** (mix company-plugin nodes into the 8 superpowers diagrams). Rejected because every future skill change would contaminate the "known good" baseline used for compatibility testing, and the audit in piece #4 would become a moving target.
+Rejected: **(A) Lift-and-shift** (mix global-plugin nodes into the 8 superpowers diagrams). Rejected because every future skill change would contaminate the "known good" baseline used for compatibility testing, and the audit in piece #4 would become a moving target.
 
 Rejected: **(C) Prompt-shape rewrite**. Rejected because it drifts from the verified superpowers source and makes diagram-accuracy audits harder to reproduce.
 
-Chosen: **(B) Preserve + extend.** Layer 1 is a strict, audited transcription of the 8 superpowers 5.0.7 diagrams, origin-coloured with `extPlugin`. Layer 2 ("extension" diagram per workflow) shows where company-plugin skills *attach* to each workflow, origin-coloured with `companyPlugin`. Some workflows won't have a layer-2 extension (e.g., the meta writing-skills workflow doesn't directly host any company-plugin skill), and that's fine — we omit layer 2 rather than force it.
+Chosen: **(B) Preserve + extend.** Layer 1 is a strict, audited transcription of the 8 superpowers 5.0.7 diagrams, origin-coloured with `extPlugin`. Layer 2 ("extension" diagram per workflow) shows where global-plugin skills *attach* to each workflow, origin-coloured with `companyPlugin`. Some workflows won't have a layer-2 extension (e.g., the meta writing-skills workflow doesn't directly host any global-plugin skill), and that's fine — we omit layer 2 rather than force it.
 
 ## 5. Piece #1 — workflow reference (audited + adapted)
 
@@ -87,11 +87,11 @@ Trigger shape: <e.g. "User says: build/add/create X">
 
 - <bullet list — extracted from the diagram>
 
-## Extension: where company-plugin skills attach  *(omitted if none apply)*
+## Extension: where global-plugin skills attach  *(omitted if none apply)*
 
 <mermaid diagram — adds `companyPlugin` nodes to specific points in the core flow>
 
-- <table: company-plugin skill | attaches at | mode (guide/review) | does not duplicate>
+- <table: global-plugin skill | attaches at | mode (guide/review) | does not duplicate>
 
 ## Compatibility notes
 
@@ -135,7 +135,7 @@ Parallelized: dispatch 4 subagents, each auditing 2 diagrams. Each returns a `PA
 
 ### 5.4 Company-plugin extension diagrams (layer 2)
 
-For each workflow, a short table is produced that answers: which of the 27 company-plugin skills *can* or *must* attach, and at which point? This informs what the layer-2 diagram contains.
+For each workflow, a short table is produced that answers: which of the 27 global-plugin skills *can* or *must* attach, and at which point? This informs what the layer-2 diagram contains.
 
 Preliminary mapping (refined during execution):
 
@@ -193,7 +193,7 @@ This is a **document**, not a new SKILL.md. Rationale: it's a testing procedure 
 
 ### 7.2 Seven checks
 
-For each new or edited company-plugin skill, run these checks before committing:
+For each new or edited global-plugin skill, run these checks before committing:
 
 | # | Check | Method |
 |---|---|---|
@@ -201,7 +201,7 @@ For each new or edited company-plugin skill, run these checks before committing:
 | **C2** | No HARD-GATE bypass | Static: do any of the skill's rules advise taking implementation action before spec approval, or committing without tests, or claiming success without verification? Workflow insertion: place the skill's invocation inside Workflow 02 between `brainstorming` and `writing-plans` — does the chain still honour the HARD-GATE? |
 | **C3** | No duplication of a superpowers primitive | Static: grep the skill for rules that repeat `test-driven-development`, `systematic-debugging`, `verification-before-completion`, `using-git-worktrees`, `finishing-a-development-branch`. If duplicated, convert the rule to a `**REQUIRED SUB-SKILL:** superpowers:<name>` marker. |
 | **C4** | Correct handoff markers | Static: every reference to a superpowers skill uses `**REQUIRED SUB-SKILL:**` or `**REQUIRED BACKGROUND:**` — not `@` links, not raw paths. |
-| **C5** | No Iron Law contradiction | Static + reasoning: for each company-plugin rule, does it contradict any of: "no code without failing test" / "no fix without root cause" / "no claim without fresh evidence" / "no skill without a failing test first" / 1%-rule invocation discipline? |
+| **C5** | No Iron Law contradiction | Static + reasoning: for each global-plugin rule, does it contradict any of: "no code without failing test" / "no fix without root cause" / "no claim without fresh evidence" / "no skill without a failing test first" / 1%-rule invocation discipline? |
 | **C6** | Review-mode output compatibility | Static: does the skill's `## Review checklist` produce output in a shape that can be consumed alongside the superpowers `code-reviewer` agent's report, without overlap or contradiction? Specifically, PASS/CONCERN/NOT APPLICABLE grading must match the contract. |
 | **C7** | Workflow-insertion simulation | Pressure-scenario: for each workflow where the skill attaches (per Piece #2), a single-page scenario that forces the agent to navigate the workflow with the skill present. Agent must not skip superpowers gates, must not invoke the skill at the wrong moment, must not duplicate existing skill outputs. |
 
@@ -321,5 +321,5 @@ Not committed by Claude. User commits after review.
 - Applying fixes from the audit (piece #5 — follow-up).
 - Diagram-rendering tooling / SVG generation.
 - Modifications to `superpowers` itself.
-- Modifications to existing company-plugin SKILLs (except as noted: **no** modifications in this session).
+- Modifications to existing global-plugin SKILLs (except as noted: **no** modifications in this session).
 - Mobile-specific workflows beyond what already sits in `mobile-implementation-guard`.

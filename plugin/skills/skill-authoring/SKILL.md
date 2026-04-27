@@ -5,7 +5,7 @@ description: "Use when creating a new skill, editing an existing skill, or scaff
 
 # skill-authoring
 
-Wraps `superpowers:writing-skills` with company conventions for the `company-plugin`.
+Wraps `superpowers:writing-skills` with company conventions for the `global-plugin`.
 
 ## When to use
 - Creating a new skill in `skills/<name>/SKILL.md`
@@ -15,7 +15,7 @@ Wraps `superpowers:writing-skills` with company conventions for the `company-plu
 ## Core rules
 
 1. **Description MUST have trigger signals.** Start with `Use when ...`. Add `TRIGGER when:` / `SKIP when:` for sharp discrimination. No vague verbs ("handles", "manages", "deals with").
-2. **Interactions section is mandatory.** Every skill declares at least one `**REQUIRED BACKGROUND:**`, `**REQUIRED SUB-SKILL:**`, `**Hands off to:**`, or `**Does not duplicate:**` tying it into the superpowers or company-plugin graph.
+2. **Interactions section is mandatory.** Every skill declares at least one `**REQUIRED BACKGROUND:**`, `**REQUIRED SUB-SKILL:**`, `**Hands off to:**`, or `**Does not duplicate:**` tying it into the superpowers or global-plugin graph.
 3. **Review checklist uses the four-section shape.** Sections: `Summary`, `Findings` (table: file:line, severity, category, fix), `Safer alternative`, `Checklist coverage` (labels: `PASS / CONCERN / NOT APPLICABLE`).
 4. **Size budget.** 200–400 lines preferred, 500 hard ceiling. Over → split.
 5. **Stack-relevant triggers.** Stack-specific skills (Next.js, NestJS, Prisma, AWS, React Native) name the stack in the description so Claude can match against user prompts.
@@ -35,7 +35,7 @@ Wraps `superpowers:writing-skills` with company conventions for the `company-plu
 1. Run `superpowers:brainstorming` to pin down the skill's purpose and attach point.
 2. Follow `superpowers:writing-skills` for file layout and metadata.
 3. Apply company conventions from the Core rules above.
-4. Hand off to `company-plugin:skill-verification` before committing.
+4. Hand off to `global-plugin:skill-verification` before committing.
 
 ## Good vs bad
 
@@ -57,7 +57,7 @@ Good:
 ```
 #### Interactions with other skills
 - **REQUIRED SUB-SKILL:** superpowers:test-driven-development
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification
 ```
 
 ## Review checklist
@@ -84,4 +84,4 @@ If the skill re-implements a superpowers primitive, replace with a sub-skill mar
 - **REQUIRED SUB-SKILL:** superpowers:writing-skills
 - **REQUIRED BACKGROUND:** superpowers:brainstorming
 - **REQUIRED BACKGROUND:** agent-development
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification

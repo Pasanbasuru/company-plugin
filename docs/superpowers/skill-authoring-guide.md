@@ -1,6 +1,6 @@
 # Skill authoring guide
 
-How to write a `SKILL.md` for the `company-plugin` library. Read this before creating or rewriting a skill.
+How to write a `SKILL.md` for the `global-plugin` library. Read this before creating or rewriting a skill.
 
 ## File layout
 

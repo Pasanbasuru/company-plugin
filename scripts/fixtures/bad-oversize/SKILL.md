@@ -24,7 +24,7 @@ x
 - rule: PASS
 
 ## Interactions with other skills
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification
 
 filler line 1
 filler line 2

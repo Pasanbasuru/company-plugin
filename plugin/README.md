@@ -1,4 +1,4 @@
-# company-plugin
+# global-plugin
 
 Company-wide guardrails for full-stack React/Next.js + Node/NestJS + Prisma/Postgres + AWS projects.
 
@@ -87,11 +87,11 @@ claude --plugin-dir /absolute/path/to/global-plugin/plugin
 Inside Claude Code:
 - `/help`
 - `/mcp`
-- `/company-plugin:architecture-guard`
-- `/company-plugin:frontend-implementation-guard`
+- `/global-plugin:architecture-guard`
+- `/global-plugin:frontend-implementation-guard`
 
 For React Native projects, also use:
-- `/company-plugin:mobile-implementation-guard`
+- `/global-plugin:mobile-implementation-guard`
 
 ## New project setup
 

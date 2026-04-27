@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rewrite the 19 thin SKILL.md files in `company-plugin/skills/` into 25 production-grade skills (19 rewritten + 6 new) plus a shared `_baseline` skill and a skill authoring guide. Each skill is one `SKILL.md` file (no `references/`), runs in hybrid guide + review mode, and encodes generic industry best-practice for the React/Next.js, NestJS, Prisma/Postgres, AWS stack.
+**Goal:** Rewrite the 19 thin SKILL.md files in `global-plugin/skills/` into 25 production-grade skills (19 rewritten + 6 new) plus a shared `_baseline` skill and a skill authoring guide. Each skill is one `SKILL.md` file (no `references/`), runs in hybrid guide + review mode, and encodes generic industry best-practice for the React/Next.js, NestJS, Prisma/Postgres, AWS stack.
 
 **Architecture:** Every skill is a folder containing a single `SKILL.md`. A shared `_baseline/SKILL.md` defines cross-cutting standards (TypeScript, security, testing, observability, accessibility, performance, resilience). Every other skill opens with `Assumes _baseline. Adds:` and only covers domain-specific content. Skills have explicit interaction/ownership notes to prevent overlap confusion.
 
@@ -226,7 +226,7 @@ Write `docs/superpowers/skill-authoring-guide.md` with this content:
 ````markdown
 # Skill authoring guide
 
-How to write a `SKILL.md` for the `company-plugin` library. Read this before creating or rewriting a skill.
+How to write a `SKILL.md` for the `global-plugin` library. Read this before creating or rewriting a skill.
 
 ## File layout
 

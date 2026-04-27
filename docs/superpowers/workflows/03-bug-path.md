@@ -77,7 +77,7 @@ flowchart TD
 - **IL3: NO CLAIM WITHOUT FRESH EVIDENCE.** Exit gate — verification output must be read, this message.
 - **Escape hatch:** 3+ failed fix attempts ⇒ STOP, the architecture is suspect. This is an explicit deliberate loop-break.
 
-## Layer 2 — where company-plugin skills attach
+## Layer 2 — where global-plugin skills attach
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables':{'fontSize':'11px'},'flowchart':{'nodeSpacing':18,'rankSpacing':22,'padding':4,'diagramPadding':4}}}%%
@@ -110,5 +110,5 @@ flowchart LR
 
 - **Do not replace TDD.** A bug-path skill must never say "quick one-line fix, skip the test". The IL2 Iron Law owns this.
 - **Do not shortcut Phase 1.** `observability-first-debugging` adds the "check logs/metrics/traces before guessing" discipline, but it does not let Claude skip to Phase 4 — it is *within* Phase 1.
-- **Preserve the 3+ escape hatch.** If a company-plugin skill triggers a 3rd failed fix, the skill must explicitly surface `STOP, question architecture` rather than continue.
+- **Preserve the 3+ escape hatch.** If a global-plugin skill triggers a 3rd failed fix, the skill must explicitly surface `STOP, question architecture` rather than continue.
 - **Exit through IL3.** Any bug-fix skill ends by deferring to `verification-before-completion`, not by declaring success on its own.

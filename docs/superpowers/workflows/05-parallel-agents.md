@@ -85,6 +85,6 @@ flowchart LR
 
 ## Compatibility notes
 
-- **Parallel agents are narrow by design.** A company-plugin skill that wants to fire inside a parallel agent must fit in a reduced context — prefer the smallest possible guide rather than a full review.
-- **Cross-agent regression is the real risk.** A new parallel-friendly skill should include a rule that references `regression-risk-check` via `**Hands off to:** company-plugin:regression-risk-check` when post-parallel verification is the right consumer.
+- **Parallel agents are narrow by design.** A global-plugin skill that wants to fire inside a parallel agent must fit in a reduced context — prefer the smallest possible guide rather than a full review.
+- **Cross-agent regression is the real risk.** A new parallel-friendly skill should include a rule that references `regression-risk-check` via `**Hands off to:** global-plugin:regression-risk-check` when post-parallel verification is the right consumer.
 - **Do not add a per-agent review step.** Per-task review belongs in Workflow 4. This workflow is about fan-out, not gating.

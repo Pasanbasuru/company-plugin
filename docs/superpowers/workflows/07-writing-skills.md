@@ -61,7 +61,7 @@ flowchart TD
 - **REQUIRED BACKGROUND: `test-driven-development`.** Same RED-GREEN-REFACTOR discipline.
 - **Description field is load-bearing.** A description that summarises the skill's workflow causes Claude to follow the description instead of reading the body. `writing-skills` has an entire CSO section on this.
 
-## Layer 2 — company-plugin compatibility audit hook
+## Layer 2 — global-plugin compatibility audit hook
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables':{'fontSize':'11px'},'flowchart':{'nodeSpacing':18,'rankSpacing':22,'padding':4,'diagramPadding':4}}}%%
@@ -95,7 +95,7 @@ flowchart TD
 
 | Phase | Artifact / skill | Mode | Trigger condition |
 |---|---|---|---|
-| After superpowers GREEN phase passes | `docs/superpowers/testing-skills-against-workflows.md` (audit template) | audit | Every new or edited company-plugin skill, without exception |
+| After superpowers GREEN phase passes | `docs/superpowers/testing-skills-against-workflows.md` (audit template) | audit | Every new or edited global-plugin skill, without exception |
 | Records | `docs/superpowers/audits/YYYY-MM-DD/<skill-name>.md` | artifact | Produced once per audit run |
 
 ## Compatibility notes
@@ -103,4 +103,4 @@ flowchart TD
 - **The workflow-compatibility audit is additive.** It runs **after** superpowers' RED-GREEN-REFACTOR passes — not instead of it. A skill with a great pressure-test record can still fail this audit, and vice versa. Both gates must pass before commit.
 - **RED verdict blocks commit.** A skill with any C1–C7 FAIL cannot merge. A YELLOW verdict (CONCERN, no FAIL) can merge with an issue logged.
 - **The audit template itself is a living document.** If, during piece #4's bulk audit, new systemic rationalizations surface, add them to the template as additional check rows and re-audit affected skills.
-- **This workflow is the only place in company-plugin where the audit is explicitly invoked.** Don't fold it into Workflow 2 or 6 — skill authoring is a distinct activity and the audit belongs here.
+- **This workflow is the only place in global-plugin where the audit is explicitly invoked.** Don't fold it into Workflow 2 or 6 — skill authoring is a distinct activity and the audit belongs here.
