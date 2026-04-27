@@ -138,7 +138,9 @@ Note: no `agents/` dir at root or in `plugin/` — the only agent file is being 
 ### Task 1: Create the empty plugin directory skeleton
 
 **Files:**
-- Create: `plugin/.claude-plugin/`, `plugin/hooks/`, `plugin/skills/`, `plugin/scripts/`, `plugin/templates/`
+- Create: `plugin/.claude-plugin/`, `plugin/scripts/`
+
+> **Why only these two:** `plugin/.claude-plugin/` is the destination of a *file* move (Task 2 moves `plugin.json` into it) and `plugin/scripts/` is the destination of a *file rename move* (Task 5 moves the bootstrap script into it with a new name). Both REQUIRE the parent dir to pre-exist. The other plugin subdirectories — `plugin/hooks/`, `plugin/skills/`, `plugin/templates/` — are destinations of *directory* moves (Tasks 4 and 6 do `git mv hooks plugin/hooks` etc.). For a directory rename, `git mv <src> <dest>` works correctly only when `<dest>` does NOT pre-exist; if it does, the source is nested INSIDE the destination (e.g., `plugin/hooks/hooks/hooks.json`). So pre-creating those three is actively harmful.
 
 - [ ] **Step 1: Create the directories**
 
@@ -146,15 +148,15 @@ Run from repo root:
 
 ```bash
 mkdir -p plugin/.claude-plugin
-mkdir -p plugin/hooks
-mkdir -p plugin/skills
 mkdir -p plugin/scripts
-mkdir -p plugin/templates
 ```
 
-Expected: no output. `ls plugin/` lists five directories.
+Expected: no output. `ls plugin/` lists exactly two directories.
 
-- [ ] **Step 2: Verify they're empty**
+- [ ] **Step 2: Verify the rule above held**
+
+Run: `ls plugin/`
+Expected output (exactly): `.claude-plugin  scripts` (two entries; nothing else).
 
 Run: `find plugin -type f`
 Expected: no output.
