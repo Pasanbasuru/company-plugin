@@ -1,7 +1,7 @@
 # Testing Company-Plugin Skills Against Superpowers Workflows
 
 Companion to `superpowers:writing-skills` and `superpowers:writing-skills/testing-skills-with-subagents.md`.
-Use this **after** superpowers pressure-testing passes and **before** committing a new or edited company-plugin skill.
+Use this **after** superpowers pressure-testing passes and **before** committing a new or edited global-plugin skill.
 
 ## Why this exists
 
@@ -141,7 +141,7 @@ This document closes that gap with seven concrete checks and a workflow-insertio
    e. Verify the subagent:
       - Does NOT skip any superpowers gate in the workflow.
       - Does NOT invoke the skill at a different workflow point.
-      - Does NOT produce output that conflicts with a parallel company-plugin skill also firing at the same point.
+      - Does NOT produce output that conflicts with a parallel global-plugin skill also firing at the same point.
       - DOES invoke the skill at the expected point and produce the expected shape of output.
 3. For discipline-style skills (those with hard "never …" rules), add pressure per `superpowers:testing-skills-with-subagents.md`:
    - Multiple pressures (time + sunk cost + exhaustion).

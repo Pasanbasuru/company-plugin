@@ -28,4 +28,4 @@ alt.
 
 ## Interactions with other skills
 - **REQUIRED BACKGROUND:** superpowers:brainstorming
-- **Hands off to:** company-plugin:skill-verification
+- **Hands off to:** global-plugin:skill-verification

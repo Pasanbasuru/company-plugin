@@ -3,14 +3,14 @@
 - **Date:** 2026-04-24
 - **Status:** Draft — awaiting user review
 - **Author:** Basuru + Claude (brainstorming session)
-- **Scope:** Two new skills in `company-plugin` + pre-commit hook wiring + follow-up discoverability audit of the existing 26 skills.
+- **Scope:** Two new skills in `global-plugin` + pre-commit hook wiring + follow-up discoverability audit of the existing 26 skills.
 
 ## 1. Background
 
-The `company-plugin` ships 26 skills. They passed a 7-check workflow-compatibility audit on 2026-04-22/23 (all GREEN). However, two properties were *not* tested and are the motivating gaps for this spec:
+The `global-plugin` ships 26 skills. They passed a 7-check workflow-compatibility audit on 2026-04-22/23 (all GREEN). However, two properties were *not* tested and are the motivating gaps for this spec:
 
-1. **Discoverability in fresh sessions** — when a user starts a new project with `company-plugin` installed and types a prompt, does Claude reliably surface the right skill from 26 options? This is driven by the quality of the `description` frontmatter field (trigger signals, keyword coverage, stack naming), not by workflow-compatibility checks.
-2. **Authoring consistency for future skills** — when someone adds a 27th skill, the current flow is ad-hoc. `superpowers:writing-skills` is the upstream authoring skill, but company-plugin has additional conventions (four-section Review checklist, sanctioned handoff markers, size target, stack-specific triggers) that aren't enforced anywhere.
+1. **Discoverability in fresh sessions** — when a user starts a new project with `global-plugin` installed and types a prompt, does Claude reliably surface the right skill from 26 options? This is driven by the quality of the `description` frontmatter field (trigger signals, keyword coverage, stack naming), not by workflow-compatibility checks.
+2. **Authoring consistency for future skills** — when someone adds a 27th skill, the current flow is ad-hoc. `superpowers:writing-skills` is the upstream authoring skill, but global-plugin has additional conventions (four-section Review checklist, sanctioned handoff markers, size target, stack-specific triggers) that aren't enforced anywhere.
 
 This spec defines two new skills that close both gaps:
 
@@ -23,17 +23,17 @@ Today:
 
 - Skills can be authored with weak descriptions that fail to surface them in fresh sessions. No automated check.
 - Skills can drift from the four-section Review checklist shape, use prose handoffs instead of sanctioned markers, or exceed the size budget. Humans spotted these in the 2026-04-22 audit — we want a machine-runnable check.
-- Nothing binds skill-authoring to the superpowers workflow graph: a new skill can be added without declaring how it interacts with upstream `superpowers:*` primitives or downstream company-plugin skills.
+- Nothing binds skill-authoring to the superpowers workflow graph: a new skill can be added without declaring how it interacts with upstream `superpowers:*` primitives or downstream global-plugin skills.
 - Pre-commit has no skill-quality gate. Bad skills ship.
 
-Goal: when a user installs `company-plugin` on a fresh project and starts a prompt, the right skills surface automatically through brainstorming and superpowers workflows, AND new skills added over time maintain that quality bar.
+Goal: when a user installs `global-plugin` on a fresh project and starts a prompt, the right skills surface automatically through brainstorming and superpowers workflows, AND new skills added over time maintain that quality bar.
 
 ## 3. Approach — chosen
 
 **B (preserve + extend).** The two new skills layer on top of `superpowers:writing-skills` without forking it. Agent Development (Anthropic) is kept as a secondary reference. Verification reuses the existing 7-check audit template at `docs/superpowers/testing-skills-against-workflows.md` rather than re-implementing it.
 
 Rejected alternatives:
-- **A (fork-and-customize)** — copy `writing-skills` into company-plugin and modify in place. Rejected: eternal upstream drift.
+- **A (fork-and-customize)** — copy `writing-skills` into global-plugin and modify in place. Rejected: eternal upstream drift.
 - **C (docs-only)** — a checklist in `docs/` with no skill. Rejected: not machine-runnable, misses pre-commit gate.
 
 ## 4. Locked decisions
@@ -66,12 +66,12 @@ description: Use when creating a new skill, editing an existing skill, or scaffo
 - `**REQUIRED SUB-SKILL:** superpowers:writing-skills` — primary authoring flow (scaffolding, metadata, format)
 - `**REQUIRED BACKGROUND:** superpowers:brainstorming` — every skill starts from a brainstorm
 - `**REQUIRED BACKGROUND:** agent-development` — alternative patterns when `writing-skills` feels constraining
-- `**Hands off to:** company-plugin:skill-verification` — after the skill is written, run verification before commit
+- `**Hands off to:** global-plugin:skill-verification` — after the skill is written, run verification before commit
 
 ### 5.4 Core rules
 
 1. **Description MUST have trigger signals.** "Use when X" clause required. Optional "TRIGGER when:" / "SKIP when:" for sharp discrimination. No vague verbs ("handles", "manages", "deals with").
-2. **Interactions section is mandatory.** Every skill declares at least one `**REQUIRED BACKGROUND:**` or `**Hands off to:**` tying it into the superpowers or company-plugin graph. Standalone skills are rejected.
+2. **Interactions section is mandatory.** Every skill declares at least one `**REQUIRED BACKGROUND:**` or `**Hands off to:**` tying it into the superpowers or global-plugin graph. Standalone skills are rejected.
 3. **Review checklist uses the four-section shape.** Sections: `Summary`, `Findings` (with `file:line, severity, category, fix`), `Safer alternative`, `Checklist coverage` (labels: `PASS / CONCERN / NOT APPLICABLE`).
 4. **Size budget.** 200–400 lines preferred, 500 is the hard ceiling. Over → split into sub-skills.
 5. **Stack-relevant triggers.** Stack-specific skills (Next.js, NestJS, Prisma, AWS, React Native) must name the stack in the description so Claude can match it to user prompts.
@@ -176,7 +176,7 @@ staged=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^skills/[^/]
 
 echo "Running skill-verification (fast mode) on staged skills..."
 for f in $staged; do
-  claude skill run company-plugin:skill-verification --mode fast --file "$f" || {
+  claude skill run global-plugin:skill-verification --mode fast --file "$f" || {
     echo "skill-verification FAILED for $f — commit blocked."
     exit 1
   }

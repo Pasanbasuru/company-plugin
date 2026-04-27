@@ -55,10 +55,10 @@ flowchart TD
 
 ## No layer 2
 
-No company-plugin skill attaches at this workflow. Everything company-plugin ships lives downstream of the gate in Workflows 2, 3, 4, 5, 6, 7.
+No global-plugin skill attaches at this workflow. Everything global-plugin ships lives downstream of the gate in Workflows 2, 3, 4, 5, 6, 7.
 
 ## Compatibility notes for new skills
 
-- A new skill must not register a `SessionStart` hook that competes with `using-superpowers` for `additionalContext`. If company-plugin ever needs a session-level injection (it currently ships a `PostToolUse` logger and a `SessionStart` logger but neither touches `additionalContext`), coordinate with this gate.
+- A new skill must not register a `SessionStart` hook that competes with `using-superpowers` for `additionalContext`. If global-plugin ever needs a session-level injection (it currently ships a `PostToolUse` logger and a `SessionStart` logger but neither touches `additionalContext`), coordinate with this gate.
 - A new skill must not alter the 1%-rule behaviour. It must sit downstream of invocation, not inside it.
 - A new skill's `description` must not be so broad that `using-superpowers` invokes it on every prompt — that would defeat the 1% discretion built into the gate.

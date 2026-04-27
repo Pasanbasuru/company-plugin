@@ -1,4 +1,4 @@
-# Superpowers Workflows — as they run with company-plugin loaded
+# Superpowers Workflows — as they run with global-plugin loaded
 
 Source of truth: `superpowers` v5.0.7 at
 `C:/Users/basuru/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/`.
@@ -10,8 +10,8 @@ Diagrams here are **audited** against that source on 2026-04-22 (see `docs/super
 Each file has:
 
 - **Layer 1 — superpowers core flow.** Strict transcription of the 5.0.7 source. Every node tagged with origin class `extPlugin`.
-- **Layer 2 — where company-plugin skills attach.** A compact diagram plus a table showing which company-plugin skills attach at which phase and in which mode (guide / review). Nodes tagged `companyPlugin`. Absent when no company-plugin skill applies to this workflow.
-- **Compatibility notes.** What a new or edited company-plugin skill attached to this workflow must not do. These feed the audit template at `docs/superpowers/testing-skills-against-workflows.md`.
+- **Layer 2 — where global-plugin skills attach.** A compact diagram plus a table showing which global-plugin skills attach at which phase and in which mode (guide / review). Nodes tagged `companyPlugin`. Absent when no global-plugin skill applies to this workflow.
+- **Compatibility notes.** What a new or edited global-plugin skill attached to this workflow must not do. These feed the audit template at `docs/superpowers/testing-skills-against-workflows.md`.
 
 ## Shape legend
 
@@ -31,7 +31,7 @@ Plain rectangles with no class are narrative / user-action / intermediate-state 
 | Class          | Meaning                                                   | Colour          |
 |----------------|-----------------------------------------------------------|-----------------|
 | `extPlugin`    | Ships from `superpowers` or another external plugin       | amber `#785f28` |
-| `companyPlugin`| Ships from this `company-plugin`                          | teal  `#1f5a5b` |
+| `companyPlugin`| Ships from this `global-plugin`                          | teal  `#1f5a5b` |
 | (none)         | Narrative / state / user action                           | plain           |
 
 Mermaid allows multiple class assignments per node. Every node gets one **shape** class (hook/rule/skill/agent/gate/artifact) AND one **origin** class (extPlugin/companyPlugin). For example:
@@ -72,7 +72,7 @@ class CAG companyPlugin
 
 ## Related documents
 
-- **Test template:** `docs/superpowers/testing-skills-against-workflows.md` — the 7 compatibility checks every new or edited company-plugin skill must pass.
+- **Test template:** `docs/superpowers/testing-skills-against-workflows.md` — the 7 compatibility checks every new or edited global-plugin skill must pass.
 - **Per-skill audit reports:** `docs/superpowers/audits/2026-04-22/` — one report per skill + `SUMMARY.md`.
 - **Skill authoring guide:** `docs/superpowers/skill-authoring-guide.md`.
 - **Categorization scratchpad (gitignored, local only):** `skills-categorization.txt`.

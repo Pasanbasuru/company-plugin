@@ -11,7 +11,7 @@ Source: skills/cicd-pipeline-safety/SKILL.md
 | C4 Correct handoff markers       | PASS | "Interactions with other skills" section uses correct Owns/Hands-off-to/Does-not-duplicate markers. No loose prose references to other skills. |
 | C5 No Iron Law contradiction     | PASS | Rules prescribe defensive configurations (OIDC, pinning, scoping, gates, artifact tracing). None force skipping tests or bypassing evidence requirements. |
 | C6 Review-mode output compat     | PASS | Review checklist structure matches authoring guide: Summary + Findings (file:line, severity, category, fix) + Checklist coverage (PASS/CONCERN/NOT APPLICABLE). Seven Core rules map 1:1 to checklist rows. |
-| C7 Workflow-insertion simulation | PASS | Skill integrates into Workflow 06 (review loop) at the code-review phase. Pure configuration review, no gate bypass, no output conflicts with parallel company-plugin skills. |
+| C7 Workflow-insertion simulation | PASS | Skill integrates into Workflow 06 (review loop) at the code-review phase. Pure configuration review, no gate bypass, no output conflicts with parallel global-plugin skills. |
 
 ## Findings (CONCERN or FAIL)
 - None

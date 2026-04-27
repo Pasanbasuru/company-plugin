@@ -1,6 +1,6 @@
 # Workflow 8 — The whole map
 
-Reference diagram. Everything superpowers ships, plus the company-plugin overlay showing where our skills attach.
+Reference diagram. Everything superpowers ships, plus the global-plugin overlay showing where our skills attach.
 
 **Audit verdict:** PASS against superpowers 5.0.7. All hooks, skills, prompt templates, and cross-reference edges verified. No corrections.
 
@@ -131,7 +131,7 @@ flowchart LR
     class SPEC,PLAN,WT,COM extPlugin
 ```
 
-## Layer 2 — the same map with company-plugin overlay
+## Layer 2 — the same map with global-plugin overlay
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables':{'fontSize':'10px'},'flowchart':{'nodeSpacing':16,'rankSpacing':22,'padding':4,'diagramPadding':4}}}%%
@@ -149,7 +149,7 @@ flowchart LR
         WSK[writing-skills]:::extPlugin
     end
 
-    subgraph CPARCH[company-plugin: Architecture]
+    subgraph CPARCH[global-plugin: Architecture]
         AG[architecture-guard]:::companyPlugin
         NEXT[nextjs-app-structure-guard]:::companyPlugin
         NEST[nestjs-service-boundary-guard]:::companyPlugin
@@ -157,7 +157,7 @@ flowchart LR
         MOB[mobile-implementation-guard]:::companyPlugin
     end
 
-    subgraph CPDATA[company-plugin: Data / Integration / Security]
+    subgraph CPDATA[global-plugin: Data / Integration / Security]
         PRIS[prisma-data-access-guard]:::companyPlugin
         STATE[state-integrity-check]:::companyPlugin
         INT[integration-contract-safety]:::companyPlugin
@@ -167,14 +167,14 @@ flowchart LR
         SEC[secrets-and-config-safety]:::companyPlugin
     end
 
-    subgraph CPIMPL[company-plugin: Impl guardrails]
+    subgraph CPIMPL[global-plugin: Impl guardrails]
         TS[typescript-rigor]:::companyPlugin
         A11Y[accessibility-guard]:::companyPlugin
         PERF[performance-budget-guard]:::companyPlugin
         TSE[test-strategy-enforcement]:::companyPlugin
     end
 
-    subgraph CPFIN[company-plugin: Finish / Ops]
+    subgraph CPFIN[global-plugin: Finish / Ops]
         CRE[change-risk-evaluation]:::companyPlugin
         RRC[regression-risk-check]:::companyPlugin
         RBP[rollback-planning]:::companyPlugin
@@ -185,11 +185,11 @@ flowchart LR
         COV[coverage-gap-detection]:::companyPlugin
     end
 
-    subgraph CPDBG[company-plugin: Bug path]
+    subgraph CPDBG[global-plugin: Bug path]
         OBS[observability-first-debugging]:::companyPlugin
     end
 
-    subgraph CPMETA[company-plugin: Meta]
+    subgraph CPMETA[global-plugin: Meta]
         AUDIT["testing-skills-against-workflows<br/>(audit template)"]:::companyPlugin
     end
 
@@ -204,6 +204,6 @@ flowchart LR
 
 ## Compatibility notes
 
-- **Every arrow between a company-plugin cluster and a superpowers phase is an attachment, not a replacement.** The superpowers phase always owns the Iron Law; the company-plugin cluster adds domain rules on top.
-- **The `_baseline` skill is implicit under every company-plugin cluster.** It is not drawn on the map because it would connect to every node. Assume it.
-- **No company-plugin skill should span more than 3 phases.** A skill that claims to attach in design + impl + finish + review is too broad — split it.
+- **Every arrow between a global-plugin cluster and a superpowers phase is an attachment, not a replacement.** The superpowers phase always owns the Iron Law; the global-plugin cluster adds domain rules on top.
+- **The `_baseline` skill is implicit under every global-plugin cluster.** It is not drawn on the map because it would connect to every node. Assume it.
+- **No global-plugin skill should span more than 3 phases.** A skill that claims to attach in design + impl + finish + review is too broad — split it.

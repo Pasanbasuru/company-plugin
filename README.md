@@ -1,4 +1,4 @@
-# company-superpowers-plugin
+# global-plugin
 
 A single root-level Claude Code plugin for your company ecosystem.
 
@@ -82,15 +82,15 @@ See [the skill authoring guide](docs/superpowers/skill-authoring-guide.md) for t
 
 ## Local test
 ```bash
-claude --plugin-dir /absolute/path/to/company-superpowers-plugin
+claude --plugin-dir /absolute/path/to/global-plugin
 ```
 
 Then try:
 - `/help`
 - `/agents`
 - `/mcp`
-- `/company-superpowers-plugin:architecture-guard`
-- `/company-superpowers-plugin:frontend-implementation-guard`
+- `/global-plugin:architecture-guard`
+- `/global-plugin:frontend-implementation-guard`
 
 ## New project setup
 Copy the project templates from `templates/project/` into your repo, or run:

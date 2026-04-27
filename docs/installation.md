@@ -27,18 +27,18 @@ Otherwise, install them separately first.
 From a fresh test project:
 
 ```bash
-claude --plugin-dir /absolute/path/to/company-superpowers-plugin
+claude --plugin-dir /absolute/path/to/global-plugin
 ```
 
 Then inside Claude Code:
 - `/help`
 - `/agents`
 - `/mcp`
-- `/company-superpowers-plugin:architecture-guard`
-- `/company-superpowers-plugin:frontend-implementation-guard`
+- `/global-plugin:architecture-guard`
+- `/global-plugin:frontend-implementation-guard`
 
 For React Native projects, also use:
-- `/company-superpowers-plugin:mobile-implementation-guard`
+- `/global-plugin:mobile-implementation-guard`
 
 ## Project setup
 Copy these into a new project:

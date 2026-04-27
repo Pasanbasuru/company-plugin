@@ -2,11 +2,11 @@
 
 Date: 2026-04-22
 Owner: Basuru
-Scope: `skills/` under `company-plugin`
+Scope: `skills/` under `global-plugin`
 
 ## 1. Goal
 
-Rewrite the current 19 thin skills in `company-plugin/skills/` into 25 production-grade skills that guide Claude toward building full-stack apps on the company's stack (React/Next.js, Node/NestJS, Prisma/Postgres, AWS) with strong defaults for security, testing, performance, accessibility, resilience, and observability.
+Rewrite the current 19 thin skills in `global-plugin/skills/` into 25 production-grade skills that guide Claude toward building full-stack apps on the company's stack (React/Next.js, Node/NestJS, Prisma/Postgres, AWS) with strong defaults for security, testing, performance, accessibility, resilience, and observability.
 
 Skills must:
 

@@ -20,7 +20,7 @@ describe("checkMarkers", () => {
   });
 
   it("accepts 'REQUIRED BACKGROUND' and 'Does not duplicate' markers", () => {
-    const skill = withInteractions("- **REQUIRED BACKGROUND:** superpowers:x\n- **Does not duplicate:** company-plugin:y");
+    const skill = withInteractions("- **REQUIRED BACKGROUND:** superpowers:x\n- **Does not duplicate:** global-plugin:y");
     const result = checkMarkers(skill);
     expect(result.severity).toBe("PASS");
   });
