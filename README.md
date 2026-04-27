@@ -1,102 +1,45 @@
-# company-superpowers-plugin
+# global-plugin
 
-A single root-level Claude Code plugin for your company ecosystem.
+Source repo for the `company-plugin` Claude Code plugin.
 
-## Target stack
-- React / Next.js
-- Node.js / NestJS / TypeScript
-- Prisma + PostgreSQL
-- AWS
-- optional React Native mobile apps
+## Status
 
-## Included skills
+Shipping. Plugin runtime lives in `plugin/`. Repo root is dev infra only.
 
-Every skill assumes the shared [`_baseline`](skills/_baseline/SKILL.md) for TypeScript strictness, security-by-default, observability, testing, accessibility, performance, and resilience. Skills only document what they add on top.
+## Repo layout
 
-See [the skill authoring guide](docs/superpowers/skill-authoring-guide.md) for the template.
-
-### Shared foundation
-- `_baseline` — cross-cutting standards referenced by every other skill
-
-### Architecture & structure
-- `architecture-guard`
-- `nextjs-app-structure-guard`
-- `nestjs-service-boundary-guard`
-- `frontend-implementation-guard`
-- `mobile-implementation-guard`
-
-### Data
-- `prisma-data-access-guard`
-- `state-integrity-check`
-
-### Integration & async
-- `integration-contract-safety`
-- `queue-and-retry-safety`
-- `resilience-and-error-handling`
-
-### Security & config
-- `auth-and-permissions-safety`
-- `secrets-and-config-safety`
-
-### Quality
-- `typescript-rigor`
-- `test-strategy-enforcement`
-- `coverage-gap-detection`
-- `regression-risk-check`
-
-### Frontend quality
-- `accessibility-guard`
-- `performance-budget-guard`
-
-### Ops & risk
-- `change-risk-evaluation`
-- `rollback-planning`
-- `infra-safe-change`
-- `aws-deploy-safety`
-- `cicd-pipeline-safety`
-- `supply-chain-and-dependencies`
-- `observability-first-debugging`
-
-## Included agent
-- security-reviewer
-
-## Included hooks
-- SessionStart logger
-- PostToolUse logger for Write/Edit
-
-## Included MCP template
-- github
-- ci-cd
-- observability
-- cloud
-- database
-
-## External plugin dependencies
-- superpowers
-- frontend-design
-- postman
-- prisma
-- deploy-on-aws
-- semgrep
-- aikido-security
+| Path | Purpose |
+|---|---|
+| `plugin/` | The plugin runtime — what consumers install. Self-contained. |
+| `scripts/` | Skill-verifier (TypeScript). Dev-only. |
+| `.husky/` | Pre-commit hook that runs `pnpm verify` on staged SKILL.md files. |
+| `docs/` | Design notes, plans, specs, audits, workflows. |
+| `package.json` | Dev deps only (vitest, husky, tsx). Not shipped. |
 
 ## Local test
-```bash
-claude --plugin-dir /absolute/path/to/company-superpowers-plugin
-```
 
-Then try:
-- `/help`
-- `/agents`
-- `/mcp`
-- `/company-superpowers-plugin:architecture-guard`
-- `/company-superpowers-plugin:frontend-implementation-guard`
-
-## New project setup
-Copy the project templates from `templates/project/` into your repo, or run:
+From any project directory:
 
 ```bash
-./scripts_bootstrap_new_project.sh /path/to/new-project
+claude --plugin-dir /absolute/path/to/global-plugin/plugin
 ```
 
-Then replace the placeholder MCP commands in `.mcp.json`.
+Inside Claude Code:
+
+- `/help` lists `company-plugin` skills.
+- `/mcp` lists the (placeholder) MCP servers.
+- `/company-plugin:architecture-guard` triggers a skill.
+
+## Maintainer workflow
+
+```bash
+pnpm install            # one-time
+pnpm test               # vitest suite
+pnpm verify plugin/skills/<name>/SKILL.md   # one skill
+```
+
+The husky pre-commit hook runs `pnpm verify` automatically on staged `plugin/skills/*/SKILL.md` files.
+
+## Consumer-facing docs
+
+See `plugin/README.md` for what the plugin does and how to install it.
