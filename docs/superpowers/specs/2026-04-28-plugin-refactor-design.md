@@ -80,13 +80,13 @@ Each decision below was made in brainstorming with Logan; rationales recorded so
 | `inject-skills-reminder.mjs` SessionStart payload | Trim to one paragraph (~2 sentences) | Skill-loading-discipline reminder only; auto-discovery already exposes skill names + descriptions to the model, so the full-roster regeneration was redundant. |
 | `inject-skills-reminder.mjs` UserPromptSubmit payload | One line (Logan's override of original "drop entirely") | Original Karpathy call was to drop UserPromptSubmit injection completely. Logan overruled: agents skip skill-loading discipline often enough in practice that a one-line reinforcement is cheap insurance. The line: *"global-plugin reminder: invoke EVERY relevant skill, not just the first one that matches. When dispatching subagents, name the required skills in the prompt and require a `skills_invoked:` YAML frontmatter block on the artifact."* |
 | Subagent-propagation prose in injector | Drop | Theater — prose-as-enforcement cannot actually force subagents to do anything. If subagent propagation matters mechanically, the right primitive is a `PreToolUse` hook on `Agent` with `modifyToolInput`. That's its own design decision and not in scope here. |
-| Inject script implementation | Strip the SKILL.md scanner, the YAML parser, the per-skill description rendering | The script's complexity existed solely to support the now-deleted full-roster regeneration. Fixed-payload emitter is a fraction of the code. |
+| Inject script implementation | Strip the SKILL.md scanner, the YAML parser, the per-skill description rendering. **MUST preserve the JSON envelope shape** the hook contract requires: stdout must remain valid JSON of shape `{ "hookSpecificOutput": { "hookEventName": "<event>", "additionalContext": "<string>" } }`. Only the `additionalContext` body changes — the envelope itself must not change. | The script's complexity existed solely to support the now-deleted full-roster regeneration. Fixed-payload emitter is a fraction of the code. The envelope requirement guards against an executor accidentally simplifying the script down to a bare `console.log("...")` that breaks the SessionStart/UserPromptSubmit hook contract. |
 
 ### 5.4 — Skill surface (relocations & deletions)
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| `skill-verification` | Move to `.claude/skills/skill-verification/` (project-local) | Procedural skill describing how to run the maintainer-side verifier. No consumer use. Project-local placement auto-discovers in this repo, doesn't ship. |
+| `skill-verification` | Move to `.claude/skills/skill-verification/` (project-local). The parent `.claude/skills/` directory does not exist in the repo today — commit 4 creates it and the move is committed (not gitignored). | Procedural skill describing how to run the maintainer-side verifier. No consumer use. Project-local placement auto-discovers in this repo, doesn't ship. |
 | `skill-authoring` | Merge content into `docs/superpowers/skill-authoring-guide.md`, delete the skill directory | Existing guide already covers similar ground. Two sources of truth → one. |
 | `regression-risk-check`, `rollback-planning` | Absorb into `change-risk-evaluation`, delete | Three skills triggered on the same diff with overlapping checklists. A router skill or delegation chain would add ceremony to mask duplication. Single skill keeps the most general name. |
 | `_baseline` | Relocate to `templates/` at repo root, split into `new-skill-template.md` + `baseline-standards.md`, delete `plugin/skills/_baseline/` | See 5.5. |
@@ -105,7 +105,7 @@ The most muddled decision. `_baseline` serves three roles:
 | Where does `_baseline` belong? | Repo-root `templates/` directory (new) | It's authoring infrastructure (scaffold + standards reference), not consumer surface. `_baseline` shipping as a consumer-facing skill with a maintainer-only description was the source of the role muddle. |
 | Why `templates/` and not `docs/`? | Logan's distinction: *"docs say what the codebase is and what it does. It isn't intended to be used for storing things that are technically part of the system."* The scaffold and standards reference are operational artifacts. | Templates is the right semantic. |
 | File split | Two files: `templates/new-skill-template.md` (scaffold) + `templates/baseline-standards.md` (standards) | One file per role. Future authors know which one to copy (template) vs. which one to read (standards). |
-| Domain skills' `## Assumes _baseline. Adds:` line | Rename to `## Assumes baseline-standards. Adds:` in the 23 surviving SKILL.md files (25 carry the line today; commits 5 and 6 delete `regression-risk-check` and `rollback-planning` before commit 7 runs the rename, so 23 files are actually edited) | Cross-reference becomes a doc reference; otherwise the line is identical in shape. |
+| Domain skills' `## Assumes _baseline. Adds:` line | Rename to `## Assumes baseline-standards. Adds:` in 23 surviving SKILL.md files. Bookkeeping: a grep across `plugin/skills/` matches the pattern in **26 files today** — 25 domain skills + `_baseline/SKILL.md` itself. Commit 6 deletes `regression-risk-check` and `rollback-planning` (-2). Commit 7 deletes `_baseline/SKILL.md` (-1, and that file is *deleted*, not renamed). The rename pass at commit 7 therefore edits **23 files**. Acceptance criterion (§10 #6) is `grep -rl "Assumes \`_baseline\`. Adds:" plugin/skills/` returns nothing. | Cross-reference becomes a doc reference; otherwise the line is identical in shape. |
 | Runtime inheritance fix? | **Not in this refactor.** | See Non-goals (§4). |
 | Verifier impact | None | Verifier doesn't hard-enforce the `_baseline` reference (confirmed by grep — single permissive test case in `frontmatter.test.ts:42-43` allows underscore-prefixed names but does not require any specific skill to exist). Verifier code untouched. |
 | Disambiguation with existing `plugin/templates/` | None — different audiences, different scopes, different lifetimes | `plugin/templates/` is consumer-onboarding scaffolds (CLAUDE.md skeleton, settings.json) and ships to consumers via the plugin marketplace. New repo-root `templates/` is skill-author infrastructure and stays in the source repo. The `plugin/` boundary keeps them clearly separated. |
@@ -124,8 +124,8 @@ The most muddled decision. `_baseline` serves three roles:
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| `plugin/README.md` | Refreshed for 0.4.0 — skill catalog (no removed skills; consolidated `change-risk-evaluation` description broadened); hook section reflects trimmed payloads + dropped loggers; new "Recommended companion plugins" subsection (former `dependencies` list); MCP section says no servers ship. | Consumer-facing source of truth must match what the plugin actually does. |
-| `docs/superpowers/skill-authoring-guide.md` | Receives merged `skill-authoring/SKILL.md` content; new section pointing at `templates/new-skill-template.md` (scaffold) and `templates/baseline-standards.md` (standards reference). | Procedural authoring guide explaining how to use the new templates. |
+| `plugin/README.md` | Refreshed for 0.4.0 — skill catalog (no removed skills; consolidated `change-risk-evaluation` description broadened); hook section reflects trimmed payloads + dropped loggers; new "Recommended companion plugins" subsection (former `dependencies` list); MCP section says no servers ship. **Also: remove the existing "New project setup" section** (the one currently pointing at `plugin/scripts/bootstrap-new-project.sh`). The bootstrap script and `plugin/templates/project/` are explicitly parked (§4) but the *templates* still ship the same broken `echo` `.mcp.json` placeholders this refactor removes from the front door. The README must not endorse the bootstrap workflow until the parked follow-up ships a clean version. Add a one-line note: "New-project setup is being reworked; pending follow-up." **`anthropic-tooling-dev` catalog entry:** list it under a small "Maintainer / experimental skills" subheading with a one-line caveat ("placement under review post-0.4.0 — may relocate or be removed from consumer surface"); do not promote to a stable consumer-facing skill. | Consumer-facing source of truth must match what the plugin actually does — including parked-but-still-shipping items, which need explicit caveats so consumers know what to expect. |
+| `docs/superpowers/skill-authoring-guide.md` | Receives merged `skill-authoring/SKILL.md` content; new section pointing at `templates/new-skill-template.md` (scaffold) and `templates/baseline-standards.md` (standards reference). **Merge strategy:** the target file already exists. Append `skill-authoring/SKILL.md`'s unique content as a new section ("Authoring a new global-plugin skill") near the top of the existing guide, then add the templates-pointer section. Do not replace the existing guide wholesale; do not interleave. If the existing guide already contains overlapping prose, prefer the version in `skill-authoring/SKILL.md` and remove the duplicate from the existing guide. | Procedural authoring guide explaining how to use the new templates. The append+dedup strategy keeps the existing guide's organizing structure while absorbing the skill's prose. |
 | Repo root `CLAUDE.md` | Standing-instructions line about `_baseline` updates to reference `templates/baseline-standards.md`. | Maintainer-mode rules must reflect the new location. |
 | Repo root `README.md` | Add `templates/` row to layout table (Shipped to consumers: No). | Layout table is the canonical inventory of what's in the repo. |
 
@@ -159,7 +159,7 @@ The most muddled decision. `_baseline` serves three roles:
 
 | Operation | Path | Change |
 |---|---|---|
-| Modify | `plugin/skills/change-risk-evaluation/SKILL.md` | Absorb unique rules + review-checklist content from `regression-risk-check` and `rollback-planning`. Broaden trigger description. If merged word count exceeds ~3,000, apply progressive disclosure inline (split to `references/patterns.md` + `references/review-checklist.md`). |
+| Modify | `plugin/skills/change-risk-evaluation/SKILL.md` | Absorb unique rules + review-checklist content from `regression-risk-check` and `rollback-planning`. Broaden trigger description. If merged word count exceeds ~3,000, apply progressive disclosure **within commit 6** (split to `references/patterns.md` + `references/review-checklist.md` in the same commit). Do **not** introduce a 16th commit for the conditional split — keep the commit count stable at 15. |
 
 ### 6.5 — `templates/` (new top-level directory at repo root)
 
@@ -171,7 +171,9 @@ The most muddled decision. `_baseline` serves three roles:
 
 The 23 affected domain skills (those that carry the line *and* survive commits 4–6): `accessibility-guard`, `architecture-guard`, `auth-and-permissions-safety`, `aws-deploy-safety`, `change-risk-evaluation`, `cicd-pipeline-safety`, `coverage-gap-detection`, `frontend-implementation-guard`, `infra-safe-change`, `integration-contract-safety`, `mobile-implementation-guard`, `nestjs-service-boundary-guard`, `nextjs-app-structure-guard`, `observability-first-debugging`, `performance-budget-guard`, `prisma-data-access-guard`, `queue-and-retry-safety`, `resilience-and-error-handling`, `secrets-and-config-safety`, `state-integrity-check`, `supply-chain-and-dependencies`, `test-strategy-enforcement`, `typescript-rigor`.
 
-`regression-risk-check` and `rollback-planning` carry the line today but are deleted in commit 6 before the rename runs, so they don't get edited at commit 7 — their content was already absorbed into the surviving `change-risk-evaluation` (which keeps its own `## Assumes` line and gets renamed normally). The four maintainer skills (`_baseline`, `skill-authoring`, `skill-verification`, `anthropic-tooling-dev`) are either deleted, moved, merged into docs, or parked, so commit 7 doesn't touch them.
+**Bookkeeping (matches §5.5):** `grep -rl "## Assumes \`_baseline\`. Adds:" plugin/skills/` returns **26 files today** — the 23 listed above + `regression-risk-check` + `rollback-planning` + `_baseline/SKILL.md` itself. Commit 6 deletes `regression-risk-check` and `rollback-planning` (-2). Commit 7 deletes `_baseline/SKILL.md` (-1, deleted not renamed). Commit 7's rename pass therefore edits the 23 surviving files listed above. Confirmed by separate grep: `skill-authoring/SKILL.md` does not carry the pattern, so commit 5's deletion of that directory is independent of the rename.
+
+The four maintainer skills (`_baseline`, `skill-authoring`, `skill-verification`, `anthropic-tooling-dev`) are either deleted, moved, merged into docs, or parked, so commit 7 doesn't touch them.
 
 ### 6.6 — Skills: progressive disclosure (six splits)
 
@@ -237,7 +239,7 @@ For each of `accessibility-guard`, `cicd-pipeline-safety`, `queue-and-retry-safe
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|
 | R1 | `_baseline` relocation breaks the verifier | Low | Low | Verifier doesn't hard-enforce the `_baseline` reference (confirmed). Test in `frontmatter.test.ts:42-43` allows underscore-prefixed names but does not require any specific skill. Run `pnpm test` after commit 7. |
-| R2 | Domain skills' `Assumes baseline-standards` line referenced by something downstream | Low | Low | Searched: only `_baseline/SKILL.md` itself + the 25 domain skills carry the pattern. No verifier check, no docs/scripts dependency. |
+| R2 | Domain skills' `Assumes baseline-standards` line referenced by something downstream | Low | Low | Searched: 26 files match the pattern today (`_baseline/SKILL.md` itself + 25 domain skills). No verifier check, no docs/scripts dependency. |
 | R3 | Trimmed hooks change consumer behavior in unexpected ways | Medium | Medium | New SessionStart payload preserves the skill-loading-discipline rule (per Logan's override). UserPromptSubmit reduced to a one-liner (also per override). Smoke test against a fixture before merging commit 3. |
 | R4 | Progressive-disclosure splits drop a critical rule from the lean SKILL.md | Medium | Medium | For each of the six splits, the SKILL.md must keep all numbered Core rules + the trigger description. Only "Good vs bad" code walkthroughs and verbose review-checklist explanations move to `references/`. Per-split smoke test: trigger the skill against a fixture, confirm rules are still cited. |
 | R5 | `change-risk-evaluation` consolidation drops unique rules from `regression-risk-check` or `rollback-planning` | Medium | Medium | Diff each source skill's rules and review-checklist sections. Every unique rule must surface in the consolidated skill. If merged skill exceeds ~3,000 words, apply progressive disclosure inline (in commit 6). |
@@ -260,17 +262,28 @@ Husky pre-commit hook runs `pnpm verify` on any staged `plugin/skills/*/SKILL.md
 
 ### 9.3 — Targeted checkpoints
 
-- **After commit 3** (hooks): execute `node plugin/hooks/inject-skills-reminder.mjs SessionStart` and `node plugin/hooks/inject-skills-reminder.mjs UserPromptSubmit` directly. Confirm output is the trimmed payload, valid JSON, and the `additionalContext` field carries the new short prose.
+- **Before commit 3** (auto-discovery smoke): with the current 0.3.0 hook still active, start Claude with `--plugin-dir <plugin>` from a fresh fixture and confirm the SessionStart system-reminder block enumerates every shipped skill name + description. This validates the assumption that motivated dropping the full-roster injection (auto-discovery already exposes them). If auto-discovery does **not** in fact list them, commit 3 must be reworked to keep a minimal roster injection rather than just a discipline reminder.
+- **After commit 3** (hooks): execute `node plugin/hooks/inject-skills-reminder.mjs SessionStart` and `node plugin/hooks/inject-skills-reminder.mjs UserPromptSubmit` directly. Confirm three things: (a) output is valid JSON parseable as `{ "hookSpecificOutput": { "hookEventName": <event>, "additionalContext": <string> } }` — the envelope shape, not just "valid JSON"; (b) UserPromptSubmit `additionalContext` is ≤300 chars (the trimmed one-liner is ~250 chars); (c) SessionStart `additionalContext` is ≤700 chars (the trimmed two-sentence reminder).
 - **After commit 6** (consolidation): word-count the merged `change-risk-evaluation/SKILL.md`. If >3,000, apply progressive disclosure inline (same commit).
 - **After commit 7** (`_baseline` relocation): full `pnpm test` + spot `pnpm verify` on three domain skills.
 - **After each of commits 8-13**: word-count the trimmed SKILL.md to confirm ≤2,000; verifier check on the skill.
 
 ### 9.4 — Final smoke test (after commit 15)
 
-From a clean fixture directory (not the repo root — per the test-isolation rule in `CLAUDE.md`):
+From a clean fixture directory (not the repo root — per the test-isolation rule in `CLAUDE.md`). The fixture must satisfy three isolation conditions so the smoke test is not a false positive caused by the maintainer-mode `CLAUDE.md`:
 
 ```bash
-cd /tmp/fixture-project
+# 1. Create a freshly-empty directory outside the repo and outside any project that ships its own CLAUDE.md.
+SMOKE=$(mktemp -d -t global-plugin-smoke-XXXX)
+cd "$SMOKE"
+
+# 2. Verify isolation BEFORE running Claude:
+#    a. No CLAUDE.md in the fixture itself.
+[ ! -e CLAUDE.md ] && [ ! -e .claude/CLAUDE.md ] || { echo "FAIL: fixture has a CLAUDE.md"; exit 1; }
+#    b. No CLAUDE.md in any ancestor up to the user's home dir (mktemp under /tmp avoids this; if running on Windows where mktemp may land elsewhere, check explicitly).
+#    c. ~/.claude/CLAUDE.md is allowed (it's user-global maintainer guidance, not the repo's project-mode CLAUDE.md), but the smoke check should record its presence so the operator knows what's loaded.
+
+# 3. Run Claude with only this plugin loaded (no other plugins from ~/.claude/plugins/ that could interfere).
 claude --plugin-dir /absolute/path/to/global-plugin/plugin
 ```
 
@@ -294,8 +307,7 @@ The refactor is complete when:
 7. `plugin/.mcp.json` does not exist.
 8. `plugin/skills/_baseline/`, `plugin/skills/skill-authoring/`, `plugin/skills/skill-verification/` (moved), `plugin/skills/regression-risk-check/`, `plugin/skills/rollback-planning/` do not exist.
 9. `plugin/hooks/hooks.json` has no `PostToolUse` block and no `mkdir/printf` logger sub-steps in `SessionStart`.
-10. `plugin/README.md` documents the 0.4.0 changes including the "Recommended companion plugins" section.
-11. Implementation plan exists at `docs/superpowers/plans/2026-04-28-plugin-refactor.md` (produced by the next step, `superpowers:writing-plans`).
+10. `plugin/README.md` documents the 0.4.0 changes: includes the "Recommended companion plugins" section (replacing the removed `dependencies` field), removes the existing "New project setup" section pending the bootstrap follow-up (so consumers are not directed at the still-broken `plugin/scripts/bootstrap-new-project.sh` + `plugin/templates/project/.mcp.json` placeholders that this refactor parks), and lists `anthropic-tooling-dev` under a "Maintainer / experimental" caveat noting placement is being evaluated post-0.4.0.
 
 ## 11. Handoff
 
