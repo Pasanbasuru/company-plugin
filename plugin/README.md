@@ -2,8 +2,6 @@
 
 Company-wide guardrails for full-stack React/Next.js + Node/NestJS + Prisma/Postgres + AWS projects.
 
-> Note: a one-command new-project setup script is being reworked. The previous `plugin/scripts/bootstrap-new-project.sh` is still shipped but its templates have known issues (broken `.mcp.json` placeholders, CLAUDE.md template at a path Claude Code doesn't read). Pending follow-up release.
-
 ## Target stack
 
 - React / Next.js
@@ -11,6 +9,24 @@ Company-wide guardrails for full-stack React/Next.js + Node/NestJS + Prisma/Post
 - Prisma + PostgreSQL
 - AWS
 - optional React Native mobile apps
+
+## Recommended setup
+
+Add these deny rules to your project's `.claude/settings.json` (create the file if it doesn't exist; merge with existing rules if it does):
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
+    ]
+  }
+}
+```
+
+The harness enforces these deterministically — the model never sees an attempted Read of those paths. The `secrets-and-config-safety` skill is the judgment layer (when and why secrets matter); these rules are the enforcement layer.
 
 ## Included skills
 
@@ -152,7 +168,7 @@ Rows that share the same **category** share the same background tint (ordered to
 
 ## Visual architecture (diagrams)
 
-The sections below map how the plugin is laid out on disk, when hooks run relative to user input, how reminders are produced, how skills relate to slash commands and supporting files, what shipped templates and scripts do, and how optional companions fit in. Expand each block to view the diagram. Diagrams share compact **font/spacing** init (the hook timeline uses slightly tighter spacing). Each flowchart defines **`classDef`** styles **`hooks`**, **`scripts`**, **`skills`**, **`templates`**. **Hooks** matches **`rgba(30, 90, 200, 0.2)`** over white; the others use the same **0.2 alpha** on saturated purple / teal / amber hues. Mermaid **`classDef`** cannot parse comma-containing **`rgba(...)`**, so node **`fill`** uses **solid hex** equivalent to blending each **`rgba`** over **white** (same perceived pastel). **`color`** is **`#0f172a`** on shapes for readable labels; **`stroke`** uses a deeper hue-aligned hex per category.
+The sections below map how the plugin is laid out on disk, when hooks run relative to user input, how reminders are produced, how skills relate to slash commands and supporting files, and how optional companions fit in. Expand each block to view the diagram. Diagrams share compact **font/spacing** init (the hook timeline uses slightly tighter spacing). Each flowchart defines **`classDef`** styles **`hooks`**, **`scripts`**, **`skills`**, **`templates`**. **Hooks** matches **`rgba(30, 90, 200, 0.2)`** over white; the others use the same **0.2 alpha** on saturated purple / teal / amber hues. Mermaid **`classDef`** cannot parse comma-containing **`rgba(...)`**, so node **`fill`** uses **solid hex** equivalent to blending each **`rgba`** over **white** (same perceived pastel). **`color`** is **`#0f172a`** on shapes for readable labels; **`stroke`** uses a deeper hue-aligned hex per category.
 
 <details>
 <summary>Plugin bundle layout (filesystem)</summary>
@@ -169,19 +185,13 @@ classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
     HK["hooks/hooks.json"]
     SCR["hooks/inject-skills-reminder.mjs"]
     SK["skills/skill-id/SKILL.md"]
-    TM["templates/project"]
-    BS["scripts/bootstrap-new-project.sh"]
   end
   PJ --- HK
   HK --> SCR
   PJ --- SK
-  PJ --- TM
-  PJ --- BS
 class HK hooks
 class SCR scripts
 class SK skills
-class TM templates
-class BS scripts
 ```
 
 </details>
@@ -258,33 +268,6 @@ class M,R,S,REF skills
 </details>
 
 <details>
-<summary>Bootstrap script and shipped project templates</summary>
-
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "11px"}, "flowchart": {"padding": 5, "nodeSpacing": 22, "rankSpacing": 22, "diagramPadding": 4}}}%%
-flowchart LR
-classDef hooks fill:#d2def4,stroke:#2563eb,color:#0f172a
-classDef scripts fill:#e8d9f3,stroke:#9333ea,color:#0f172a
-classDef skills fill:#d4ece6,stroke:#059669,color:#0f172a
-classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
-  subgraph script ["bootstrap-new-project.sh"]
-    SH["shell"]
-  end
-  subgraph out ["templates/project"]
-    CL[".claude/CLAUDE.md"]
-    ST[".claude/settings.json"]
-    MCP[".mcp.json"]
-  end
-  SH --> CL
-  SH --> ST
-  SH --> MCP
-class SH scripts
-class CL,ST,MCP templates
-```
-
-</details>
-
-<details>
 <summary>Optional companions and MCP conventions</summary>
 
 ```mermaid
@@ -336,8 +319,6 @@ classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
   subgraph ships ["Shipped"]
     A["hooks<br/>SessionStart UserPromptSubmit"]
     B["skills<br/>24 SKILL.md"]
-    C["templates/project"]
-    D["bootstrap script"]
   end
   subgraph nothere ["Not shipped"]
     E["no MCP servers"]
@@ -346,8 +327,6 @@ classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
   end
 class A hooks
 class B skills
-class C templates
-class D scripts
 class F,G hooks
 ```
 

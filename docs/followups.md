@@ -20,17 +20,11 @@ Tracked work surfaced during the 2026-04-27 plugin runtime extraction, with stat
 
 **Status:** RESOLVED in 0.4.0 (commit `aba8250`). `skill-verification` was relocated from `plugin/skills/skill-verification/` to `.claude/skills/skill-verification/` (project-local maintainer skill). It auto-discovers when working in this repo and is no longer shipped to consumers via the plugin marketplace, so the `pnpm verify` invocation is no longer presented to anyone who doesn't have the source repo.
 
-## 4. Bootstrap script + `plugin/templates/project/` rework
+## 4. ~~Bootstrap script + `plugin/templates/project/` rework~~
 
-**Status:** OPEN. Surfaced during the 2026-04-28 plugin refactor and parked there explicitly (spec §4).
+**Status:** RESOLVED in 2026-04-29 (delete-not-fix). Implemented per [`docs/superpowers/specs/2026-04-29-bootstrap-cleanup-design.md`](superpowers/specs/2026-04-29-bootstrap-cleanup-design.md).
 
-**Summary:** Three issues bundled together:
-
-- `plugin/templates/project/.claude/CLAUDE.md` lives at a path Claude Code does not read (the recognized memory paths are `<repo-root>/CLAUDE.md` and `~/.claude/CLAUDE.md`, NOT `<repo-root>/.claude/CLAUDE.md`). The shipped template is invisible to the model.
-- `plugin/scripts/bootstrap-new-project.sh` uses unconditional `cp`, which silently overwrites any existing `.claude/CLAUDE.md`, `.claude/settings.json`, or `.mcp.json` in the target. Re-running the script destroys consumer state.
-- `plugin/templates/project/.mcp.json` still ships the broken `echo` placeholders (see item 2).
-
-**Recommendation:** rework as one unit. Either (a) delete the script and templates, replacing with documentation in `plugin/README.md`; or (b) rewrite the script to JSON-merge `settings.json`, drop the unread `.claude/CLAUDE.md` template, and ship `.mcp.json` as `{"mcpServers": {}}`.
+**Resolution:** Deleted `plugin/scripts/bootstrap-new-project.sh`, the entire `plugin/templates/project/` tree, and the now-empty `plugin/scripts/` and `plugin/templates/` directories. Preserved only the `.env`/secrets `Read` deny rules as a tight "Recommended setup" section in `plugin/README.md` — that's the determinism layer the harness enforces; the `secrets-and-config-safety` skill remains the judgment layer. The CLAUDE.md scaffold (filler) and the `.mcp.json` placeholders (broken) were dropped entirely. Three mermaid diagrams in `plugin/README.md` updated to match (the obsolete bootstrap-script subgraph was deleted entirely). After this commit, `plugin/` contains only `.claude-plugin/`, `skills/`, `hooks/`, and `README.md`.
 
 ## 5. ~~`anthropic-tooling-dev` placement decision~~
 
