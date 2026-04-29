@@ -255,13 +255,11 @@ classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
   end
   subgraph use ["Invoke"]
     T["Skill tool or slash"]
-    X["Baseline cross-ref"]
   end
   R --> T
   M --> T
   T --> S
   S --- REF
-  S --> X
 class M,R,S,REF skills
 ```
 
@@ -307,7 +305,7 @@ classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
 </details>
 
 <details>
-<summary>0.4.0 surface vs removed / not shipped</summary>
+<summary>Current surface vs removed / not shipped</summary>
 
 ```mermaid
 %%{init: {"themeVariables": {"fontSize": "11px"}, "flowchart": {"padding": 5, "nodeSpacing": 22, "rankSpacing": 22, "diagramPadding": 4}}}%%
@@ -337,25 +335,27 @@ class F,G hooks
 - **SessionStart** — injects a one-paragraph reminder of skill-loading discipline (use every relevant skill, name skills explicitly when dispatching subagents).
 - **UserPromptSubmit** — re-emits the same reminder as a one-line reinforcement on every prompt.
 
-The previous timestamp loggers (PostToolUse Write/Edit, SessionStart) and the per-prompt full-roster injection were removed in 0.4.0.
+Previous timestamp loggers (PostToolUse Write/Edit, SessionStart) and the per-prompt full-roster injection are not shipped — the plugin currently runs only the two hooks above.
 
 ## Recommended companion plugins
 
 `global-plugin` is designed to work alongside these plugins. Install them separately for full coverage:
 
 ```bash
-claude plugin install superpowers --marketplace claude-plugins-official
-claude plugin install frontend-design --marketplace claude-plugins-official
-claude plugin install prisma --marketplace claude-plugins-official
-claude plugin install deploy-on-aws --marketplace claude-plugins-official
-claude plugin install semgrep --marketplace claude-plugins-official
+claude plugin install superpowers@claude-plugins-official
+claude plugin install frontend-design@claude-plugins-official
+claude plugin install prisma@claude-plugins-official
+claude plugin install deploy-on-aws@claude-plugins-official
+claude plugin install semgrep@claude-plugins-official
 ```
+
+The same plugins can also be installed from inside Claude Code with the `/plugin install <name>@<marketplace>` slash command.
 
 These are recommendations, not enforced dependencies — the plugin works without them, but several skills cross-reference them by name. If a companion is not installed, those cross-references will be unresolved.
 
 ## MCP servers
 
-`global-plugin` does not ship any MCP servers in 0.4.0. The previous `.mcp.json` shipped placeholder `echo` servers that broke `/mcp` for consumers and was removed.
+`global-plugin` does not ship any MCP servers. A previous `.mcp.json` shipped placeholder `echo` servers that broke `/mcp` for consumers and has been removed.
 
 If your project uses MCP servers, configure them in your project's own `.mcp.json`. Suggested server names that align with the plugin's guard skills:
 
