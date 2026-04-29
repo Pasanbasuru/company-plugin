@@ -142,8 +142,8 @@ Each skill is self-contained — no cross-references to anything outside the plu
 </tr>
 <tr style="background-color: rgba(105, 88, 103, 0.29);">
 <td>Maintainer / experimental</td>
-<td><code>anthropic-tooling-dev</code></td>
-<td>Guidance for Claude Code harness work: plugins, skills, hooks, agents, MCP, Agent SDK.</td>
+<td><code>org-ai-tooling</code></td>
+<td>Senior-engineer mindset for Claude Code tooling: harness-primitive selection, plugin / skill / hook / agent / MCP authoring, Agent SDK usage.</td>
 </tr>
 </tbody>
 </table>

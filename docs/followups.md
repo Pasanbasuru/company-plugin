@@ -32,17 +32,11 @@ Tracked work surfaced during the 2026-04-27 plugin runtime extraction, with stat
 
 **Recommendation:** rework as one unit. Either (a) delete the script and templates, replacing with documentation in `plugin/README.md`; or (b) rewrite the script to JSON-merge `settings.json`, drop the unread `.claude/CLAUDE.md` template, and ship `.mcp.json` as `{"mcpServers": {}}`.
 
-## 5. `anthropic-tooling-dev` placement decision
+## 5. ~~`anthropic-tooling-dev` placement decision~~
 
-**Status:** OPEN. Parked during the 2026-04-28 plugin refactor (spec §4).
+**Status:** RESOLVED in 2026-04-29 (rename + verifier-shape conformance). Implemented per [`docs/superpowers/specs/2026-04-29-org-ai-tooling-rename-design.md`](superpowers/specs/2026-04-29-org-ai-tooling-rename-design.md).
 
-**Summary:** `plugin/skills/anthropic-tooling-dev/` is meta-content about Claude Code tooling itself. A consumer's React/NestJS app does not benefit from loading it, but the skill is genuinely useful when working on this repo. Three options under consideration:
-
-- Move to `.claude/skills/anthropic-tooling-dev/` (project-local maintainer skill — same destination as `skill-verification`).
-- Move to `templates/anthropic-tooling-dev.md` (treat as reference doc, not a triggering skill).
-- Leave in `plugin/skills/` with a Maintainer/experimental caveat in the catalog (current state).
-
-The verifier currently flags this skill as RED (it doesn't follow the four-section Review checklist shape that domain skills do — because it isn't a domain skill). The RED is expected and acknowledged in the 2026-04-28 spec.
+**Resolution:** Skill renamed `anthropic-tooling-dev` → `org-ai-tooling` in both copies (`plugin/skills/org-ai-tooling/`, `.claude/skills/org-ai-tooling/`). Description rewritten in verifier-compliant `Use when …` form with explicit TRIGGER and SKIP clauses so the skill triggers only on Claude Code tooling work, not on consumer app code. Body restructured into the four required domain-skill sections (`Core rules`, `Red flags`, `Review checklist`, `Interactions with other skills`); reference content (decision framework, primitive cheat-sheet, key flags, key commands, common mistakes) moved to `references/patterns.md`. Verifier verdict: RED → GREEN. Cross-references updated in `plugin/README.md` and root `CLAUDE.md`. The skill stays consumer-facing (option (c) from the original three) under the "Maintainer / experimental" subheading. Note: the `## Assumes baseline-standards. Adds:` line was deliberately NOT added to the new skill — see followups item #6 for the broader cross-boundary cleanup.
 
 ## 6. ~~`templates/baseline-standards.md` runtime inheritance gap~~
 

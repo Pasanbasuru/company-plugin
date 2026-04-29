@@ -90,7 +90,7 @@ When working in this repo, load every relevant skill before doing anything subst
 
 **Non-negotiable set** for any substantive maintainer work in this repo:
 
-- `anthropic-tooling-dev`
+- `org-ai-tooling`
 - every `plugin-dev:*` skill: `plugin-structure`, `plugin-settings`, `hook-development`, `skill-development`, `command-development`, `agent-development`, `mcp-integration`, `create-plugin`
 - `claude-md-management:claude-md-improver` (when touching any `CLAUDE.md`)
 - `simplify`

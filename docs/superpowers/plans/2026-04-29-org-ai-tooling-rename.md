@@ -12,8 +12,6 @@ skills_invoked:
 
 # `org-ai-tooling` Rename Implementation Plan
 
-> **STATUS: DEFERRED** — paused on 2026-04-29 to land the broader baseline-standards cleanup first ([`docs/superpowers/specs/2026-04-29-baseline-standards-cleanup-design.md`](../specs/2026-04-29-baseline-standards-cleanup-design.md)). The plan's task list is largely still valid, but Task 5 (plugin/README.md catalog row), Task 6 (root CLAUDE.md non-negotiable list), and the cross-reference grep expectations in Task 8 will shift after the cleanup lands. Re-derive against the new state when re-engaging.
-
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
 > **Skill-loading discipline (non-negotiable for any subagent dispatched against this plan):** Before any substantive work, invoke EVERY relevant skill via the `Skill` tool — breadth-first, exhaustive. Required set when working on this repo: `anthropic-tooling-dev`, every `plugin-dev:*` skill, `claude-md-management:claude-md-improver` (when touching `CLAUDE.md`), `simplify`, plus matching `superpowers:*` skills. Each subagent has its own context and must independently invoke the full set. Subagent artifacts MUST start with the YAML frontmatter `skills_invoked:` block listing every skill loaded. Log "Skills loaded: [list]" as the first line of substantive work.
