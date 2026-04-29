@@ -335,7 +335,7 @@ Drift in IAM policies is particularly dangerous. A policy that drifted from leas
 ## Interactions with other skills
 
 - **Owns:** IaC change review, Terraform plan analysis, remote state discipline, IAM policy review in IaC context.
-- **Hands off to:** `aws-deploy-safety` for application-level deploy concerns (ECS task definitions, Lambda config, runtime roles); `secrets-and-config-safety` for secret reference patterns and rotation; `rollback-planning` for the rollback strategy when a destructive infra change is approved.
+- **Hands off to:** `aws-deploy-safety` for application-level deploy concerns (ECS task definitions, Lambda config, runtime roles); `secrets-and-config-safety` for secret reference patterns and rotation; `change-risk-evaluation` for the rollback strategy when a destructive infra change is approved.
 - **Does not duplicate:** Terraform style linting (`tflint`, `checkov`) — this skill covers review judgement, not automated linting rules.
 
 ## Review checklist

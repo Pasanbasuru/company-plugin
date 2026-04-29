@@ -307,7 +307,7 @@ When a concurrent test is genuinely impractical (e.g., the operation requires ex
 
 - **Owns:** gap-finding for existing code.
 - **REQUIRED SUB-SKILL:** `global-plugin:test-strategy-enforcement` — coverage decisions only make sense through the strategy lens (which layer owns which test); consult it to translate every CONCERN into the correct test shape.
-- **Hands off to:** `regression-risk-check` for blocker-level coverage gaps — when a gap touches a critical path (auth, payment, data mutation) and must block merge.
+- **Hands off to:** `change-risk-evaluation` for blocker-level coverage gaps — when a gap touches a critical path (auth, payment, data mutation) and must block merge.
 - **Does not duplicate:** line-coverage tooling (`vitest --coverage`). High line coverage is a prerequisite, not a substitute, for the analysis this skill performs.
 
 ---

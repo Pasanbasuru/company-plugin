@@ -278,7 +278,7 @@ Log metric filters and alarms (e.g. alerting on `ERROR` count exceeding a thresh
 - **Owns:** AWS-level deploy mechanics — rolling strategy, alias traffic shifting, health check wiring, migration sequencing, secrets injection at deploy time, log retention at deploy time.
 - **Hands off to:** infra-safe-change for provisioning the underlying resources (VPC, subnets, ECS cluster, Lambda function declaration, Secrets Manager secret creation).
 - **Hands off to:** secrets-and-config-safety for how the application code fetches and uses secrets at runtime.
-- **Hands off to:** rollback-planning for the rollback trigger criteria and the runbook path.
+- **Hands off to:** change-risk-evaluation for the rollback trigger criteria and the runbook path.
 - **Does not duplicate:** CI pipeline concerns (action pinning, OIDC, branch protection) — those belong to `cicd-pipeline-safety`.
 
 ## Review checklist

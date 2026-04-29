@@ -1,6 +1,6 @@
 ---
 name: test-strategy-enforcement
-description: Use when adding tests, changing testing patterns, or reviewing a PR's test plan. Do NOT use for missing-coverage analysis (use `coverage-gap-detection`) or for risk assessment (use `regression-risk-check`). Covers test pyramid, unit vs integration vs e2e split, flake hygiene, test data, mocks vs real services.
+description: Use when adding tests, changing testing patterns, or reviewing a PR's test plan. Do NOT use for missing-coverage analysis (use `coverage-gap-detection`) or for risk assessment (use `change-risk-evaluation`). Covers test pyramid, unit vs integration vs e2e split, flake hygiene, test data, mocks vs real services.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -355,7 +355,7 @@ For TypeScript-level mocking in unit tests, prefer `vi.fn()` with explicit retur
 
 - **REQUIRED SUB-SKILL:** superpowers:test-driven-development — TDD is the upstream discipline; this skill adds pyramid / layer-split / flake-hygiene rules on top.
 - **Owns:** test strategy and patterns — pyramid shape, tooling, flake hygiene, data management, mock discipline.
-- **Hands off to:** `coverage-gap-detection` for identifying which paths need tests; `regression-risk-check` for assessing blast radius of a change.
+- **Hands off to:** `coverage-gap-detection` for identifying which paths need tests; `change-risk-evaluation` for assessing blast radius of a change.
 - **Does not duplicate:** `prisma-data-access-guard`'s migration testing concerns — this skill focuses on how to structure the test, not on Prisma query correctness.
 
 ## Review checklist
