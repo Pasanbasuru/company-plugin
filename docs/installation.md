@@ -10,7 +10,7 @@ A single Claude Code plugin shipping ~24 guardrail skills for the company stack:
 - AWS
 - optional React Native mobile apps
 
-Plugin runtime lives under `plugin/` in this repo. Consumers install only that subtree via the plugin marketplace; everything else (`docs/`, `scripts/`, `templates/`, `.husky/`) is dev infrastructure for *building* the plugin.
+Plugin runtime lives under `plugin/` in this repo. Consumers install only that subtree via the plugin marketplace; everything else (`docs/`, `scripts/`, `.husky/`) is dev infrastructure for *building* the plugin.
 
 ## Recommended companion plugins
 
@@ -59,11 +59,9 @@ For React Native projects, also use:
 
 ## Project setup
 
-> **Note:** the previous one-command `bootstrap-new-project.sh` workflow is being reworked. The script and its templates still ship in `plugin/scripts/` and `plugin/templates/` but have known issues (broken `.mcp.json` placeholders, `.claude/CLAUDE.md` template at a path Claude Code doesn't read). Pending follow-up release.
+The plugin doesn't scaffold consumer projects — it ships skills and a pair of lightweight hooks, nothing more. Set up a new project manually:
 
-Until the bootstrap rework lands, set up a new project manually:
-
-1. Add a `.claude/settings.json` to your project with sensible deny rules (Read access to `.env`, `.env.*`, `secrets/**` should be denied at minimum). Reference: `plugin/templates/project/.claude/settings.json`.
+1. Add a `.claude/settings.json` to your project with deny rules for `.env`, `.env.*`, and `secrets/**` — see the "Recommended setup" section in `plugin/README.md` for the exact copy-paste block. The harness enforces these deterministically.
 2. Add a project-root `CLAUDE.md` describing your stack, architecture, and operational constraints (Claude Code reads `<repo-root>/CLAUDE.md`, *not* `<repo-root>/.claude/CLAUDE.md`).
 3. If you use MCP servers, configure them in your project's `.mcp.json`.
 4. Install the recommended companion plugins (see above) so cross-references resolve.

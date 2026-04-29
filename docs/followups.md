@@ -10,11 +10,9 @@ Tracked work surfaced during the 2026-04-27 plugin runtime extraction, with stat
 
 **Summary:** `board-plugin` publishes via a `.claude-plugin/marketplace.json` at repo root with a `git-subdir` source pointing at `plugin/`. `global-plugin` doesn't have one yet. Adding it requires the GitHub owner/URL the plugin will be published from, plus an owner email. Mirror the structure used in `/c/Users/logan/Desktop/projects/org/board-plugin/.claude-plugin/marketplace.json`.
 
-## 2. `plugin/templates/project/.mcp.json` still ships broken `echo` placeholders
+## 2. ~~`plugin/templates/project/.mcp.json` still ships broken `echo` placeholders~~
 
-**Status:** PARTIAL — front-door file `plugin/.mcp.json` was deleted in 0.4.0 (commit `aab386c`), but the consumer-onboarding template at `plugin/templates/project/.mcp.json` still ships the same five `echo` placeholder servers. The `bootstrap-new-project.sh` script copies that template into a consumer's project, reproducing the broken state.
-
-**Summary:** Decide on the template's fate as part of the bootstrap rework (item below): replace with `{"mcpServers": {}}`, document setup in the consumer README, or delete the bootstrap path entirely. Until then, `plugin/README.md` carries a deferral note steering consumers away from the bootstrap workflow.
+**Status:** RESOLVED in 2026-04-29 — folded into the bootstrap cleanup. Implemented per [`docs/superpowers/specs/2026-04-29-bootstrap-cleanup-design.md`](superpowers/specs/2026-04-29-bootstrap-cleanup-design.md). The `plugin/templates/project/.mcp.json` file (along with the rest of `plugin/templates/project/` and the bootstrap script that copied it) was deleted outright. No `.mcp.json` template ships with the plugin anymore.
 
 ## 3. ~~`skill-verification` skill instructs consumers to run `pnpm verify`, which only exists in the source repo~~
 
