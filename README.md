@@ -16,7 +16,7 @@ Ships ~24 skill-format guardrails ("guards") that activate when an agent works o
 - **Frontend quality** — accessibility, performance budget
 - **Ops & risk** — change-risk evaluation (covers blast radius, rollback path, deploy strategy, monitoring, stakeholders), infra change, AWS deploy, CI/CD, observability-first debugging
 
-Every skill builds on shared baseline standards (kept in `templates/baseline-standards.md` in this source repo, referenced by every domain skill's `## Assumes baseline-standards. Adds:` header) so cross-cutting TypeScript / security / observability / testing / a11y / perf / resilience standards aren't duplicated. A pair of lightweight hooks (SessionStart + UserPromptSubmit) inject a brief skill-loading-discipline reminder; no MCP servers and no loggers ship with the plugin in 0.4.0.
+Each skill is self-contained — domain skills hold their own rules. A pair of lightweight hooks (SessionStart + UserPromptSubmit) inject a brief skill-loading-discipline reminder; no MCP servers and no loggers ship with the plugin in 0.4.0.
 
 The full mechanism inventory — exact skill list, hook config, recommended companion plugins — lives in [`plugin/README.md`](./plugin/README.md).
 
@@ -25,7 +25,6 @@ The full mechanism inventory — exact skill list, hook config, recommended comp
 | Path | Purpose | Shipped to consumers |
 |---|---|---|
 | `plugin/` | Plugin runtime — manifest, skills, hooks, onboarding scripts | Yes |
-| `templates/` | Skill-author infrastructure: scaffolds and standards reference for skills authored in this repo | No |
 | `docs/` | Design notes, plans, specs, audits, workflows | No |
 | `docs/superpowers/{plans,specs,workflows,audits}/` | Structured maintainer artifacts (dated `YYYY-MM-DD-<topic>.md`) | No |
 | `scripts/` | Skill-verifier (TypeScript) + vitest harness | No |

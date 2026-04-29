@@ -7,10 +7,6 @@ description: Use when writing or reviewing React Native + Expo mobile code — s
 
 **Purpose:** Keep the mobile app's structure predictable, native boundaries thin, and updates safe on both stores.
 
-## Assumes `baseline-standards`. Adds:
-
-React Native and Expo-specific implementation guards — managed vs bare workflow discipline, centralised navigation architecture, native module adapter pattern, offline UX requirements, and EAS Build/Update safety constraints.
-
 ---
 
 ## Core rules
@@ -290,7 +286,6 @@ For each rule, mark **PASS**, **CONCERN**, or **NOT APPLICABLE**.
 
 ## Interactions with other skills
 
-- **REQUIRED BACKGROUND:** `templates/baseline-standards.md` — structural expectations shared with all domain skills.
 - **Hands off to:** `state-integrity-check` — offline sync conflict resolution logic.
 - **Hands off to:** `integration-contract-safety` — API contract changes affecting mobile payloads.
 - **Hands off to:** `accessibility-guard` — TalkBack / VoiceOver / dynamic type concerns.

@@ -9,9 +9,6 @@ allowed-tools: Read, Grep, Glob, Bash
 ## Purpose & scope
 Keep NestJS codebases maintainable by ensuring each module owns a coherent domain, controllers stay thin HTTP glue, services hold all business logic, and DTOs validate everything that crosses a boundary. Proper layer discipline means the same logic is reachable from HTTP controllers, queue workers, and CLI scripts alike without duplication. Triggers on any change touching modules, controllers, services, providers, or DTOs.
 
-## Assumes `baseline-standards`. Adds:
-NestJS-specific module/provider structure, controller/service discipline, DTO validation placement, and transaction scope enforcement.
-
 ## Core rules
 1. **Controllers are thin: validate (DTO), authorize, delegate to a service, shape the response. No business logic.** — *Why:* Controllers are the HTTP glue layer; embedding logic makes it unreachable from other entry points such as queue workers or schedulers.
 2. **Services are stateless. State lives in DB or injected caches.** — *Why:* NestJS defaults providers to singleton scope, so instance state becomes a concurrency hazard shared across all concurrent requests.

@@ -44,8 +44,8 @@ Tracked work surfaced during the 2026-04-27 plugin runtime extraction, with stat
 
 The verifier currently flags this skill as RED (it doesn't follow the four-section Review checklist shape that domain skills do — because it isn't a domain skill). The RED is expected and acknowledged in the 2026-04-28 spec.
 
-## 6. `templates/baseline-standards.md` runtime inheritance gap
+## 6. ~~`templates/baseline-standards.md` runtime inheritance gap~~
 
-**Status:** OPEN, deliberately deferred (2026-04-28 spec §4).
+**Status:** RESOLVED in 2026-04-29 (delete-not-fix). Implemented per [`docs/superpowers/specs/2026-04-29-baseline-standards-cleanup-design.md`](superpowers/specs/2026-04-29-baseline-standards-cleanup-design.md).
 
-**Summary:** Every domain skill opens with `## Assumes \`baseline-standards\`. Adds:` referencing the cross-cutting standards doc at `templates/baseline-standards.md`. The reference is textual only — the doc does not auto-load in a consumer session alongside the domain skill. The model has these conventions in training data, so the practical loss is mild, but it is suboptimal compared to the documented intent. Future work could either (a) move the standards into a real consumer-facing skill that the model invokes alongside any domain skill, or (b) make the inheritance explicit via a hook that injects baseline standards at SessionStart.
+**Resolution:** `templates/baseline-standards.md` deleted outright rather than fixing the inheritance gap. The 8 baseline sections (TypeScript strict, security-by-default, observability floor, testing floor, accessibility floor, performance floor, resilience floor, stack-assumed) are in the model's training as canonical defaults; loading them at runtime adds tokens for marginal benefit. All 23 `## Assumes baseline-standards. Adds:` headings removed from domain skills, plus 6 explicit body-text references in 4 skills. `templates/new-skill-template.md` also deleted (canonical scaffold guidance lives in `docs/superpowers/skill-authoring-guide.md`); the `templates/` directory is gone. Cross-references in `plugin/README.md`, root `CLAUDE.md`, root `README.md`, and `docs/superpowers/skill-authoring-guide.md` updated to match. After this work, `plugin/` references nothing at the repo root — fully self-contained.

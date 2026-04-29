@@ -10,10 +10,6 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Keep the monorepo's shape healthy — packages have clear owners, dependencies flow one direction, shared code is stable. Changes that cross package or service boundaries get reviewed against dependency rules before they calcify into spaghetti. This skill activates whenever a diff introduces a new cross-package edge, removes a boundary, or proposes a new top-level package.
 
-## Assumes `baseline-standards`. Adds:
-
-Monorepo structure and cross-package boundary rules.
-
 ## Core rules
 
 1. **Apps depend on packages; packages never depend on apps.** — *Why:* apps are leaves in the dependency graph; reversing the arrow couples independent deliverables.

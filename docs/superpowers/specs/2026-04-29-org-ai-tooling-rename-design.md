@@ -11,6 +11,8 @@ skills_invoked:
 
 # `org-ai-tooling` — Rename + Trigger Tighten + Verifier-Shape Conformance
 
+> **STATUS: DEFERRED** — paused on 2026-04-29 to land the broader baseline-standards cleanup first ([`docs/superpowers/specs/2026-04-29-baseline-standards-cleanup-design.md`](2026-04-29-baseline-standards-cleanup-design.md)). Some specifics in §5.5 (cross-references) and §6.2 (file-by-file map) will need revision once the cleanup lands, because `plugin/README.md` and root `CLAUDE.md` change. Revisit after that spec ships.
+
 - **Date:** 2026-04-29
 - **Status:** Draft — awaiting user review
 - **Author:** Logan + Claude

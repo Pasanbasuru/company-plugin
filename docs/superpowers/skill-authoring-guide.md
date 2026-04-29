@@ -11,12 +11,7 @@ How to write a `SKILL.md` for the `global-plugin` library. Read this before crea
 
 ## Templates and standards reference
 
-Two repo-root files support skill authoring:
-
-- **`templates/new-skill-template.md`** — a verifier-GREEN scaffold to copy when starting a new skill. Fill in all placeholder markers with domain-specific content.
-- **`templates/baseline-standards.md`** — the cross-cutting rules every domain skill assumes (TypeScript strictness, security defaults, observability, testing, accessibility, performance, resilience). Each domain skill opens with `## Assumes baseline-standards. Adds:` referencing this file.
-
-Do not hand-roll a new SKILL.md from scratch — start from the template.
+Do not hand-roll a new SKILL.md from scratch — start from the `superpowers:writing-skills` skill scaffold.
 
 ## File layout
 
@@ -35,13 +30,12 @@ Every domain skill's `SKILL.md` follows this exact order:
 1. **YAML frontmatter** with `name`, `description`, `allowed-tools`.
 2. `# <Skill Title>`
 3. `## Purpose & scope` — 2–3 sentences.
-4. `` ## Assumes `baseline-standards`. Adds: `` — one line naming the additional domain (the bare name `baseline-standards` is the canonical reference; it points at `templates/baseline-standards.md` in the source repo).
-5. `## Core rules` — numbered list. Each rule is one sentence + a `*Why:*` line.
-6. `## Red flags` — table of `Thought | Reality` pairs.
-7. `## Good vs bad` — 2–3 subsections, each with a `Bad:` and `Good:` code block.
-8. Domain-specific `##` sections (deep dives).
-9. `## Interactions with other skills` — explicit owns / hands-off / does-not-duplicate bullets.
-10. `## Review checklist` — prescribed report format for review-mode invocations.
+4. `## Core rules` — numbered list. Each rule is one sentence + a `*Why:*` line.
+5. `## Red flags` — table of `Thought | Reality` pairs.
+6. `## Good vs bad` — 2–3 subsections, each with a `Bad:` and `Good:` code block.
+7. Domain-specific `##` sections (deep dives).
+8. `## Interactions with other skills` — explicit owns / hands-off / does-not-duplicate bullets.
+9. `## Review checklist` — prescribed report format for review-mode invocations.
 
 ## Writing the `description`
 
@@ -165,11 +159,6 @@ Report PASS / CONCERN / NOT APPLICABLE per rule:
 - Rule 5 (stack-relevant triggers): PASS / CONCERN / NOT APPLICABLE
 - Rule 6 (no duplicated primitives): PASS / CONCERN / NOT APPLICABLE
 
-## What every skill assumes
-
-- `templates/baseline-standards.md` is in effect. Do not restate TypeScript strict, observability floor, testing floor, etc.
-- The stack pinned in `templates/baseline-standards.md` (Next.js 15, NestJS 11, Prisma 6, Postgres 16, Node 22).
-
 ## Size target
 
 200–400 lines per `SKILL.md`. Hard ceiling at 500 lines — if you hit it, the skill is doing too much. Propose a split.
@@ -177,6 +166,5 @@ Report PASS / CONCERN / NOT APPLICABLE per rule:
 ## Self-review before commit
 
 1. **Placeholder scan:** no `TBD`, `TODO`, `handle appropriately`, `add error handling` without specifics.
-2. **Baseline leak:** rules that restate `templates/baseline-standards.md` get removed.
-3. **Overlap check:** if another skill owns a concern, hand off rather than re-encode.
-4. **Testability:** every rule is checkable as PASS / CONCERN / NOT APPLICABLE.
+2. **Overlap check:** if another skill owns a concern, hand off rather than re-encode.
+3. **Testability:** every rule is checkable as PASS / CONCERN / NOT APPLICABLE.

@@ -10,10 +10,6 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Keep the React layer clean: components are focused, state lives at the right level, hooks follow the rules, and composition beats inheritance of concerns. This skill applies whenever you write or review React components, custom hooks, component-level state, or client-side data-fetching. It stops at the Next.js rendering boundary (hand off to `nextjs-app-structure-guard`) and does not cover accessibility concerns (hand off to `accessibility-guard`).
 
-## Assumes `baseline-standards`. Adds:
-
-React-specific composition, state-placement, and hook rules on top of baseline TypeScript strictness.
-
 ## Core rules
 
 1. **A component does one thing. Split when it exceeds ~150 lines or handles unrelated concerns.** — *Why:* a component that mixes data-fetching, business logic, and layout is hard to test, reuse, and comprehend in isolation; focused components compose cleanly.

@@ -14,7 +14,7 @@ Company-wide guardrails for full-stack React/Next.js + Node/NestJS + Prisma/Post
 
 ## Included skills
 
-Skills reference the shared baseline (now in `templates/`) for TypeScript strictness, security-by-default, observability, testing, accessibility, performance, and resilience. Skills only document what they add on top.
+Each skill is self-contained — no cross-references to anything outside the plugin. Skills hold their own domain rules; cross-cutting expectations like TypeScript strictness, security defaults, structured observability, and the test pyramid are in the model's training as canonical defaults rather than restated here.
 
 <table>
 <thead>

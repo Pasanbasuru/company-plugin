@@ -12,10 +12,6 @@ Queues are at-least-once by default — duplicate and out-of-order messages are 
 
 Apply this skill whenever touching SQS consumers, EventBridge rules, Lambda event-source mappings, BullMQ workers, or any other async job processor.
 
-## Assumes `baseline-standards`. Adds:
-
-Queue-specific delivery semantics — at-least-once handling, idempotency keys, DLQs, visibility timeout tuning, FIFO ordering caveats, and payload versioning at the consumer boundary.
-
 ## Core rules
 
 1. **Every consumer is idempotent.** Either the operation is naturally idempotent (e.g., `SET` is idempotent; `INCREMENT` is not), or an idempotency key is stored and checked before proceeding. — *Why:* SQS guarantees at-least-once delivery. Network hiccups, Lambda timeouts, and manual redrive from a DLQ all produce duplicates. A consumer that runs twice must produce the same final state as one that ran once.

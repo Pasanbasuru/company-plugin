@@ -10,10 +10,6 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Ensure every interface is usable by people who navigate with keyboards, screen readers, magnifiers, or reduced motion — not a pass at the end, a pass at write time. This skill applies whenever you write or review React components, forms, modals, navigation, or any interactive UI. Accessibility is a correctness requirement, not a nice-to-have: many users depend on it, and retrofitting is far more expensive than building it in from the start.
 
-## Assumes `baseline-standards`. Adds:
-
-WCAG 2.2 AA compliance, keyboard reachability, focus management, ARIA correctness, colour contrast, reduced motion, and screen reader compatibility on top of baseline HTML/React discipline.
-
 ## Core rules
 
 1. **Every interactive element is keyboard-reachable in logical tab order and has a visible focus indicator.** — *Why:* users who cannot use a pointer device navigate exclusively via keyboard; an element that cannot be focused or activated by keyboard is completely inaccessible to them. Removing `outline` without a replacement focus style is a WCAG 2.4.7 failure.
@@ -72,7 +68,6 @@ function ClosePanel() {
 
 - **Owns:** accessibility compliance (WCAG 2.2 AA, keyboard, focus, ARIA, contrast, reduced-motion).
 - **Hands off to:** `frontend-implementation-guard` for component structure, `performance-budget-guard` for motion-vs-performance tradeoffs.
-- **Does not duplicate:** `templates/baseline-standards.md`'s accessibility floor; this skill enforces it in concrete review.
 
 ## Review checklist
 

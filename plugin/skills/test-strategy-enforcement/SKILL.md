@@ -10,10 +10,6 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Keep the test portfolio useful — fast where it matters, real where correctness requires it, minimal where it doesn't. Apply this skill when authoring new tests, restructuring an existing suite, reviewing a PR's test plan, or deciding whether a given test belongs at the unit, integration, or e2e layer. The goal is a suite that is trustworthy (few false negatives), maintainable (few fragile assertions), and fast enough to run on every commit.
 
-## Assumes `baseline-standards`. Adds:
-
-Test portfolio discipline — pyramid shape, tooling conventions, flake hygiene, and data strategies — on top of baseline coverage requirements.
-
 ## Core rules
 
 1. **Unit tests are pure — no DB, no network, no filesystem. Target < 50 ms each.** — *Why:* slow or IO-bound unit tests are not unit tests; they are integration tests without the benefit of a real environment. Speed is what makes a unit suite worth running on every keystroke.

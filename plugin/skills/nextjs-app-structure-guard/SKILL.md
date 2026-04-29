@@ -9,9 +9,6 @@ allowed-tools: Read, Grep, Glob, Bash
 ## Purpose & scope
 Keep App Router code aligned with its rendering model: Server Components by default, client components pushed to the leaves, middleware kept narrow, and route handlers kept thin. This skill triggers on any change touching App Router files — pages, layouts, route handlers, middleware, server actions, or components that cross the server/client boundary. The goal is to prevent accidental client-bundle bloat, secret leakage, and untestable business logic hiding in framework glue files.
 
-## Assumes `baseline-standards`. Adds:
-Next.js App Router specific rendering, routing, and caching rules — RSC/client boundary placement, route handler shape, middleware scope, server action safety, and explicit cache policy per fetch.
-
 ## Core rules
 1. **Server Components are the default. `'use client'` goes on the smallest leaf that needs it.** — *Why:* pushing client directives to leaves ships less JS, keeps data and secrets on the server, and lets streaming work correctly across the subtree.
 2. **Do not import server-only modules (`fs`, DB clients, secret managers) into client components.** — *Why:* these modules end up in the client bundle, leaking secrets or crashing at runtime when Node APIs are unavailable in the browser.

@@ -12,10 +12,6 @@ Give an approver a one-page read on risk for a planned change at PR time — not
 
 This skill owns end-to-end risk posture: rating, blast-radius, deploy strategy, monitoring, rollback design, stakeholder notification. It hands off to `observability-first-debugging`, `aws-deploy-safety`, `infra-safe-change`, `queue-and-retry-safety`, and `coverage-gap-detection` for their respective specialisations, and does not duplicate PR code review.
 
-## Assumes `baseline-standards`. Adds:
-
-End-to-end change risk posture — risk-rating rubric, blast-radius enumeration (importer graph, classification, query-plan regression, spooky-action surfaces), deploy-strategy selection, monitoring signal naming, rollback design (mechanism taxonomy, migration reversibility, kill-switch design, dual-support windows, rehearsal), and stakeholder notification.
-
 ## Core rules
 
 The 18 rules below are grouped by concern. Numbering runs 1-18 sequentially. Apply every rule that is relevant to the change; mark the rest `NOT APPLICABLE` in the Review checklist.
