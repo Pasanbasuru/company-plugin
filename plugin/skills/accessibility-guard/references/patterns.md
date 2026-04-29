@@ -1,0 +1,385 @@
+# Accessibility patterns — deep dives
+
+Reference for implementation details. The lean `SKILL.md` states the Core rules; this file explains *how* to apply them with code examples, patterns, and ARIA reference material.
+
+---
+
+## Keyboard and focus
+
+Every interactive element must be reachable by pressing Tab (or Shift+Tab to reverse) and activated by pressing Enter or Space as appropriate. The natural DOM order determines tab order; avoid `tabindex` values greater than `0` because they create a separate, confusing tab sequence that does not match the visual layout.
+
+Use `tabindex="0"` only to make a non-interactive element intentionally focusable (e.g., a custom widget container). Use `tabindex="-1"` to make an element programmatically focusable without placing it in the natural tab sequence — this is the correct value for dialog containers and for elements that receive focus via script (e.g., an error summary heading).
+
+Focus indicators must be visible. The browser default `outline` is acceptable as a baseline; if you override it for aesthetic reasons, the replacement must have at least 3:1 contrast against the adjacent background colour. The `:focus-visible` pseudo-class lets you show a focus ring only for keyboard navigation while hiding it for pointer interaction:
+
+```css
+/* Show ring only for keyboard focus — not on mouse click */
+.interactive-element:focus-visible {
+  outline: 2px solid #005fcc;
+  outline-offset: 2px;
+}
+.interactive-element:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+On single-page route transitions, move focus to the page heading or a skip-nav landmark immediately after navigation completes. A common pattern is a visually-hidden `<h1>` with `tabindex="-1"` that is focused by the router's navigation hook:
+
+```tsx
+// In your router's onNavigationComplete callback:
+const pageHeadingRef = useRef<HTMLHeadingElement>(null);
+
+useEffect(() => {
+  pageHeadingRef.current?.focus();
+}, [pathname]);
+
+return <h1 ref={pageHeadingRef} tabIndex={-1} className="sr-only">{pageTitle}</h1>;
+```
+
+Skip navigation links allow keyboard users to jump past repeated navigation directly to the main content. Render one as the first element in `<body>`, visible only on focus:
+
+```tsx
+<a href="#main-content" className="skip-link">Skip to main content</a>
+<nav>...</nav>
+<main id="main-content" tabIndex={-1}>...</main>
+```
+
+---
+
+## Forms and errors
+
+Every `<input>`, `<select>`, and `<textarea>` must have a programmatically associated label — either a visible `<label htmlFor={id}>` or, where a visible label is not possible, `aria-label` or `aria-labelledby` referencing visible text. Placeholder text is not a label: it disappears on input and has lower contrast than label text by convention.
+
+Use `useId()` (React 18+) to generate stable, collision-free IDs for the input–label pair. This avoids the common mistake of hard-coding IDs that break when the component is rendered more than once on the same page.
+
+Validation errors must be associated with their input via `aria-describedby` pointing to the error message element. Set `aria-invalid="true"` on the input when an error is active. Inject errors into the DOM dynamically using `aria-live="polite"` (for inline, non-urgent errors) or `aria-live="assertive"` (for time-sensitive messages). `role="alert"` implies `aria-live="assertive"` and should be used sparingly — overusing it creates a stream of interruptions.
+
+### Good: labelled input with `aria-describedby` + `aria-live` error
+
+```tsx
+// Label is always visible and programmatically linked.
+// aria-describedby links the error; aria-live announces it on insertion.
+// aria-invalid signals the error state to the screen reader.
+function EmailField() {
+  const id = useId();
+  const errorId = `${id}-error`;
+  const [error, setError] = useState('');
+
+  return (
+    <div>
+      <label htmlFor={id}>Email address</label>
+      <input
+        id={id}
+        type="email"
+        aria-describedby={error ? errorId : undefined}
+        aria-invalid={error ? 'true' : undefined}
+        onChange={(e) => validate(e.target.value, setError)}
+      />
+      <div
+        id={errorId}
+        role="alert"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {error}
+      </div>
+    </div>
+  );
+}
+```
+
+### Bad: placeholder-as-label
+
+```tsx
+// Placeholder disappears on focus — the user forgets what the field is for.
+// There is no programmatic label for the screen reader.
+// The error text is rendered but never announced.
+function EmailField() {
+  const [error, setError] = useState('');
+  return (
+    <div>
+      <input
+        type="email"
+        placeholder="Email address"
+        onChange={(e) => validate(e.target.value, setError)}
+      />
+      {error && <span style={{ color: 'red' }}>{error}</span>}
+    </div>
+  );
+}
+```
+
+For multi-field forms with a submission error summary, programmatically focus the summary heading after a failed submission so screen reader users hear the summary immediately:
+
+```tsx
+const errorSummaryRef = useRef<HTMLDivElement>(null);
+
+function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  const errors = validate(formValues);
+  if (errors.length > 0) {
+    setErrors(errors);
+    // Allow the DOM to update, then move focus to the summary.
+    requestAnimationFrame(() => errorSummaryRef.current?.focus());
+    return;
+  }
+  submitForm(formValues);
+}
+
+// In JSX:
+{errors.length > 0 && (
+  <div ref={errorSummaryRef} tabIndex={-1} role="alert">
+    <h2>There are {errors.length} errors in this form</h2>
+    <ul>
+      {errors.map((err) => (
+        <li key={err.field}>
+          <a href={`#${err.field}`}>{err.message}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+```
+
+Required fields should be indicated visually and programmatically. Use the native `required` attribute on `<input>` elements — screen readers announce "required" automatically. Do not rely solely on a colour (e.g., a red asterisk) to convey required status; include a text explanation such as "Fields marked with * are required" near the top of the form.
+
+---
+
+## Modal: focus trap + restore
+
+### Bad: modal that loses focus
+
+```tsx
+// Focus is not moved to the modal on open.
+// Tab key escapes the modal into the background page.
+// When the modal closes, focus is dropped rather than returned to the trigger.
+function BadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <button onClick={onClose}>Close</button>
+        <p>Modal content</p>
+      </div>
+    </div>
+  );
+}
+```
+
+### Good: focus trap + restore
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { createFocusTrap, type FocusTrap } from 'focus-trap';
+
+function GoodModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const trapRef = useRef<FocusTrap | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    // Capture the element that opened the modal so we can restore focus on close.
+    triggerRef.current = document.activeElement as HTMLElement | null;
+
+    // Activate a real focus trap: Tab / Shift+Tab cycle inside the dialog,
+    // initial focus moves to the first focusable child, focus is restored
+    // to triggerRef.current when the trap deactivates.
+    if (dialogRef.current) {
+      trapRef.current = createFocusTrap(dialogRef.current, {
+        escapeDeactivates: false,            // we handle Escape via onKeyDown below
+        returnFocusOnDeactivate: false,      // we restore focus manually for clarity
+        allowOutsideClick: true,
+      });
+      trapRef.current.activate();
+    }
+
+    return () => {
+      trapRef.current?.deactivate();
+      trapRef.current = null;
+      triggerRef.current?.focus();
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      ref={dialogRef}
+      tabIndex={-1}                     // makes the dialog itself focusable
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      className="modal-overlay"
+    >
+      <div className="modal">
+        <h2 id="modal-title">Confirm action</h2>
+        <p>Are you sure you want to proceed?</p>
+        <button type="button" onClick={onClose}>Cancel</button>
+        <button type="button" onClick={() => { confirm(); onClose(); }}>
+          Confirm
+        </button>
+      </div>
+    </div>
+  );
+}
+// For production: use Radix UI Dialog or Headless UI Dialog which ship
+// focus-trap and restore behaviour out of the box.
+```
+
+---
+
+## Colour and contrast
+
+WCAG 2.2 AA mandates:
+- **4.5:1** minimum contrast ratio for text smaller than 18 pt (or 14 pt bold).
+- **3:1** minimum contrast ratio for large text (18 pt+ / 14 pt+ bold), UI components (input borders, checkbox borders, button outlines), and graphical elements essential to understanding content.
+- There is no contrast requirement for decorative elements, disabled controls, or logotypes.
+
+Never convey meaning through colour alone. Always pair colour with a secondary cue — an icon, a label, a pattern, or a text description. A status indicator that is green for success and red for failure must also carry a textual label ("Success" / "Error") or an icon with an `aria-label`.
+
+Check contrast at design time and in code review using tools such as the WebAIM Contrast Checker, the browser DevTools accessibility panel, or the Figma plugin "Contrast". Automated tools like axe-core detect most contrast failures, but they cannot detect contrast issues on images, gradients, or elements with dynamically computed colours — those require manual inspection.
+
+Dark mode and high-contrast mode require separate verification. An accessible light-mode palette is not automatically accessible in dark mode because the relative contrast of overlapping colours can flip. Use CSS custom properties and `prefers-color-scheme` to define both palettes explicitly, and test each independently.
+
+---
+
+## Motion, animation, and reduced-motion
+
+The CSS media query `prefers-reduced-motion: reduce` is set by users who have requested reduced motion at the OS level. When this media query is active, any animation, transition, or parallax effect that covers significant distance or plays for more than a few hundred milliseconds must be disabled or replaced with a minimal variant (e.g., a simple opacity fade instead of a slide-in):
+
+```css
+/* Default: smooth slide-in */
+.drawer {
+  transition: transform 300ms ease-in-out;
+}
+
+/* Reduced-motion: instant or minimal */
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    transition: opacity 100ms linear;
+    transform: none;
+  }
+}
+```
+
+In React, the `useReducedMotion` hook from Framer Motion or a hand-rolled hook wrapping `matchMedia` gives you a boolean you can use to gate animated variants:
+
+```tsx
+// SSR-safe: initial value is false on the server (no motion preference assumed).
+// useEffect only runs in the browser, so window access is guarded by the lifecycle,
+// not a typeof check. The client hydrates the real value on mount.
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return reduced;
+}
+
+function AnimatedBanner() {
+  const reduced = useReducedMotion();
+  return (
+    <div
+      style={{
+        animation: reduced ? 'none' : 'slideIn 400ms ease-out',
+        opacity: reduced ? 1 : undefined,
+      }}
+    >
+      Welcome back
+    </div>
+  );
+}
+```
+
+Auto-playing video and GIFs must either loop for no more than five seconds or provide a mechanism to pause, stop, or hide them. This is a WCAG 2.2 AA requirement (Success Criterion 2.2.2) and also applies in reduced-motion contexts.
+
+Do not use animations to convey critical information. A spinner, a progress bar, and a confetti burst are decorative; the underlying state change (loading, complete, error) must also be communicated via text or an `aria-live` region.
+
+---
+
+## ARIA patterns reference
+
+The WAI-ARIA Authoring Practices Guide (APG) at https://www.w3.org/WAI/ARIA/apg/ is the authoritative reference for ARIA widget patterns. Before building a custom combobox, dialog, tabs, tree, menubar, or carousel, read the corresponding APG pattern — it specifies the required roles, states, properties, and keyboard interactions in full.
+
+Key patterns and their most commonly missed requirements:
+
+**Dialog (modal):** `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing to the dialog title, focus trap confining Tab/Shift+Tab to the dialog's focusable descendants, Escape key closes the dialog, focus returns to the trigger element on close.
+
+**Combobox:** The text input has `role="combobox"`, `aria-expanded`, `aria-controls` pointing to the listbox, and `aria-activedescendant` tracking the highlighted option. Arrow keys move through options; Enter selects; Escape closes.
+
+**Tabs:** The tab list has `role="tablist"`; each tab has `role="tab"`, `aria-selected`, and `aria-controls` pointing to its panel. Arrow keys (left/right or up/down) move between tabs; Tab moves focus into the active panel.
+
+**Disclosure (accordion):** The trigger is a `<button>` with `aria-expanded` and `aria-controls` pointing to the panel. The panel itself needs no ARIA role — it is just a container that is shown or hidden.
+
+**Tooltip:** The tooltip container has `role="tooltip"` and an ID; the trigger element has `aria-describedby` referencing that ID. Tooltip appears on focus and hover; does not contain interactive content.
+
+Common ARIA mistakes to avoid:
+- Applying `aria-label` to a `<div>` that contains multiple interactive elements — label the individual controls, not the container.
+- Using `role="presentation"` or `role="none"` on an element that has focusable descendants — this removes the element from the accessibility tree but not its children, producing orphaned interactive elements.
+- Setting `aria-hidden="true"` on an element while it or a descendant still has focus — focus inside a hidden subtree is a screen reader trap.
+- Using `aria-live="assertive"` for non-urgent messages — it interrupts whatever the screen reader is currently reading.
+
+---
+
+## Testing a11y
+
+Accessibility testing requires both automated scanning and manual verification. Automated tools catch approximately 30–50 % of WCAG issues; the rest require human judgement.
+
+### Automated scanning with axe-core
+
+axe-core (https://github.com/dequelabs/axe-core) is the industry-standard automated accessibility rule engine. Integrate it at two levels:
+
+1. **Unit / component tests** using `jest-axe`:
+   ```tsx
+   import { render } from '@testing-library/react';
+   import { axe, toHaveNoViolations } from 'jest-axe';
+   expect.extend(toHaveNoViolations);
+
+   it('has no axe violations', async () => {
+     const { container } = render(<EmailField />);
+     const results = await axe(container);
+     expect(results).toHaveNoViolations();
+   });
+   ```
+
+2. **End-to-end tests** using `@axe-core/playwright`:
+   ```ts
+   import { checkA11y } from 'axe-playwright';
+
+   test('checkout page has no axe violations', async ({ page }) => {
+     await page.goto('/checkout');
+     await checkA11y(page, undefined, {
+       detailedReport: true,
+       detailedReportOptions: { html: true },
+     });
+   });
+   ```
+
+Run axe scans on every page/route, not just the home page. Violations on low-traffic pages are still legal and user-experience liabilities.
+
+### Manual keyboard testing
+
+Automated tools cannot verify focus order, keyboard trap absence, or the logical reading sequence of dynamic content. For every critical user flow (sign-in, checkout, form submission, modal interaction), manually test using only the keyboard:
+
+1. Press Tab from the top of the page and verify each interactive element receives focus in a logical order.
+2. Activate buttons and links with Enter; activate buttons also with Space.
+3. Open and close modals; confirm focus moves in and returns correctly.
+4. Trigger form validation errors; confirm error messages are announced.
+5. Navigate away and back using the browser's Back button; confirm focus is restored sensibly.
+
+### Manual screen reader spot-checks
+
+Test with at least one screen reader on the primary target platform. The most commonly used combinations are:
+
+- **VoiceOver + Safari** on macOS / iOS (enable in System Preferences > Accessibility; navigate with VO+arrow keys).
+- **NVDA + Firefox or Chrome** on Windows (free download at nvaccess.org; navigate with arrow keys and NVDA modifier).
+- **TalkBack** on Android (enable in Settings > Accessibility; navigate by swiping).
+
+Spot-check focus, form labelling, error announcement, modal behaviour, and dynamic content updates (especially `aria-live` regions). Screen reader behaviour differences between browsers and AT versions are real — if budget allows, test in at least two combinations.
