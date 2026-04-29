@@ -1,6 +1,6 @@
 ---
 name: prisma-data-access-guard
-description: Use when touching Prisma queries, schema, or migrations. Do NOT use for schema design decisions without a concrete query (use `architecture-guard`). Covers query shape, N+1, transactions, migration safety, indexes, raw SQL safety, selection shape.
+description: Use when reviewing or editing Prisma queries, schema, or migrations. Do NOT use for schema design decisions without a concrete query (use `architecture-guard`). Covers query shape, N+1, transactions, migration safety, indexes, raw SQL safety, selection shape.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

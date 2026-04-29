@@ -1,6 +1,6 @@
 ---
 name: nestjs-service-boundary-guard
-description: Use when touching a NestJS module, controller, provider, or DTO. Do NOT use for database query shape (use `prisma-data-access-guard`) or for cross-service contracts (use `integration-contract-safety`). Covers module ownership, provider scope, controller/service split, DTO validation, transaction placement, cross-module coupling.
+description: Use when reviewing or editing a NestJS module, controller, provider, or DTO. Do NOT use for database query shape (use `prisma-data-access-guard`) or for cross-service contracts (use `integration-contract-safety`). Covers module ownership, provider scope, controller/service split, DTO validation, transaction placement, cross-module coupling.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

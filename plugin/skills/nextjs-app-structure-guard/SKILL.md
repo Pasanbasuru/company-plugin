@@ -1,6 +1,6 @@
 ---
 name: nextjs-app-structure-guard
-description: Use when touching a Next.js App Router file — page, layout, route handler, middleware, server action, or a component that crosses the server/client boundary. Do NOT use for pure client component state logic (use `frontend-implementation-guard`) or for data access (use `prisma-data-access-guard`). Covers RSC vs client, route handlers, middleware, server actions, streaming, caching, route groups.
+description: Use when reviewing or editing a Next.js App Router file — page, layout, route handler, middleware, server action, or a component that crosses the server/client boundary. Do NOT use for pure client component state logic (use `frontend-implementation-guard`) or for data access (use `prisma-data-access-guard`). Covers RSC vs client, route handlers, middleware, server actions, streaming, caching, route groups.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

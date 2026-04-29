@@ -1,6 +1,6 @@
 ---
 name: auth-and-permissions-safety
-description: Use when touching authentication, sessions, JWT/tokens, RBAC/ABAC logic, or any route/handler/procedure that accesses user data. Do NOT use for infra-level IAM (use `infra-safe-change` / `aws-deploy-safety`). Covers authN flows, session/token hygiene, RBAC/ABAC checks, CSRF, permission inheritance.
+description: Use when reviewing or editing authentication, sessions, JWT/tokens, RBAC/ABAC logic, or any route/handler/procedure that accesses user data. Do NOT use for infra-level IAM (use `infra-safe-change` / `aws-deploy-safety`). Covers authN flows, session/token hygiene, RBAC/ABAC checks, CSRF, permission inheritance.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

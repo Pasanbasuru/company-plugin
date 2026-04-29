@@ -1,6 +1,6 @@
 ---
 name: resilience-and-error-handling
-description: Use when code calls a network service, handles an error, sets a timeout, implements a retry, or exposes a user-facing failure path. Do NOT use for queue-specific retry semantics (use `queue-and-retry-safety`). Covers timeouts, retry with jitter, circuit breakers, error boundaries, idempotency of external calls, graceful degradation, typed errors.
+description: Use when reviewing or designing code that calls a network service, handles an error, sets a timeout, implements a retry, or exposes a user-facing failure path. Do NOT use for queue-specific retry semantics (use `queue-and-retry-safety`). Covers timeouts, retry with jitter, circuit breakers, error boundaries, idempotency of external calls, graceful degradation, typed errors.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

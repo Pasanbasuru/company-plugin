@@ -1,6 +1,6 @@
 ---
 name: architecture-guard
-description: Use when a change crosses service/app boundaries, adds a new top-level package, or shifts dependency direction in the monorepo. Do NOT use for intra-app structure concerns — use nextjs-app-structure-guard or nestjs-service-boundary-guard instead. Covers monorepo ownership, dependency direction, shared-package scope, cross-service contracts.
+description: Use when reviewing a change that crosses service/app boundaries, adds a new top-level package, or shifts dependency direction in the monorepo. Do NOT use for intra-app structure concerns — use nextjs-app-structure-guard or nestjs-service-boundary-guard instead. Covers monorepo ownership, dependency direction, shared-package scope, cross-service contracts.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: performance-budget-guard
-description: Use when adding a new route, new dependency, heavy computation, new DB query on a hot path, or UI that might affect Core Web Vitals. Do NOT use for pure logic correctness review (use `typescript-rigor`) or for DB query shape (use `prisma-data-access-guard`). Covers Core Web Vitals, JS bundle budgets, query p95 budgets, memoization, streaming, caching layers.
+description: Use when reviewing or creating a new route, dependency, heavy computation, DB query on a hot path, or UI that might affect Core Web Vitals. Do NOT use for pure logic correctness review (use `typescript-rigor`) or for DB query shape (use `prisma-data-access-guard`). Covers Core Web Vitals, JS bundle budgets, query p95 budgets, memoization, streaming, caching layers.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

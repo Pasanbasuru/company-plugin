@@ -1,6 +1,6 @@
 ---
 name: infra-safe-change
-description: Use when modifying Terraform, CloudFormation, CDK, or any IaC that provisions cloud resources — especially state stores, networking, IAM, and compute scaling. Do NOT use for application-level AWS SDK calls (use `aws-deploy-safety`). Covers IaC review, state management, drift detection, destructive plan detection, IAM policies, networking changes.
+description: Use when reviewing or editing Terraform, CloudFormation, CDK, or any IaC that provisions cloud resources — especially state stores, networking, IAM, and compute scaling. Do NOT use for application-level AWS SDK calls (use `aws-deploy-safety`). Covers IaC review, state management, drift detection, destructive plan detection, IAM policies, networking changes.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

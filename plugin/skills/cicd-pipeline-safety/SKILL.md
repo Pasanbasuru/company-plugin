@@ -1,6 +1,6 @@
 ---
 name: cicd-pipeline-safety
-description: Use when modifying GitHub Actions workflows, reusable workflows, required-check configuration, or promotion logic between environments. Do NOT use for application deploy mechanics (use `aws-deploy-safety`). Covers OIDC to AWS, secret scoping, required checks, branch protection, artifact integrity, environment promotion, third-party action pinning.
+description: Use when reviewing or editing GitHub Actions workflows, reusable workflows, required-check configuration, or promotion logic between environments. Do NOT use for application deploy mechanics (use `aws-deploy-safety`). Covers OIDC to AWS, secret scoping, required checks, branch protection, artifact integrity, environment promotion, third-party action pinning.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: state-integrity-check
-description: Use when a change writes data AND the UI caches or optimistically updates that data, or when cache/invalidation behaviour changes on either side. Do NOT use for pure DB write review (use `prisma-data-access-guard`) or pure UI state shape (use `frontend-implementation-guard`). Covers cache invalidation, optimistic updates, server/client divergence, stale reads.
+description: Use when reviewing a change that writes data AND the UI caches or optimistically updates that data, or when cache/invalidation behaviour changes on either side. Do NOT use for pure DB write review (use `prisma-data-access-guard`) or pure UI state shape (use `frontend-implementation-guard`). Covers cache invalidation, optimistic updates, server/client divergence, stale reads.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
