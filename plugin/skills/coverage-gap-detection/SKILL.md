@@ -303,7 +303,7 @@ When invoked in review mode, produce a markdown report with exactly these four s
 
 ### Summary
 
-One line stating whether coverage is adequate for merge, and the count of CONCERN-level gaps.
+One line: GREEN / YELLOW / RED verdict on coverage adequacy for merge, plus the count of CONCERN-level gaps.
 
 ### Findings
 

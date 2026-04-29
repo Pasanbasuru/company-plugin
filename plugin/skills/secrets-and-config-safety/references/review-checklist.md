@@ -8,7 +8,7 @@ Use this file when producing a complete secrets review report. The lean `SKILL.m
 
 ### Summary
 
-One line: pass / concerns / blocking issues. Name the reviewed surface (service, module, or file set) and the overall verdict in a single sentence so a reader can scan the result without reading further.
+One line: GREEN / YELLOW / RED. Name the reviewed surface (service, module, or file set) and the overall verdict in a single sentence so a reader can scan the result without reading further.
 
 ### Findings
 

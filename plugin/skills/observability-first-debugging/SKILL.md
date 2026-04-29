@@ -308,7 +308,7 @@ fields @timestamp, requestId, errorCode, durationMs, @message
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Handler inventory** — for each HTTP handler or queue consumer: file:line, has structured logs (yes/no), emits latency metric (yes/no), emits error metric (yes/no), correlation ID propagated (yes/no).
 3. **Findings** — per issue: *File:line, severity (blocking | concern | info), rule violated, what's wrong, recommended fix.*
 4. **Safer alternative** — for each observability gap flagged in Findings, propose a lower-risk mitigation before reaching for new log lines. If structured logs are unavailable on the hot path, prefer a targeted deploy-tracking dashboard or existing metric drill-down over adding ad-hoc logs. Prefer existing traces/spans over new print-style logs when debugging request flow, and prefer re-using an already-emitted correlation ID over introducing a new one.

@@ -313,7 +313,7 @@ For Pact (consumer-driven) and schema-driven generated-client test patterns plus
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line describing overall contract health and whether any blocking issues exist.
+1. **Summary** — one line: GREEN / YELLOW / RED, plus overall contract health.
 2. **Findings** — per issue: *file:line, severity: blocking | concern | info, category, fix*. Also tag each finding's contract change class (*additive* / *breaking* / *behavioural*) and name affected consumers inline in the fix column.
 3. **Safer alternative** — prefer additive schema evolution (new optional fields, tolerant readers) over breaking changes paired with version bumps; prefer consumer-driven contracts (Pact) over producer-owned OpenAPI specs for inter-service APIs where consumers are known; prefer explicit `schemaVersion` + deprecation headers over silent removal.
 4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.

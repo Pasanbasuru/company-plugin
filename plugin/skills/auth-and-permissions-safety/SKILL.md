@@ -223,7 +223,7 @@ In Next.js API routes or server actions, do not return different HTTP status cod
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / N concerns / blocking.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: `file:line, severity (low/med/high), category, fix`. Include endpoint-level observations as bullets here: for each route/handler/procedure touched, note whether it has an authN guard and a resource-scoped authZ check, and flag any missing or role-only checks as findings with their file:line.
 3. **Safer alternative** — when the reviewed design has a simpler or lower-risk alternative, name it. Examples: prefer session-based auth with server-side revocation over long-lived JWTs when tokens don't cross service boundaries; prefer short-lived access tokens + refresh rotation over long-lived bearer tokens; prefer resource-scoped Prisma `findFirst({ where: { id, ownerId } })` over a role-only guard plus an unconditional service fetch.
 4. **Checklist coverage** — for each of the 8 core rules, mark: PASS / CONCERN / NOT APPLICABLE.

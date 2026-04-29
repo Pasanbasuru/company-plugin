@@ -82,7 +82,7 @@ For full patterns (Next.js `server-only` guard, rotation-ready Prisma pool, SSM 
 
 ### Summary
 
-One line: pass / concerns / blocking issues. Name the reviewed surface and the overall verdict in a single sentence.
+One line: GREEN / YELLOW / RED. Name the reviewed surface and the overall verdict in a single sentence.
 
 ### Findings
 

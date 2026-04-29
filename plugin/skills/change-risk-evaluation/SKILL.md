@@ -82,7 +82,7 @@ Produce a markdown report with four sections (Summary / Findings / Safer alterna
 
 ### Summary
 
-One line stating the overall risk posture, blast-radius verdict (contained / moderate / high), deploy strategy, and whether the rollback path is credible and rehearsed.
+One line: GREEN / YELLOW / RED verdict, plus blast-radius (contained / moderate / high), deploy strategy, and whether the rollback path is credible and rehearsed.
 
 ### Findings
 

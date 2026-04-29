@@ -124,7 +124,7 @@ Middleware runs on every matched request, so the `matcher` config must be tight 
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *File:line, severity (blocking | concern | info), category (RSC boundary | route handler | middleware | server action | caching | metadata purity), what's wrong, fix*. List every `'use client'` with file:line and whether it could move to a smaller leaf.
 3. **Safer alternative** — if an anti-pattern is widespread (e.g., top-level `'use client'` across many layouts, fat route handlers), prescribe the replacement and migration path.
 4. **Checklist coverage** — for each rule below, mark PASS / CONCERN / NOT APPLICABLE:

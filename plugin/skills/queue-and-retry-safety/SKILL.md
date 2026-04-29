@@ -88,7 +88,7 @@ For DynamoDB-backed idempotency and the heartbeat pattern for long-running jobs,
 
 ### Summary
 
-One line: pass / concerns / blocking issues. Name the reviewed surface (consumer file, CDK stack, queue configuration) and the overall verdict in a single sentence so a reader can scan the result without reading further.
+One line: GREEN / YELLOW / RED. Name the reviewed surface (consumer file, CDK stack, queue configuration) and the overall verdict in a single sentence so a reader can scan the result without reading further.
 
 ### Findings
 

@@ -268,7 +268,7 @@ Recommended retention tiers:
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *resource/file, severity (low/med/high), category, what is wrong, recommended fix*.
 3. **Safer alternative** — if applicable, name an alternative approach and why the current one is riskier. Examples: prefer blue/green (CodeDeploy) over in-place ECS rolling updates for stateful or payment-handling workloads; prefer Secrets Manager rotation with short-lived fetched values over long-lived secret references baked into task definition revisions; prefer pre-creating the Lambda CloudWatch Logs group in IaC over letting the Lambda service auto-create it with no retention policy.
 4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.

@@ -171,7 +171,7 @@ Applying authorization guards globally is dangerous because any new controller a
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *File:line, severity (blocking | concern | info), category (controller discipline | module export surface | cross-module coupling | transaction placement | DTO validation | guard scope), what's wrong, fix*. List every controller method with logic beyond validate/authorize/delegate/shape.
 3. **Safer alternative** — if an anti-pattern is widespread (e.g., transactions in controllers across many modules, bare `any` DTOs), prescribe the replacement and migration path.
 4. **Checklist coverage** — for each rule below, mark PASS / CONCERN / NOT APPLICABLE:

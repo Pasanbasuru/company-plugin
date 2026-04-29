@@ -110,7 +110,7 @@ Run all three during a new-package PR and in the pre-merge CI pipeline.
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — for every new cross-package edge introduced by the diff, list: *File:line, severity (blocking | concern | info), category (dependency direction | cycle | deep import | missing owner | cross-service type leak | test coupling), what's wrong, fix*. Classify each edge against the four-layer dependency direction rules explicitly.
 3. **Safer alternative** — if an anti-pattern is widespread (e.g., multiple apps importing each other), prescribe the replacement (e.g., extract `@acme/shared-foo`, migrate all consumers, delete the cross-app imports).
 4. **Checklist coverage** — for each rule below, mark PASS / CONCERN / NOT APPLICABLE:

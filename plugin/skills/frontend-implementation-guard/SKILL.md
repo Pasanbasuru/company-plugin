@@ -256,7 +256,7 @@ Keep effects focused. An effect that does multiple unrelated things should be tw
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *File:line, severity (blocking | concern | info), category, what's wrong, recommended fix*. Flag every component over 150 lines, every `useEffect` that fetches or syncs server data, and every Context used for high-frequency state with exact file:line.
 3. **Safer alternative** — if an anti-pattern is widespread (e.g., `useEffect`+`useState` for data fetching throughout the codebase), prescribe the migration path for the whole codebase, not just the single file.
 4. **Checklist coverage** — for each rule below, mark PASS / CONCERN / NOT APPLICABLE:

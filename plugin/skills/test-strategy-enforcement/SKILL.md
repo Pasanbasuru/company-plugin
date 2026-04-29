@@ -350,7 +350,7 @@ Prefer explicit `vi.fn().mockResolvedValue(...)` over `vi.mock(...)` auto-mocks 
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *File:line, severity (low/med/high), category, what's wrong, recommended fix*.
 3. **Safer alternative** — for each concern, suggest the lower-risk test pattern:
    - Prefer Testcontainers-backed integration tests over mocked Prisma/DB repository tests for data-access code.

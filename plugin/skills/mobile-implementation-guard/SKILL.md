@@ -258,7 +258,7 @@ iOS info.plist usage description strings must be accurate and specific. These st
 ## Review checklist
 
 ### Summary
-One-line verdict on the mobile implementation's structural health — managed workflow discipline, navigation centralisation, adapter boundaries, offline UX, and OTA safety.
+One line: GREEN / YELLOW / RED verdict on structural health — managed workflow discipline, navigation centralisation, adapter boundaries, offline UX, and OTA safety.
 
 ### Findings
 List each concern as `file:line, severity, category, fix`. Severity is `blocker | major | minor`. Category is one of `workflow | navigation | adapter | platform | offline | eas-update | permissions`. Fix is a one-line actionable remediation.

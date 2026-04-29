@@ -145,7 +145,7 @@ When dropping to raw SQL, always use the tagged `$queryRaw` template literal, ne
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *File:line, severity (low/med/high), category, what's wrong, recommended fix*.
 3. **Safer alternative** — if an anti-pattern is widespread, prescribe the replacement approach for the whole codebase.
 4. **Checklist coverage** — for each rule below, mark: PASS / CONCERN / NOT APPLICABLE.

@@ -84,7 +84,7 @@ jobs:
 
 ### Summary
 
-One line: pass / concerns / blocking issues. Name the reviewed surface (workflow file, environment config, branch protection) and the overall verdict in a single sentence so a reader can scan the result without reading further.
+One line: GREEN / YELLOW / RED. Name the reviewed surface (workflow file, environment config, branch protection) and the overall verdict in a single sentence so a reader can scan the result without reading further.
 
 ### Findings
 

@@ -258,7 +258,7 @@ node node_modules/some-package/scripts/postinstall.js
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *file:line, severity (low/med/high), category, what is wrong, recommended fix*.
 3. **Safer alternative** — prefer a vetted well-maintained transitive dependency over vendoring or forking a small one-function package; prefer an internal mirror (Verdaccio / CodeArtifact) over direct npm-registry fetches for CI reproducibility; prefer lockfile-aware SCA (`pnpm audit`, Socket.dev, OSV-Scanner) over version-range scans — analyze what you actually ship; prefer `--ignore-scripts` plus an explicit allowlist over trusting every `postinstall` hook for new dependencies.
 4. **Checklist coverage** — for each of the 7 core rules, mark: PASS / CONCERN / NOT APPLICABLE.

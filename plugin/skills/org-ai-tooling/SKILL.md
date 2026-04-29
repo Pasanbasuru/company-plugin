@@ -60,7 +60,7 @@ When invoked to audit a Claude Code tooling artifact (skill, hook, plugin, subag
 
 ### Summary
 
-One line: pass / concerns / blocking issues. Name the reviewed surface and the overall verdict in a single sentence so a reader can scan without reading further.
+One line: GREEN / YELLOW / RED. Name the reviewed surface and the overall verdict in a single sentence so a reader can scan without reading further.
 
 ### Findings
 

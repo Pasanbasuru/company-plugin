@@ -137,7 +137,7 @@ For full implementation details (timeout utility, `retryWithBackoff` with full j
 
 ### Summary
 
-One line: pass / concerns / blocking issues. Name the reviewed surface and the overall verdict in a single sentence.
+One line: GREEN / YELLOW / RED. Name the reviewed surface and the overall verdict in a single sentence.
 
 ### Findings
 

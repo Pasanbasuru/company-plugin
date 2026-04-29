@@ -8,7 +8,7 @@ Use this file when producing a complete accessibility review report. The lean `S
 
 ### 1. Summary
 
-One line: pass / concerns / blocking issues. Name the reviewed surface (component, route, flow) and the overall verdict in a single sentence so a reader can scan the result without reading further.
+One line: GREEN / YELLOW / RED. Name the reviewed surface (component, route, flow) and the overall verdict in a single sentence so a reader can scan the result without reading further.
 
 ### 2. Findings
 

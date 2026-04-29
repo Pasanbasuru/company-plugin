@@ -304,7 +304,7 @@ Every cache must have a written invalidation story before merge.
 
 Produce a markdown report with these sections:
 
-1. **Summary** — one line: pass / concerns / blocking issues.
+1. **Summary** — one line: GREEN / YELLOW / RED.
 2. **Findings** — per issue: *File:line, severity (blocking | concern | info), category (bundle | web-vitals | query-p95 | memoization | image | cache), what's wrong, recommended fix*. Include bundle delta if measurable, new-query p95 estimate, and image optimization state for every `<img>` tag found.
 3. **Safer alternative** — if an anti-pattern is widespread (e.g., raw `<img>` across many components, blanket `React.memo`), prescribe the replacement approach for the whole codebase.
 4. **Checklist coverage** — for each rule below, mark PASS / CONCERN / NOT APPLICABLE:
