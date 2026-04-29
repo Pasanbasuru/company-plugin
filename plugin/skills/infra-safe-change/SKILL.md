@@ -136,7 +136,7 @@ When invoked in review mode, emit a markdown report with these four sections.
 
 ### Summary
 
-One line: overall verdict (GREEN / YELLOW / RED) and the headline risk for this IaC change.
+One line: pass / concerns / blocking issues. Name the headline risk for this IaC change in a single sentence.
 
 ### Findings
 
