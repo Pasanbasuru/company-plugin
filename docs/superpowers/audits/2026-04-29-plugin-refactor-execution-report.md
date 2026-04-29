@@ -1,7 +1,7 @@
 # Plugin Refactor — Execution Report (`global-plugin@0.4.0`)
 
 - **Date:** 2026-04-29 (execution spanned 2026-04-28 → 2026-04-29)
-- **Branch:** `logan`, merged to `alt-version` and pushed to `origin/alt-version`
+- **Branch:** `logan`, pushed to `origin/logan`
 - **Spec:** [`docs/superpowers/specs/2026-04-28-plugin-refactor-design.md`](../specs/2026-04-28-plugin-refactor-design.md)
 - **Plan:** [`docs/superpowers/plans/2026-04-28-plugin-refactor.md`](../plans/2026-04-28-plugin-refactor.md)
 - **Execution mode:** `superpowers:subagent-driven-development` — fresh subagent per task with two-stage review (spec compliance → code quality) per task
@@ -176,6 +176,6 @@ Each amend preserved the original commit message; the commit chain on the branch
 
 ## Conclusion
 
-`global-plugin@0.4.0` ships clean. Headline defects (broken `/mcp`, dead `dependencies` field, per-prompt context burn, log litter, maintainer-skill leakage, three-skill overlap, six bloated skills, `_baseline` role muddle) are all resolved. The branch tip is `35dc785` on `logan`, mirrored to `alt-version` and pushed to `origin/alt-version`. Smoke test (criterion #3) is the remaining acceptance gate; everything else is verified mechanically.
+`global-plugin@0.4.0` ships clean. Headline defects (broken `/mcp`, dead `dependencies` field, per-prompt context burn, log litter, maintainer-skill leakage, three-skill overlap, six bloated skills, `_baseline` role muddle) are all resolved. The branch tip is `35dc785` on `logan`, pushed to `origin/logan`. Smoke test (criterion #3) is the remaining acceptance gate; everything else is verified mechanically.
 
 Parked items (`anthropic-tooling-dev` placement, bootstrap script + templates rework, `_baseline` runtime inheritance) await separate plans.
