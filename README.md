@@ -61,4 +61,4 @@ The husky pre-commit hook runs `pnpm verify` automatically on staged `plugin/ski
 
 ## Consumer-facing docs
 
-See [`plugin/README.md`](./plugin/README.md) for the consumer-facing skill catalog, hook list, MCP setup, install instructions, and the new-project bootstrap script.
+See [`plugin/README.md`](./plugin/README.md) for the consumer-facing skill catalog, hook list, MCP setup, and install instructions. (A one-command new-project setup script is being reworked — see `plugin/README.md`'s deferral note.)

@@ -59,6 +59,6 @@ No global-plugin skill attaches at this workflow. Everything global-plugin ships
 
 ## Compatibility notes for new skills
 
-- A new skill must not register a `SessionStart` hook that competes with `using-superpowers` for `additionalContext`. If global-plugin ever needs a session-level injection (it currently ships a `PostToolUse` logger and a `SessionStart` logger but neither touches `additionalContext`), coordinate with this gate.
+- A new skill must not register a `SessionStart` hook that competes with `using-superpowers` for `additionalContext`. As of 0.4.0, global-plugin ships SessionStart and UserPromptSubmit hooks that DO emit a brief `additionalContext` payload (a skill-loading-discipline reminder); a new skill registering its own injection must coordinate with both this gate and the existing global-plugin injector.
 - A new skill must not alter the 1%-rule behaviour. It must sit downstream of invocation, not inside it.
 - A new skill's `description` must not be so broad that `using-superpowers` invokes it on every prompt — that would defeat the 1% discretion built into the gate.

@@ -9,7 +9,7 @@ Use this **after** superpowers pressure-testing passes and **before** committing
 
 This document closes that gap with seven concrete checks and a workflow-insertion procedure.
 
-## Assumes `_baseline`. Adds: superpowers workflow awareness.
+## Assumes `baseline-standards`. Adds: superpowers workflow awareness.
 
 ## The seven checks
 
@@ -202,7 +202,7 @@ Overall verdict: GREEN | YELLOW | RED
 
 ## When individual checks do not apply
 
-- `_baseline`: C1 (description trigger) and C6 (review-mode output) do NOT apply — `_baseline` is never invoked directly.
+- The shared baseline (`templates/baseline-standards.md`) is a docs file, not an invocable skill — none of the seven checks apply to it. Where a domain skill says `## Assumes \`baseline-standards\`. Adds:`, that is a textual cross-reference, not a sub-skill marker, and is exempt from C4 (handoff markers).
 - Pure-reference skills (none exist today): C2 (HARD-GATE bypass) and C7 (workflow-insertion) may be N/A.
 - Skills with no `## Review checklist` by design: C6 is N/A if the skill is guide-only. Document the reason.
 

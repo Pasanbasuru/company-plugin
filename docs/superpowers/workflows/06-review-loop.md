@@ -68,8 +68,6 @@ flowchart LR
 
     subgraph DOMAIN[Domain-risk reviewers — run alongside, not on top]
         CRE[change-risk-evaluation]:::companyPlugin
-        RRC[regression-risk-check]:::companyPlugin
-        RBP[rollback-planning]:::companyPlugin
         ARC[architecture-guard]:::companyPlugin
         ANYGUARD["any domain guard<br/>(next / nest / prisma / …)"]:::companyPlugin
     end
@@ -81,9 +79,7 @@ flowchart LR
 
 | Phase | Company-plugin skill | Mode | Owner concern |
 |---|---|---|---|
-| Alongside `code-reviewer` | `change-risk-evaluation` | review | Overall risk posture of the change |
-| Alongside `code-reviewer` | `regression-risk-check` | review | Blast radius on changed surface |
-| Alongside `code-reviewer` | `rollback-planning` | review | Reverse path for the change |
+| Alongside `code-reviewer` | `change-risk-evaluation` | review | Overall risk posture, blast radius on changed surface, and reverse path for the change (consolidated in 0.4.0 from prior `change-risk-evaluation` + `regression-risk-check` + `rollback-planning`) |
 | Alongside `code-reviewer` | `architecture-guard` | review | Cross-service boundaries / monorepo ownership |
 | Alongside `code-reviewer` | `nextjs-app-structure-guard`, `nestjs-service-boundary-guard`, `frontend-implementation-guard`, `mobile-implementation-guard` | review | Intra-app structure matching the changed files |
 | Alongside `code-reviewer` | `prisma-data-access-guard`, `state-integrity-check`, `integration-contract-safety`, `queue-and-retry-safety`, `resilience-and-error-handling`, `auth-and-permissions-safety`, `secrets-and-config-safety` | review | Domain-specific risk for the affected subsystem |

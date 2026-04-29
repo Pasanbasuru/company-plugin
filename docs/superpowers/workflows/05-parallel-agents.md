@@ -71,9 +71,9 @@ flowchart LR
     classDef companyPlugin fill:#1f5a5bd9,stroke:#4fb0b2,stroke-width:1.25px,color:#dff3f4
 
     VB[verification-before-completion]:::extPlugin
-    RRC[regression-risk-check]:::companyPlugin
+    CRE[change-risk-evaluation]:::companyPlugin
 
-    VB --> RRC
+    VB --> CRE
 ```
 
 ### Attach-point table
@@ -81,10 +81,10 @@ flowchart LR
 | Phase | Company-plugin skill | Mode | Trigger condition |
 |---|---|---|---|
 | Inside each parallel agent's scope | any domain guard that fits the narrow task | guide | Same criteria as Workflow 4's guardrail cluster, scoped down |
-| After full-suite verification | `regression-risk-check` | review | Always — flags whether any of the parallel fixes expanded blast radius unexpectedly |
+| After full-suite verification | `change-risk-evaluation` | review | Always — flags whether any of the parallel fixes expanded blast radius unexpectedly (covers blast-radius analysis as part of its consolidated scope in 0.4.0) |
 
 ## Compatibility notes
 
 - **Parallel agents are narrow by design.** A global-plugin skill that wants to fire inside a parallel agent must fit in a reduced context — prefer the smallest possible guide rather than a full review.
-- **Cross-agent regression is the real risk.** A new parallel-friendly skill should include a rule that references `regression-risk-check` via `**Hands off to:** global-plugin:regression-risk-check` when post-parallel verification is the right consumer.
+- **Cross-agent regression is the real risk.** A new parallel-friendly skill should include a rule that references `change-risk-evaluation` via `**Hands off to:** global-plugin:change-risk-evaluation` when post-parallel verification is the right consumer (the skill covers blast-radius analysis as well as risk posture and rollback).
 - **Do not add a per-agent review step.** Per-task review belongs in Workflow 4. This workflow is about fan-out, not gating.

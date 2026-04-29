@@ -35,7 +35,7 @@ Every domain skill's `SKILL.md` follows this exact order:
 1. **YAML frontmatter** with `name`, `description`, `allowed-tools`.
 2. `# <Skill Title>`
 3. `## Purpose & scope` — 2–3 sentences.
-4. `` ## Assumes `templates/baseline-standards.md`. Adds: `` — one line naming the additional domain.
+4. `` ## Assumes `baseline-standards`. Adds: `` — one line naming the additional domain (the bare name `baseline-standards` is the canonical reference; it points at `templates/baseline-standards.md` in the source repo).
 5. `## Core rules` — numbered list. Each rule is one sentence + a `*Why:*` line.
 6. `## Red flags` — table of `Thought | Reality` pairs.
 7. `## Good vs bad` — 2–3 subsections, each with a `Bad:` and `Good:` code block.
@@ -106,7 +106,7 @@ Good:
 ```
 #### Interactions with other skills
 - **REQUIRED SUB-SKILL:** superpowers:test-driven-development
-- **Hands off to:** global-plugin:skill-verification
+- **Hands off to:** skill-verification (project-local maintainer skill at `.claude/skills/skill-verification/`; not shipped to consumers).
 - **Does not duplicate:** architecture-guard's schema ownership concerns.
 ```
 

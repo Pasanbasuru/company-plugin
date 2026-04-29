@@ -176,8 +176,6 @@ flowchart LR
 
     subgraph CPFIN[global-plugin: Finish / Ops]
         CRE[change-risk-evaluation]:::companyPlugin
-        RRC[regression-risk-check]:::companyPlugin
-        RBP[rollback-planning]:::companyPlugin
         ISC[infra-safe-change]:::companyPlugin
         AWS[aws-deploy-safety]:::companyPlugin
         CICD[cicd-pipeline-safety]:::companyPlugin
@@ -205,5 +203,5 @@ flowchart LR
 ## Compatibility notes
 
 - **Every arrow between a global-plugin cluster and a superpowers phase is an attachment, not a replacement.** The superpowers phase always owns the Iron Law; the global-plugin cluster adds domain rules on top.
-- **The `_baseline` skill is implicit under every global-plugin cluster.** It is not drawn on the map because it would connect to every node. Assume it.
+- **The shared baseline (`templates/baseline-standards.md`) is implicit under every global-plugin cluster.** It is not drawn on the map because it would connect to every node. Assume it. (As of 0.4.0 the baseline lives at `templates/baseline-standards.md` in the source repo, referenced by every domain skill's `## Assumes baseline-standards. Adds:` header.)
 - **No global-plugin skill should span more than 3 phases.** A skill that claims to attach in design + impl + finish + review is too broad — split it.

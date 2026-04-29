@@ -6,7 +6,7 @@ Maintainer-mode rules for this repo. This file is at the repo root and **is not 
 
 ## Status
 
-Source repo for `global-plugin`: a company-wide Claude Code plugin of ~30 guardrail skills for full-stack React/Next.js + Node/NestJS + Prisma/Postgres + AWS (with optional React Native). Plugin runtime lives in `plugin/`. Repo root holds maintainer/build infra only.
+Source repo for `global-plugin`: a company-wide Claude Code plugin of ~24 guardrail skills for full-stack React/Next.js + Node/NestJS + Prisma/Postgres + AWS (with optional React Native). Plugin runtime lives in `plugin/`. Repo root holds maintainer/build infra only.
 
 ## Repo modes — maintainer vs consumer audit
 
@@ -35,7 +35,7 @@ If you can't tell which mode you're in, ask: "is this question about how we ship
 ├── package.json, pnpm-lock.yaml # vitest, husky, tsx (dev deps only)
 └── plugin/                      # PLUGIN RUNTIME — what consumers install
     ├── .claude-plugin/plugin.json
-    ├── skills/                  # ~30 skills, each `<name>/SKILL.md`
+    ├── skills/                  # ~24 skills, each `<name>/SKILL.md`
     ├── hooks/hooks.json         # SessionStart/UserPromptSubmit
     ├── scripts/                 # consumer-onboarding tools (bootstrap script)
     └── templates/

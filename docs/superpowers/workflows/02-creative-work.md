@@ -123,8 +123,6 @@ flowchart LR
 
     subgraph FINISH[Attach: finish-phase risk]
         CRE[change-risk-evaluation]:::companyPlugin
-        RRC[regression-risk-check]:::companyPlugin
-        RBP[rollback-planning]:::companyPlugin
         ISC[infra-safe-change]:::companyPlugin
         AWS[aws-deploy-safety]:::companyPlugin
         CICD[cicd-pipeline-safety]:::companyPlugin
@@ -159,9 +157,7 @@ flowchart LR
 | Implementation guardrail | `performance-budget-guard` | guide + review | UI or DB-touching |
 | Test discipline | `test-strategy-enforcement` | guide | Any test added or touched |
 | Test discipline | `coverage-gap-detection` | review | Before finishing |
-| Finish-phase risk | `change-risk-evaluation` | review | Always |
-| Finish-phase risk | `regression-risk-check` | review | Always |
-| Finish-phase risk | `rollback-planning` | review | Always |
+| Finish-phase risk | `change-risk-evaluation` | review | Always — covers risk posture, blast radius, and rollback options (consolidated in 0.4.0 from prior `change-risk-evaluation` + `regression-risk-check` + `rollback-planning`) |
 | Finish-phase risk | `infra-safe-change` | guide + review | IaC touched |
 | Finish-phase risk | `aws-deploy-safety` | guide + review | AWS deploy touched |
 | Finish-phase risk | `cicd-pipeline-safety` | guide + review | Workflow files touched |

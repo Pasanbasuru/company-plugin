@@ -65,8 +65,8 @@ class CAG companyPlugin
 | "Fix bug / test failure / crash" | `systematic-debugging` → `test-driven-development` → `verification-before-completion` | `observability-first-debugging` (Phase 1), domain guards (Phase 4) | No fix without root cause; 3+ failures → question architecture |
 | "Execute plan" (recommended path) | `subagent-driven-development` → `finishing-a-development-branch` | guardrail cluster applies inside Implementer subagent | Two-stage review: spec first, then quality |
 | "Execute plan" (parallel session) | `executing-plans` → `finishing-a-development-branch` | guardrail cluster | Stop if plan gaps |
-| "Fix these N independent tests" | `dispatching-parallel-agents` → `verification-before-completion` | `regression-risk-check` (post-parallel cross-check) | Only fan out if truly independent |
-| "Review my work / before merging" | `requesting-code-review` → `code-reviewer` agent → `receiving-code-review` | `change-risk-evaluation`, `regression-risk-check`, `rollback-planning`, plus domain guards | No performative agreement |
+| "Fix these N independent tests" | `dispatching-parallel-agents` → `verification-before-completion` | `change-risk-evaluation` (post-parallel cross-check; covers blast radius as part of its 0.4.0 consolidated scope) | Only fan out if truly independent |
+| "Review my work / before merging" | `requesting-code-review` → `code-reviewer` agent → `receiving-code-review` | `change-risk-evaluation` (risk posture + blast radius + rollback path, all consolidated in 0.4.0), plus domain guards | No performative agreement |
 | "About to claim something works" | `verification-before-completion` | — | Run the command THIS message |
 | "Write / edit a skill" | `writing-skills` (REQUIRED BACKGROUND: `test-driven-development`) | **+ `docs/superpowers/testing-skills-against-workflows.md` audit** | No skill without a failing test first; no skill commit without a GREEN workflow audit |
 
