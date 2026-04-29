@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Prevent silent breaking changes across service boundaries — consumers find out in production otherwise. Governs every point where code crosses a team or service line: REST/HTTP APIs, webhooks, async event payloads, and machine-readable schema files. Prescribes how to distinguish additive from breaking changes, version and sign payloads, and keep contract tests wired in CI so breakage is caught before deployment.
+Prevent silent breaking changes across service boundaries. Governs every point where code crosses a team or service line: REST/HTTP APIs, webhooks, async event payloads, and machine-readable schema files. Prescribes how to distinguish additive from breaking changes, version and sign payloads, and keep contract tests wired in CI so breakage is caught before deployment.
 
 ## Core rules
 
@@ -180,8 +180,6 @@ async function handleOrderShipped(raw: unknown) {
 
 ## Breaking vs additive change taxonomy
 
-A change is **breaking** when any existing consumer following the published contract will encounter a runtime error or silently incorrect behaviour after deployment. **Additive** = every existing consumer continues to work without modification.
-
 **Definitively breaking:**
 - Removing a field from a response or event payload.
 - Renaming a field (equivalent to remove + add).
@@ -205,7 +203,7 @@ A change is **breaking** when any existing consumer following the published cont
 - Altering idempotency guarantees.
 - Changing error message text when consumers parse it programmatically.
 
-Before claiming a change is additive, answer: does every known consumer use a tolerant reader pattern (e.g., struct tags with `omitempty`, Zod with `.passthrough()`, OpenAPI `additionalProperties: true`)? If you cannot verify this for all consumers, treat the change as potentially breaking.
+Before claiming a change is additive, answer: does every known consumer use a tolerant reader pattern (e.g., struct tags with `omitempty`, Zod with `.passthrough()`, OpenAPI `additionalProperties: true`)?
 
 ## OpenAPI workflow
 
@@ -213,7 +211,7 @@ For the schema-first workflow (OpenAPI spec example, `openapi-typescript` / `red
 
 ## Webhook signing and verification
 
-Webhook endpoints are publicly reachable, so any actor that discovers the URL can POST arbitrary payloads. Signature verification is the only reliable defence.
+Webhook endpoints are public — signature verification is the only defence.
 
 **HMAC-SHA256 pattern:** producer signs the raw body concatenated with a timestamp; consumer recomputes the HMAC and compares via a constant-time function to prevent timing-oracle attacks.
 
@@ -240,26 +238,13 @@ export function buildWebhookHeaders(
 }
 ```
 
-The consumer implementation is shown in the Good vs bad section above. Key points:
-- Use `express.raw()` (not `express.json()`) so the raw body bytes are available for HMAC.
-- Validate the timestamp is within a tolerance window (typically 5 minutes) to block replay attacks.
-- Use `crypto.timingSafeEqual` — `===` comparison leaks timing information that an attacker can exploit.
-- Acknowledge with `200` before async processing; most webhook platforms retry on non-2xx responses.
+The consumer implementation is shown in the Good vs bad section above.
 
-**Secret rotation:** Rotate webhook secrets without downtime by accepting signatures from both the old and the new secret during a brief overlap window (e.g., 30 minutes). Publish the new secret to consumers before revoking the old one.
+**Secret rotation:** Rotate webhook secrets without downtime by accepting signatures from both the old and the new secret during a brief overlap window (e.g., 30 minutes).
 
 ## Event schema versioning
 
-Async event systems (EventBridge, SQS, Kafka, pub/sub) decouple producers and consumers at the cost of synchronous contract enforcement. Schema versioning closes that gap.
-
-**Key principles:**
-
-1. Every event payload carries a top-level `schemaVersion` integer. The initial published version is `1`.
-2. Producers increment `schemaVersion` on every breaking change and continue publishing both old and new versions in parallel during a migration window.
-3. Consumers parse with `safeParse` (never `parse`) and discard events whose `schemaVersion` they do not recognise, emitting a structured log entry with the raw payload for forensics.
-4. The Zod discriminated-union pattern (shown in Good vs bad) is the recommended implementation.
-
-**Schema registry:** For high-volume systems, use a schema registry (AWS Glue Schema Registry, Confluent, or a Git-tracked JSON Schema file) as the single source of truth. Producers validate against the registry before publishing; consumers validate on receipt.
+**Schema registry:** For high-volume systems, use a schema registry (AWS Glue Schema Registry, Confluent, or a Git-tracked JSON Schema file). Producers validate against the registry before publishing; consumers validate on receipt.
 
 **Migration window procedure:**
 1. Publish the new schema version as a draft; share with all known consumers.
@@ -270,8 +255,6 @@ Async event systems (EventBridge, SQS, Kafka, pub/sub) decouple producers and co
 6. Consumers remove old-version handling in a cleanup PR.
 
 ## Deprecation strategy
-
-A deprecation is a promise: this feature works today and will be removed on a known future date. Make deprecations observable and actionable.
 
 **HTTP API deprecations:**
 
@@ -314,7 +297,7 @@ export class DeprecationInterceptor implements NestInterceptor {
 **Event deprecations:**
 
 - Publish a `contract.deprecated` meta-event when an event type or schema version enters deprecation. Include the event type, current version, last-supported version, and sunset timestamp.
-- Maintain a deprecation registry (a simple JSON file or a Confluence page) listing every active deprecation with its sunset date and migration instructions.
+- Maintain a deprecation registry of active sunsets.
 
 ## Contract testing
 

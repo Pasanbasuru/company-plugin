@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Keep the React layer clean: components are focused, state lives at the right level, hooks follow the rules, and composition beats inheritance of concerns. This skill applies whenever you write or review React components, custom hooks, component-level state, or client-side data-fetching. It stops at the Next.js rendering boundary (hand off to `nextjs-app-structure-guard`) and does not cover accessibility concerns (hand off to `accessibility-guard`).
+Keep the React layer clean: components are focused, state lives at the right level, hooks follow the rules, and composition beats inheritance of concerns. This skill applies whenever you write or review React components, custom hooks, component-level state, or client-side data-fetching.
 
 ## Core rules
 
@@ -162,29 +162,29 @@ function SearchSection() {
 
 ## Component decomposition heuristics
 
-A component has grown too large when it satisfies any of these conditions: the file exceeds roughly 150 lines, the component has more than four `useState` calls, it fetches data AND manages layout AND handles user events, or reading it requires scrolling past multiple unrelated concerns. The fix is always extraction — not refactoring within the same file.
+A component has grown too large when it satisfies any of these conditions: the file exceeds roughly 150 lines, the component has more than four `useState` calls, it fetches data AND manages layout AND handles user events, or reading it requires scrolling past multiple unrelated concerns.
 
-When deciding how to split, follow the single-responsibility principle at the UI layer. A component should answer one of these questions: "what does this data look like?" (presentational), "where does this data come from?" (container/data), or "how does this interaction work?" (controlled widget). Components that try to answer two questions at once should be split on that boundary.
+When deciding how to split, follow the single-responsibility principle at the UI layer. A component should answer one of these questions: "what does this data look like?" (presentational), "where does this data come from?" (container/data), or "how does this interaction work?" (controlled widget).
 
-Prefer composition over prop drilling for deeply nested variants. If a parent passes more than three props through an intermediate component that does not itself consume those props, the intermediate is just a conduit — consider either colocating the consumer with its data source or using a well-scoped render prop / children pattern. Do not reach for Context as the default solution to prop drilling; Context is appropriate only when the value is genuinely global and changes rarely (see the section below).
+Prefer composition over prop drilling for deeply nested variants. If a parent passes more than three props through an intermediate component that does not itself consume those props, the intermediate is just a conduit — consider either colocating the consumer with its data source or using a well-scoped render prop / children pattern.
 
-Name components after what they represent, not how they are implemented. `<UserCard>` communicates intent; `<BoxWithAvatarAndTextOnTheRight>` communicates layout. Future readers should be able to understand the component tree from names alone, without reading every implementation.
+Name components after what they represent, not how they are implemented. `<UserCard>` communicates intent; `<BoxWithAvatarAndTextOnTheRight>` communicates layout.
 
 ## State placement
 
 The decision tree for where to place state is straightforward: start at the component that directly uses the state. If a sibling also needs it, lift to their nearest common ancestor. Stop lifting there. Only lift higher if a genuinely unrelated subtree in a different branch of the component tree also requires access — and even then, ask whether a URL parameter, a custom hook with a stable reference, or a lightweight store is a better fit than lifting further.
 
-Derived state is not state. If a value can be computed from existing state or props synchronously, compute it in the render body rather than caching it in `useState`. A `fullName` derived from `firstName` and `lastName` should be `const fullName = \`${firstName} ${lastName}\`` — not a separate `useState` that is kept in sync with an effect. Keeping derived values in state creates two sources of truth and a synchronisation gap. Use `useMemo` only when the derivation is genuinely expensive (benchmarked, not assumed) and the component re-renders frequently.
+Derived state is not state. If a value can be computed from existing state or props synchronously, compute it in the render body rather than caching it in `useState`. A `fullName` derived from `firstName` and `lastName` should be `const fullName = \`${firstName} ${lastName}\`` — not a separate `useState` that is kept in sync with an effect. Use `useMemo` only when the derivation is genuinely expensive (benchmarked, not assumed) and the component re-renders frequently.
 
 Form state has its own rules. Uncontrolled inputs via `useRef` are appropriate for simple, infrequent reads (e.g., a search box read on submit). Controlled inputs via `useState` are appropriate when the UI reacts live to the value (e.g., character count, inline validation). For complex, multi-field forms with cross-field validation and submission state, use a form library (React Hook Form is the canonical choice) rather than building that machinery yourself.
 
 ## Server state vs client state
 
-The distinction between server state and client state is fundamental. Server state is data that lives on a remote server: user profiles, order lists, configuration from an API. It has a source of truth you do not control, it can become stale, and other clients may be mutating it concurrently. Client state is data that exists only in the browser session: whether a modal is open, the active tab index, a draft value in a text field before it is saved.
+Server state lives on a remote server (user profiles, configs, etc.) — has source-of-truth elsewhere. Client state lives in the browser session — the source-of-truth IS the local state.
 
 Server state belongs to TanStack Query (v5). Do not reach for `useState` + `useEffect` to fetch, cache, or synchronise remote data. `useQuery` handles the full lifecycle — loading, success, error, background refresh, deduplication of concurrent requests for the same key, and automatic retry on network error. `useMutation` handles writes with optimistic updates and cache invalidation via `queryClient.invalidateQueries`. The query key is the cache key: be intentional about its shape. A query for a specific resource should include all variables that affect the response in the key array (e.g., `['orders', { userId, status }]`).
 
-Do not use TanStack Query for client state. A modal's open/close, a multi-step wizard's current step, and a filter panel's expanded/collapsed state are not server state — they belong in `useState` or a small local state machine. Mixing the two muddies the mental model and wastes cache entries.
+Do not use TanStack Query for client state. A modal's open/close, a multi-step wizard's current step, and a filter panel's expanded/collapsed state are not server state — they belong in `useState` or a small local state machine.
 
 When a mutation changes data covered by an existing query, invalidate that query immediately after the mutation succeeds:
 
@@ -199,13 +199,11 @@ const mutation = useMutation({
 });
 ```
 
-For optimistic updates (the UI reflects the change before the server confirms), use `onMutate` to snapshot and update the cache, `onError` to roll back, and `onSettled` to refetch. The TanStack Query docs show the canonical pattern; do not invent an ad-hoc alternative.
+For optimistic updates (the UI reflects the change before the server confirms), use `onMutate` to snapshot and update the cache, `onError` to roll back, and `onSettled` to refetch.
 
 ## Context: when it's right
 
 React Context is the right tool for values that are: (1) genuinely needed by many components at different nesting levels, (2) change infrequently relative to render frequency, and (3) not server state. Canonical examples: the authenticated user object read after login, the active theme/color scheme, the i18n locale, and feature flags that change on deployment rather than on user interaction.
-
-Context is the wrong tool when the value updates on user keystrokes, on scroll, on every API response, or in any tight loop. Use it for those cases and every tree consumer re-renders on every update, degrading performance in ways that are invisible until measured.
 
 A well-structured Context module has three parts: the type of the value, the context itself with a sensible default, and a custom hook that wraps `useContext` and throws a descriptive error when used outside the provider. This prevents the silent `undefined` that results from forgetting to add the provider:
 
@@ -234,19 +232,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 ```
 
-Split contexts by concern rather than bundling everything into one `AppContext`. A single monolithic context object means any update to any field — even one irrelevant to a given consumer — triggers a re-render. Separate `AuthContext`, `ThemeContext`, and `FeatureFlagContext` so consumers only subscribe to what they actually use.
+Split contexts by concern rather than bundling everything into one `AppContext`. A single monolithic context object means any update to any field — even one irrelevant to a given consumer — triggers a re-render. Separate `AuthContext`, `ThemeContext`, and `FeatureFlagContext`.
 
 ## Hook rules and custom hook design
 
-The two hook rules are invariants, not guidelines: only call hooks at the top level of a React function (never inside conditions, loops, or nested functions), and only call hooks from React functions or custom hooks (never from plain utilities). `eslint-plugin-react-hooks` enforces both. If the linter reports a violation, fix the code — do not disable the rule.
+The two hook rules are invariants, not guidelines: only call hooks at the top level of a React function (never inside conditions, loops, or nested functions), and only call hooks from React functions or custom hooks (never from plain utilities). `eslint-plugin-react-hooks` enforces both.
 
-Custom hooks are the primary mechanism for extracting stateful logic out of components. A custom hook is appropriate when the same combination of `useState`, `useEffect`, `useCallback`, or `useRef` appears in more than one component, or when the logic is complex enough that it obscures the component's rendering intent. Name every custom hook with the `use` prefix so the linter can apply hook rules to it.
+Custom hooks are the primary mechanism for extracting stateful logic out of components. A custom hook is appropriate when the same combination of `useState`, `useEffect`, `useCallback`, or `useRef` appears in more than one component, or when the logic is complex enough that it obscures the component's rendering intent. Prefix custom hooks with `use`.
 
 Design custom hooks around behaviours, not data shapes. `useFormSubmit`, `useIntersectionObserver`, and `useLocalStorage` are behaviour-first names. `useUserData` that simply re-exports a `useQuery` call adds a layer without adding meaning — prefer calling `useQuery` directly with a well-named query function.
 
-Keep effects focused. An effect that does multiple unrelated things should be two separate effects. Each effect should have a clear purpose readable from its code alone. If an effect's dependency array is long and difficult to reason about, that is a signal the effect is doing too much. Cleanup functions are mandatory whenever the effect sets up a subscription, a timer, or an event listener — missing cleanup causes memory leaks and stale-closure bugs on component unmount and re-render.
+Keep effects focused. An effect that does multiple unrelated things should be two separate effects. Each effect should have a clear purpose readable from its code alone. Cleanup functions are mandatory whenever the effect sets up a subscription, a timer, or an event listener — missing cleanup causes memory leaks and stale-closure bugs on component unmount and re-render.
 
-`useCallback` and `useMemo` are optimisation tools, not default tools. Wrap a function in `useCallback` when it is passed as a prop to a memoised child component or when it is listed as a dependency of another hook. Wrap a computation in `useMemo` when it is measurably expensive and the component re-renders frequently. Do not wrap everything by default — the overhead of the wrapper is non-zero and the cognitive cost is real.
+`useCallback` and `useMemo` are optimisation tools, not default tools. Wrap a function in `useCallback` when it is passed as a prop to a memoised child component or when it is listed as a dependency of another hook. Wrap a computation in `useMemo` when it is measurably expensive and the component re-renders frequently. Do not wrap everything by default — the wrapper has overhead.
 
 ## Interactions with other skills
 

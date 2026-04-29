@@ -126,10 +126,8 @@ it('treats an already-expired token as inactive', () => {
 
 ## Critical-path checklist
 
-A critical path is any code execution path whose failure causes data loss, incorrect billing, unauthorized access, or a broken user-facing flow. Use this checklist before any merge that touches such a path.
-
-1. **Identify the critical paths in the change.** List them explicitly: "this PR changes the subscription-upgrade flow, which writes to `subscriptions`, fires a webhook to Stripe, and sends a confirmation email."
-2. **For each path, verify there is an integration test** — not a unit test with mocked collaborators, but a test that runs the real database write (or a transaction-rolled-back variant), the real HTTP call to a test double, and the real email template render.
+1. **Identify the critical paths in the change.** "this PR changes the subscription-upgrade flow, which writes to `subscriptions`, fires a webhook to Stripe, and sends a confirmation email."
+2. **For each path, verify there is an integration test.** Real DB write (or transaction-rolled-back), real HTTP to a test double, real template render.
 3. **Verify the failure path for each step.** What happens if the DB write succeeds but the webhook call fails? Is that tested? What happens if the email render throws?
 4. **Check transaction boundaries.** If the path writes to more than one table or calls more than one external service, verify that partial failure leaves the system in a consistent state and that this is tested.
 5. **Check idempotency.** If the operation can be retried (e.g., via a queue), verify that running it twice is safe and that this is tested.
@@ -138,25 +136,18 @@ A critical path is any code execution path whose failure causes data loss, incor
 
 ## Negative-case discovery heuristics
 
-Negative cases are the hardest to find because they are invisible in a feature spec. Use these heuristics to surface them.
-
-**Scan for decision points.** Every `if`, `switch`, `?.`, `?? `, `||`, and `&&` in the changed code is a branch. For each branch, ask: does the test suite exercise both sides?
-
-**Scan for thrown errors and rejected promises.** Search for `throw`, `Promise.reject`, `.rejects`, and error-typed return values. Each one is an untested negative case until proven otherwise.
-
-**Ask "what if the input is wrong?"** For every function parameter and every external data source (API response, database row, form value): what if it is null? Empty? The wrong type? Out of range? Too long?
-
-**Ask "what if the dependency fails?"** For every network call, database query, and third-party SDK call: what if it times out? Returns a 500? Returns a malformed payload? These are negative cases that are frequently absent from test suites.
-
-**Ask "what if the user is not supposed to do this?"** For every action a user can take, there is usually a set of users who should be denied. Verify the denial tests exist.
-
-**Trace the error up the call stack.** When a low-level function throws, does the caller surface a meaningful error to the user, or does it swallow it? Is the surface behavior tested?
+| Heuristic | What to check |
+|---|---|
+| Scan for decision points | Every `if`, `switch`, `?.`, `??`, `\|\|`, `&&` is a branch — does the suite exercise both sides? |
+| Scan for thrown errors / rejected promises | Each `throw`, `Promise.reject`, `.rejects`, error-typed return is an untested negative case until proven otherwise. |
+| What if the input is wrong? | For every parameter and external data source: null, empty, wrong type, out of range, too long. |
+| What if the dependency fails? | For every network/DB/SDK call: timeout, 500, malformed payload. |
+| What if the user shouldn't do this? | For every action, identify the denied set and verify denial tests exist. |
+| Trace errors up the stack | Verify callers surface (not swallow) low-level errors. |
 
 ---
 
 ## Authorization coverage
-
-Authorization gaps are among the most dangerous coverage gaps because they are silent: the code runs, returns data, and no test ever fails — because no test ever asked whether it *should* run.
 
 **Minimum coverage for any authorization check:**
 
@@ -183,15 +174,13 @@ describe('deletePost', () => {
 });
 ```
 
-For role-based systems, every role that should be denied must have its own test. It is not sufficient to test one denied role and assume others behave the same — they often don't, because role checks are frequently maintained by hand.
+For role-based systems, every denied role gets its own test.
 
-For multi-tenant systems, cross-tenant access must be explicitly tested: a user from tenant A attempting to read or write a resource belonging to tenant B must be denied, and that denial must be in the test suite.
+Multi-tenant: explicit cross-tenant denial tests.
 
 ---
 
 ## Empty/loading/error state tests
-
-React components that conditionally render different UI based on async state have three branches by definition: loading, success (possibly with data, possibly empty), and error. All three must be tested.
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -236,7 +225,7 @@ describe('PostList', () => {
 });
 ```
 
-Apply the same pattern to server components, suspense boundaries, and any UI that conditionally renders based on a flag, a permission, or the presence of data.
+Apply the same pattern to server components, suspense boundaries, and conditional UI.
 
 ---
 
@@ -295,7 +284,7 @@ it('does not double-charge when two checkout requests race', async () => {
 });
 ```
 
-When a concurrent test is genuinely impractical (e.g., the operation requires external scheduling), add a code comment on the function stating: what the concurrency invariant is, why it holds (e.g., unique index on `(cartId, status)`), and what monitoring detects a violation in production.
+If a concurrent test is impractical, document the invariant + production monitoring in a code comment on the function.
 
 ---
 

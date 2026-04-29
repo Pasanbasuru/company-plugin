@@ -150,11 +150,11 @@ const { mutate, isPaused } = useMutation({
 
 ## Expo managed vs bare
 
-Expo managed workflow is the default choice. The SDK (53+) bundles camera, notifications, location, secure store, and file system modules that cover the vast majority of production use cases without ejecting. The workflow enables OTA updates for all JS/TS and asset changes, and the `app.json` / `app.config.ts` surface is the only native configuration file you need to touch.
+Expo managed workflow is the default choice. The SDK (53+) bundles camera, notifications, location, secure store, and file system modules covering most production use cases.
 
-Bare workflow is justified when the app requires a native SDK that has no Expo module equivalent, when a custom Gradle/Xcode build phase is mandatory, or when the team already owns iOS/Android engineers who maintain the native layer. When bare is chosen, the decision must be documented in `ARCHITECTURE.md` with the specific justification. All other guidance in this skill still applies; the adapter pattern becomes more important, not less, because the native surface is now larger and riskier.
+Bare workflow is justified when the app requires a native SDK that has no Expo module equivalent, when a custom Gradle/Xcode build phase is mandatory, or when the team already owns iOS/Android engineers who maintain the native layer. When bare is chosen, document the decision in `ARCHITECTURE.md`.
 
-Continuous Native Generation (CNG) — where `android/` and `ios/` directories are generated from config plugins and deleted from version control — is the recommended approach for new bare projects. It keeps native directories reproducible and makes Expo SDK upgrades low-friction.
+Continuous Native Generation (CNG) — where `android/` and `ios/` directories are generated from config plugins and deleted from version control — is the recommended approach for new bare projects.
 
 ---
 
@@ -162,7 +162,7 @@ Continuous Native Generation (CNG) — where `android/` and `ios/` directories a
 
 React Navigation v7 is the standard. The navigator tree lives in `src/navigation/` and is the only place where `<Stack.Navigator>`, `<Tab.Navigator>`, and `<Drawer.Navigator>` appear. Screens are registered by name and receive typed params via the `RootStackParamList` type exported from `src/navigation/types.ts`.
 
-Never import a screen component from another screen. Cross-screen transitions go through `navigation.navigate('ScreenName', params)` or `navigation.push(...)`. This is not a style rule — it is what makes deep links, notification tap handlers, and universal links work without rewriting the navigation layer.
+Never import a screen component from another screen. Cross-screen transitions go through `navigation.navigate('ScreenName', params)` or `navigation.push(...)`.
 
 Typed navigation hooks (`useNavigation<StackNavigationProp<RootStackParamList>>()`) catch param mismatches at compile time. Every route that accepts params must have its type in `RootStackParamList`.
 
@@ -181,9 +181,7 @@ Every third-party native SDK and every `react-native` core module that crosses i
 - Declares a mock in `src/adapters/__mocks__/` so unit tests never hit native code.
 - Handles permissions where the native module requires them (camera, location, notifications).
 
-This pattern means that if `expo-camera` is replaced with `react-native-vision-camera`, the change is entirely contained to `src/adapters/cameraAdapter.ts`. Screens, tests, and the rest of the codebase are unaffected.
-
-`Platform.select` may appear inside adapters when the native API behaves differently per platform (e.g., Android requires `WRITE_EXTERNAL_STORAGE` for certain operations; iOS does not). It should not appear in the adapter's exported interface — callers receive a unified API.
+`Platform.select` may appear inside adapters when the native API behaves differently per platform (e.g., Android requires `WRITE_EXTERNAL_STORAGE` for certain operations; iOS does not).
 
 ---
 
@@ -206,20 +204,20 @@ For permissions, the native manifest entries must match code requests:
 - **iOS:** `Info.plist` keys (`NSCameraUsageDescription`, `NSLocationWhenInUseUsageDescription`, etc.) must be set via Expo config plugin or directly in the bare `ios/` directory. Expo SDK 53 managed workflow sets these automatically when you add the relevant package and configure it in `app.config.ts`.
 - **Android:** `AndroidManifest.xml` permissions (`CAMERA`, `ACCESS_FINE_LOCATION`, `POST_NOTIFICATIONS`, etc.) must be listed. Android 13+ requires `POST_NOTIFICATIONS` to be requested at runtime; it is not granted automatically.
 
-Haptic feedback, share sheets, and status bar behaviour differ between platforms. Wrap each in an adapter. Do not assume iOS behaviour is the baseline.
+Haptic feedback, share sheets, and status bar behaviour differ between platforms. Wrap each in an adapter.
 
 ---
 
 ## Offline UX
 
-Offline UX is not optional for a production mobile app. The baseline expectation:
+Baseline offline UX:
 
 1. **Reads:** TanStack Query with a persister (`@tanstack/query-async-storage-persister` backed by MMKV or AsyncStorage) keeps the last successful response in local storage. Users see stale data, clearly labelled, rather than a blank screen.
 2. **Writes:** Mutations use `networkMode: 'offlineFirst'`. TanStack Query queues them and replays on reconnect. The screen shows an `isPaused` indicator ("Will submit when online").
 3. **Conflict resolution:** When a queued write finally reaches the server and conflicts with a newer server state, the app must have a defined policy (last-write-wins, user prompt, or discard). Document the policy per mutation type.
 4. **Network status:** Use `@react-native-community/netinfo` to detect connectivity. Show a persistent banner when offline; dismiss it automatically on reconnect.
 
-`expo-secure-store` (SecureStore) is for sensitive tokens and credentials — not for general offline data caching. For bulk offline data, use MMKV via `react-native-mmkv` or SQLite via `expo-sqlite`. Choose the right storage layer for each use case.
+`expo-secure-store` (SecureStore) is for sensitive tokens and credentials — not for general offline data caching. For bulk offline data, use MMKV via `react-native-mmkv` or SQLite via `expo-sqlite`.
 
 ---
 
@@ -236,7 +234,7 @@ Set `runtimeVersion` policy to `"appVersion"` (ties it to the `app.json` version
 
 Channels (`production`, `staging`, `preview`) map to EAS Update channels in `eas.json`. A staging binary should point to the `staging` channel; a production binary to `production`. Never point a production binary at `staging`.
 
-JS-only changes (logic fixes, copy updates, style tweaks, new React components with no new native imports) are safe for OTA. Any change that causes a new native module to be required at runtime is not safe for OTA and will crash on devices with the old binary.
+JS-only changes (logic, copy, style, new React components without new native imports) are OTA-safe. Anything requiring a new native module is not OTA-safe and will crash old binaries.
 
 ---
 
@@ -251,9 +249,9 @@ The correct flow for any OS permission:
 
 For `expo-notifications`, the `POST_NOTIFICATIONS` runtime permission on Android 13+ must be requested explicitly in code in addition to being declared in the manifest. Use the `Notifications.requestPermissionsAsync()` API from the adapter layer.
 
-For location, prefer `requestForegroundPermissionsAsync()` unless background location is genuinely required by the product. Background location triggers additional App Store review scrutiny and should be documented in the privacy manifest.
+For location, prefer `requestForegroundPermissionsAsync()` unless background location is genuinely required by the product. Background location triggers additional App Store review scrutiny.
 
-iOS info.plist usage description strings must be accurate and specific. Apple rejects apps where the description does not match actual usage. These strings are set in `app.config.ts` via the `ios.infoPlist` field in managed workflow.
+iOS info.plist usage description strings must be accurate and specific. These strings are set in `app.config.ts` via the `ios.infoPlist` field in managed workflow.
 
 ---
 
