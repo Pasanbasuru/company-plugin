@@ -206,11 +206,10 @@ classDef hooks fill:#d2def4,stroke:#2563eb,color:#0f172a
 classDef scripts fill:#e8d9f3,stroke:#9333ea,color:#0f172a
 classDef skills fill:#d4ece6,stroke:#059669,color:#0f172a
 classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
-  SS["SessionStart"] --> R["hooks runner"]
-  UP["UserPromptSubmit"] --> R
+  UP["UserPromptSubmit"] --> R["hooks runner"]
   R --> I["inject-skills-reminder.mjs"]
   I --> J["stdout JSON"]
-class SS,UP,R hooks
+class UP,R hooks
 class I scripts
 ```
 
@@ -226,8 +225,7 @@ classDef hooks fill:#d2def4,stroke:#2563eb,color:#0f172a
 classDef scripts fill:#e8d9f3,stroke:#9333ea,color:#0f172a
 classDef skills fill:#d4ece6,stroke:#059669,color:#0f172a
 classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
-  A["argv slot 2<br/>SessionStart or UserPromptSubmit"] --> B["Pick body"]
-  B --> C["Build payload"]
+  A["UserPromptSubmit fires"] --> C["Build payload"]
   C --> D["hookSpecificOutput<br/>eventName + context"]
   D --> E["stdout JSON"]
 class A,D hooks
@@ -315,7 +313,7 @@ classDef scripts fill:#e8d9f3,stroke:#9333ea,color:#0f172a
 classDef skills fill:#d4ece6,stroke:#059669,color:#0f172a
 classDef templates fill:#f6dfd3,stroke:#ea580c,color:#0f172a
   subgraph ships ["Shipped"]
-    A["hooks<br/>SessionStart UserPromptSubmit"]
+    A["hooks<br/>UserPromptSubmit"]
     B["skills<br/>24 SKILL.md"]
   end
   subgraph nothere ["Not shipped"]
@@ -332,10 +330,9 @@ class F,G hooks
 
 ## Included hooks
 
-- **SessionStart** — injects a one-paragraph reminder of skill-loading discipline (use every relevant skill, name skills explicitly when dispatching subagents).
-- **UserPromptSubmit** — re-emits the same reminder as a one-line reinforcement on every prompt.
+- **UserPromptSubmit** — injects a one-line reminder of skill-loading discipline (use every relevant skill, name skills explicitly when dispatching subagents) on every user prompt. Per-turn injection keeps the rule alive in recent context; an earlier SessionStart variant carrying the same content was redundant and has been dropped.
 
-Previous timestamp loggers (PostToolUse Write/Edit, SessionStart) and the per-prompt full-roster injection are not shipped — the plugin currently runs only the two hooks above.
+Previous timestamp loggers (PostToolUse Write/Edit, SessionStart) and the per-prompt full-roster injection are not shipped — the plugin runs only the single hook above.
 
 ## Recommended companion plugins
 

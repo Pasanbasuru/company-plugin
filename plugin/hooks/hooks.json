@@ -1,21 +1,11 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/inject-skills-reminder.mjs\" SessionStart"
-          }
-        ]
-      }
-    ],
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/inject-skills-reminder.mjs\" UserPromptSubmit"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/inject-skills-reminder.mjs\""
           }
         ]
       }
