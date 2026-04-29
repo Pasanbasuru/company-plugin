@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Debug production by reading the system, not by guessing — and write code that can be debugged that way. At 3 AM the only reliable evidence is what the system emitted: structured logs, metric time-series, distributed traces. Rich, correlated signals let you reconstruct what happened in minutes; free-text strings force you to redeploy with extra `console.log` calls, which is slow and risky. Apply when investigating a live issue, reviewing a hot-path handler, or writing code for a shared environment.
+Debug by reading the system, not by guessing. Apply when investigating live issues, reviewing hot-path handlers, or writing code for shared environments.
 
 ## Core rules
 
@@ -115,7 +115,7 @@ For the Pino base config, PII redaction setup, and AsyncLocalStorage-backed requ
 
 ## Correlation IDs end-to-end
 
-A correlation ID is a UUID generated at the request entry point (API gateway, load balancer, or first service) and carried through every downstream op: HTTP calls, queue messages, DB query comments, trace spans. It is the single thread you pull to reconstruct one user action.
+A correlation ID is a UUID generated at the entry point and carried through every downstream op (HTTP, queue messages, DB query comments, trace spans).
 
 **The `AsyncLocalStorage` pattern** avoids threading the ID through every function argument: middleware establishes the context; anywhere downstream calls `getRequestContext()`.
 
@@ -186,7 +186,7 @@ export async function handler(event: SQSEvent): Promise<void> {
 
 ## Metrics that matter
 
-Instrument every handler with the four golden signals: latency, traffic, errors, saturation. CloudWatch, Datadog, and Prometheus all accept these; patterns below use CloudWatch EMF but concepts are universal.
+Instrument every handler with the four golden signals (latency, traffic, errors, saturation). Examples in CloudWatch EMF; concepts are universal.
 
 **Emitting structured metrics via CloudWatch EMF:**
 
@@ -215,7 +215,7 @@ export async function checkoutHandler(req: Request, res: Response): Promise<void
 
 Alternatively extract metrics from Pino JSON logs via a `AWS::Logs::MetricFilter` with `FilterPattern: '{ $.level = "error" && $.service = "checkout" }'` and dimensions keyed on `$.errorCode`.
 
-**Percentiles over averages.** Averages mask bimodal distributions — a p99 of 2 000 ms is invisible if the average is 120 ms. Always publish p50, p95, p99. In CloudWatch, use `PERCENTILE` statistics.
+**Percentiles over averages.** Always publish p50/p95/p99 (CloudWatch `PERCENTILE` statistic). Averages mask bimodal distributions.
 
 **What to measure on every handler at minimum:**
 
@@ -232,7 +232,7 @@ For OpenTelemetry SDK setup, manual span pattern, and trace-context-into-Pino in
 
 ## Alarm design + runbooks
 
-An alarm without a runbook creates panic; an alarm on the wrong signal creates fatigue. Alert on symptoms users experience (not internal noise), and give every alarm a runbook that orients the on-call within 60 seconds of waking up.
+Alert on user-visible symptoms; every alarm gets a runbook.
 
 **Alarm tiers:**
 
@@ -271,9 +271,9 @@ new Alarm(this, 'CheckoutP99LatencyAlarm', {
 
 ## Debugging playbook
 
-Work these steps in order. Do not skip ahead to a fix before completing at least steps 1–3.
+Work these steps in order.
 
-**Step 1 — Define the blast radius.** How many users, which features, since when? Check the error-rate dashboard for the inflection point. All users or a subset (region, tier, browser)?
+**Step 1 — Define the blast radius.** How many users, which features, since when? Check the error-rate dashboard for the inflection point.
 
 **Step 2 — Read the logs.** Query structured logs for the time window and affected service. Use a known-bad `requestId` if you have one, or filter by `level=error` and `service=<affected>`. Look for error codes, cause chains, unexpected fields, and patterns in affected requests (same `userId` prefix, `skuId`, downstream endpoint).
 
@@ -288,13 +288,13 @@ fields @timestamp, requestId, errorCode, durationMs, @message
 
 **Step 3 — Read the metrics.** Pull p99 latency, error rate, and throughput for the affected handler over the last 2 h. Look for correlation with a deploy (vertical annotation), step-function change (config change), or gradual degradation (resource exhaustion/leak).
 
-**Step 4 — Pull a trace.** Take one `requestId` from step 2 and find its trace. The waterfall shows which downstream call was slow or failed. Common culprits: bad DB query plan, downstream timeout, new code path calling an extra external service.
+**Step 4 — Pull a trace.** Take one `requestId` from step 2 and find its trace. Common culprits: bad DB query plan, downstream timeout, new code path calling an extra external service.
 
 **Step 5 — Form hypotheses (max three).** Ordered by probability. Be specific: "Payment provider `/charges` returning 503 since 14:32 UTC" is a hypothesis; "something wrong with payments" is not.
 
-**Step 6 — Verify, then fix.** Test the most likely hypothesis with the minimal action (status page, deploy log, specific metric query). Propose a fix only after confirming. State clearly what is *verified* vs *assumed*.
+**Step 6 — Verify, then fix.** Test the most likely hypothesis with the minimal action (status page, deploy log, specific metric query). Propose a fix only after confirming.
 
-**Step 7 — Post-mortem signal.** File the log/metric/trace gap that made diagnosis harder than needed. Every incident leaves the system more observable than it found it.
+**Step 7 — Post-mortem signal.** File the log/metric/trace gap that made diagnosis harder than needed.
 
 ## Interactions with other skills
 

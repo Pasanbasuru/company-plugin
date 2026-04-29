@@ -8,23 +8,23 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-The CI pipeline is a production system. Its failures become silent regressions — a flipped tag poisons every subsequent deploy, a leaked secret persists in logs long after rotation, and a `pull_request_target` misconfiguration hands untrusted code the keys to your cloud account. This skill applies whenever a GitHub Actions workflow file, reusable workflow, environment configuration, or branch protection rule is created or modified. It does not own what the deploy does once it reaches AWS (use `aws-deploy-safety`) or how third-party dependencies are kept current (use `supply-chain-and-dependencies`); it owns pipeline integrity from trigger to artifact.
+The CI pipeline is a production system; its failures become silent regressions. This skill applies whenever a GitHub Actions workflow file, reusable workflow, environment configuration, or branch protection rule is created or modified. It does not own what the deploy does once it reaches AWS (use `aws-deploy-safety`) or how third-party dependencies are kept current (use `supply-chain-and-dependencies`); it owns pipeline integrity from trigger to artifact.
 
 ## Core rules
 
-1. **AWS access uses OIDC via `aws-actions/configure-aws-credentials`, never long-lived `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets.** — *Why:* long-lived keys are static credentials that persist in GitHub's encrypted secret store indefinitely; they rotate manually, appear in support requests and CI logs when misconfigured, and their blast radius is bounded only by the IAM policy attached — which is often wider than intended. OIDC issues a short-lived token scoped to a single workflow run; the token expires automatically, cannot be extracted from the run, and the IAM role's trust policy can enforce `sub` conditions that restrict which repo, branch, and environment can assume it.
+1. **AWS access uses OIDC via `aws-actions/configure-aws-credentials`, never long-lived `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets.** — *Why:* Long-lived keys persist in GitHub secrets, drift, and leak via CI logs. OIDC mints per-run tokens scoped by a `sub` trust condition (repo/branch/env).
 
-2. **Third-party actions are pinned to a full 40-character commit SHA, not a mutable tag.** — *Why:* a tag like `@v3` is a mutable pointer — the action author can push a new commit to that tag at any time, silently replacing the code your workflow executes. Pinning to a SHA makes the action immutable: the exact bytes that ran in review are the exact bytes that run in production. Dependabot can still propose SHA updates with a human-readable tag in the comment, preserving reviewability without sacrificing immutability.
+2. **Third-party actions are pinned to a full 40-character commit SHA, not a mutable tag.** — *Why:* a tag like `@v3` is a mutable pointer — the action author can push a new commit to that tag at any time, silently replacing the code your workflow executes. Pinning to a SHA makes the action immutable: the exact bytes that ran in review are the exact bytes that run in production.
 
-3. **Secrets are scoped to GitHub environments (`environments/prod`, `environments/staging`); no single repository-level secret blob serves all jobs.** — *Why:* a repository-level secret is accessible to any workflow that runs in that repository, including those triggered by fork PRs or low-trust branches. Environment secrets are only injected when the job explicitly references that environment and the environment's protection rules (required reviewers, branch restrictions) are satisfied. Blast radius on a compromised workflow is limited to the environment it was allowed to access.
+3. **Secrets are scoped to GitHub environments (`environments/prod`, `environments/staging`); no single repository-level secret blob serves all jobs.** — *Why:* a repository-level secret is accessible to any workflow that runs in that repository, including those triggered by fork PRs or low-trust branches. Environment secrets are only injected when the job explicitly references that environment and the environment's protection rules (required reviewers, branch restrictions) are satisfied.
 
-4. **Required checks on the default branch include at minimum: type-check, unit tests, integration tests, and build. No merge is possible without all checks passing.** — *Why:* branch protection without required checks is decorative. A green merge button without type-check passing means a TypeScript error can reach the default branch; without integration tests, a broken API contract ships silently. Required checks enforce the invariant that the merge queue only admits code that has been mechanically verified to meet the project's quality bar.
+4. **Required checks on the default branch include at minimum: type-check, unit tests, integration tests, and build. No merge is possible without all checks passing.** — *Why:* branch protection without required checks is decorative. A green merge button without type-check passing means a TypeScript error can reach the default branch; without integration tests, a broken API contract ships silently.
 
-5. **Pull requests from forks use the `pull_request` trigger, not `pull_request_target`, unless the workflow has been explicitly audited for secret leakage.** — *Why:* `pull_request_target` runs in the context of the base branch, with access to repository secrets and environment variables, even when the PR comes from an untrusted fork. A malicious PR can modify workflow files or scripts that `pull_request_target` then executes with elevated permissions. `pull_request` runs in the fork's context — secrets are withheld, and the GITHUB_TOKEN has read-only permissions by default.
+5. **Pull requests from forks use the `pull_request` trigger, not `pull_request_target`, unless the workflow has been explicitly audited for secret leakage.** — *Why:* `pull_request_target` runs in the base-branch context with secrets even for untrusted forks — a malicious PR can modify workflow files or scripts that then execute with elevated permissions. `pull_request` runs in the fork's context — secrets are withheld, and the GITHUB_TOKEN has read-only permissions by default.
 
-6. **Deployments to `prod` require an explicit `environment: production` block with required reviewers and a branch restriction to `main`.** — *Why:* without an environment gate, any workflow that satisfies its trigger conditions can deploy to production — including a branch push, a failed test suite that somehow still reaches the deploy job, or an automated dependency bump. Required reviewers add a human checkpoint; branch restrictions ensure only commits that have passed the full merge queue reach the production environment.
+6. **Deployments to `prod` require an explicit `environment: production` block with required reviewers and a branch restriction to `main`.** — *Why:* Without an environment gate, any workflow can deploy to prod. Required reviewers + branch restriction add a human checkpoint.
 
-7. **Build artifacts are uploaded with `actions/upload-artifact`, annotated with the commit SHA and run ID, and given an explicit retention period.** — *Why:* an artifact that cannot be traced to its source commit is useless for incident investigation. An artifact stored at the default 90-day retention may hold sensitive build outputs (compiled binaries, bundled source maps, dependency lock files) well past the point of usefulness. Explicit retention and SHA annotation are a deployment contract: the artifact that will be deployed is exactly the one produced by commit `abc123`, run `987654321`, and it will be gone in 30 days.
+7. **Build artifacts are uploaded with `actions/upload-artifact`, annotated with the commit SHA and run ID, and given an explicit retention period.** — *Why:* an artifact that cannot be traced to its source commit is useless for incident investigation. An artifact stored at the default 90-day retention may hold sensitive build outputs (compiled binaries, bundled source maps, dependency lock files) well past the point of usefulness.
 
 ## Red flags
 
@@ -53,7 +53,6 @@ jobs:
           aws-region: eu-west-1
 ```
 
-The key never expires, is stored in GitHub's secret store, and every workflow in this repo can request it.
 
 Good — OIDC token exchanged for short-lived role credentials, action pinned to SHA:
 
@@ -74,7 +73,6 @@ jobs:
           aws-region: eu-west-1
 ```
 
-The OIDC JWT is minted per-run, expires after the run, and the IAM trust policy constrains which repo/branch/environment can assume the role.
 
 ## Interactions with other skills
 

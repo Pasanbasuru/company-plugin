@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Software fails — networks partition, third-party services degrade, tail latency is always worse than median. Code that assumes the happy path breaks users. This skill prescribes the patterns that make code fail *well*: bounded waits, safe retries, fast-fail under load, isolated failure surfaces, and typed error contracts that force callers to handle every outcome. Apply whenever you touch a `fetch` call, HTTP client, SDK integration, `try/catch`, a React component that can throw, or any function returning recoverable failure.
+Networks partition; tail latency dominates. Make code fail well — bounded waits, safe retries, isolated failure surfaces, typed errors. Apply whenever you touch a `fetch` call, HTTP client, SDK integration, `try/catch`, a React component that can throw, or any function returning recoverable failure.
 
 ## Core rules
 
@@ -106,7 +106,7 @@ export async function lookupCustomerTier(customerId: string): Promise<string> {
 
 ### Error boundary per feature vs single app-level boundary
 
-Bad — one root boundary blanks the page on any crash: `<ErrorBoundary fallback={<p>Something went wrong</p>}>{Header, MainContent, RecommendationPanel, Footer}</ErrorBoundary>`.
+Bad — one root boundary, any crash blanks the page: `<ErrorBoundary fallback={<p>Something went wrong</p>}>{Header, MainContent, RecommendationPanel, Footer}</ErrorBoundary>`.
 
 Good — each independent feature wraps its own boundary so failures are isolated:
 

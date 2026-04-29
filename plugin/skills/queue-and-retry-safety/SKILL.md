@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Queues are at-least-once by default — duplicate and out-of-order messages are a normal operating condition, not an edge case. Every piece of code that touches a queue must tolerate them without data corruption, double-billing, or phantom state. This skill enforces the disciplines that make consumers safe: idempotency keys, DLQ topology, visibility timeout management, and correct ordering assumptions.
+Queues are at-least-once — duplicates and reordering are normal; consumers must tolerate them without data corruption.
 
 Apply this skill whenever touching SQS consumers, EventBridge rules, Lambda event-source mappings, BullMQ workers, or any other async job processor.
 

@@ -95,6 +95,6 @@ A good Claude Code tooling deliverable:
 5. Is dogfoodable: you'd use it yourself tomorrow.
 6. Has been run end-to-end at least once before being called done.
 
-If it doesn't hit all six, it's a draft. Keep iterating.
+If not all six, it's a draft.
 
 For the full primitive decision framework, primitive table, key flags, key commands, and common-mistake catalog, see `references/patterns.md`.

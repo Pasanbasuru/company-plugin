@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Enforce strong type discipline: model correctness-by-construction at boundaries and in domain code so invalid states are unrepresentable. Apply this skill when a type-system choice eliminates a class of bug outright — not as a box-ticking exercise. Boundary parsing, branded IDs, discriminated unions, and typed errors are the primary levers.
+Make invalid states unrepresentable. Boundary parsing, branded IDs, discriminated unions, typed errors.
 
 ## Core rules
 
@@ -136,11 +136,7 @@ async function handleMessage(raw: unknown): Promise<void> {
 }
 ```
 
-Apply this pattern at every trust boundary: HTTP handlers, queue consumers, file parsers, third-party API responses, and `process.env` reads.
-
 ## Error typing
-
-Two patterns — choose based on the failure mode.
 
 **`Result<T, E>` for expected, recoverable failures** (business rules, validation, not-found):
 
@@ -169,17 +165,15 @@ class ValidationError extends AppError {
 }
 ```
 
-Use `Result` when callers must handle every failure path. Use typed exceptions when failure indicates a bug or an outage the caller cannot meaningfully recover from. Either way, `catch (e: unknown)` — never `catch (e: any)` — and narrow with `instanceof` or a type guard before accessing fields.
+Use `Result` when callers must handle every failure path. Use typed exceptions when failure indicates a bug or an outage the caller cannot meaningfully recover from.
 
 ## Migration tactics
-
-Removing `any` from an existing codebase is incremental work, not a big bang.
 
 1. **Start at trust boundaries.** Route handlers, queue consumers, and env reads are the highest-value targets. Replace `as SomeType` casts with Zod schemas and let `z.infer` drive the type.
 2. **Promote `any` to `unknown`.** A mechanical change — swap `any` for `unknown` throughout; the compiler then surfaces every unsafe access, one by one.
 3. **Narrow with Zod or type guards.** For each `unknown` that surfaces, write a narrowing function or schema. Prefer Zod schemas at I/O boundaries; prefer type guard functions (`isFoo(x): x is Foo`) for internal domain checks.
 4. **Tighten `tsconfig` one option at a time.** Add one of the options from the [Compiler options](#compiler-options) section, fix resulting errors, commit. Repeat. Mixing option additions with business changes makes errors harder to attribute.
-5. **Suppress nothing silently.** If a `@ts-ignore` was there before you arrived, leave a `// TODO` with a ticket reference or remove it. Never add a new suppression as part of a migration step.
+5. **Suppress nothing silently.** No new `@ts-ignore`; existing ones get a ticket-linked TODO.
 
 ## Interactions with other skills
 

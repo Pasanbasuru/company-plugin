@@ -8,11 +8,11 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Keep secrets out of source, out of logs, and out of the client bundle; keep config predictable across environments. This skill covers the application-code layer: how secrets are sourced, how environment variables are validated at startup, how Next.js client/server boundaries are respected, and how config values that change per environment are managed without drifting. It does not cover how Secrets Manager or Parameter Store are provisioned (that is `infra-safe-change`) or how CI pipelines inject secrets (that is `cicd-pipeline-safety`).
+Keep secrets out of source, out of logs, and out of the client bundle; keep config predictable across environments. Covers application-code layer: sourcing, startup validation, Next.js client/server boundaries, per-env config.
 
 ## Core rules
 
-1. **Secrets come from AWS Secrets Manager (runtime pull) or are injected at deploy time — never committed, never in plaintext env files in the repo.** — *Why:* a secret committed even once is permanent — git history is not erased by deletion; anyone with repo access, past or present, can recover it. Deploy-time injection via the platform (ECS task definition, Lambda environment, Vercel env) keeps the plaintext off disk and out of version control entirely.
+1. **Secrets come from AWS Secrets Manager (runtime pull) or are injected at deploy time — never committed, never in plaintext env files in the repo.** — *Why:* git history is forever; deploy-time injection keeps plaintext off disk.
 2. **`.env.example` (or equivalent) is committed; real `.env` files are `.gitignore`d and never shared in chat.** — *Why:* an example file documents every required variable without leaking values; sharing in chat pastes the secret into a transcript that may be retained, searched, or exposed by the platform.
 3. **Env vars are validated on startup with Zod — fail fast with a clear message if missing.** — *Why:* a service that starts with a missing or malformed secret silently falls back to `undefined`, producing cryptic runtime errors far from the source; fail-fast surfaces the misconfiguration at deploy time, not at 3 AM during an incident.
 4. **Next.js: server-only secrets never go in `NEXT_PUBLIC_*`. Every `NEXT_PUBLIC_*` variable is reviewed before merge.** — *Why:* `NEXT_PUBLIC_*` values are inlined into the client bundle at build time and shipped to every browser; any secret placed there is immediately public, regardless of what the variable name implies.

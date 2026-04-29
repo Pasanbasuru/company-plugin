@@ -8,30 +8,30 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Infra changes land all at once and often can't be undone quickly. A `terraform apply` that deletes an RDS instance or wipes a DynamoDB table is not recoverable in minutes — it may not be recoverable at all without a backup restore. This skill catches destructive plans before apply, enforces remote state discipline, and holds IAM changes to the least-privilege bar. It is Terraform-primary but the principles apply equally to CDK and CloudFormation stacks.
+Infra changes land all at once and may not be undoable. Catches destructive plans before apply, enforces remote-state discipline, holds IAM to least-privilege. Terraform-primary; same principles apply to CDK/CloudFormation.
 
 ## Core rules
 
 1. **Every `terraform plan` is read fully before apply — destructive actions (`-`/`forces replacement`) block merge without explicit written justification.**
-   *Why:* Terraform outputs a complete diff. Skipping it or grepping only for errors means a resource deletion can ship unnoticed. Destructive actions on stateful resources are almost always accidental; written justification forces a deliberate decision.
+   *Why:* Terraform outputs a complete diff. Grepping for errors misses deletions; written justification forces a deliberate decision.
 
 2. **State is remote, versioned, and locked (S3 + DynamoDB or Terraform Cloud). Local state in CI is never acceptable.**
-   *Why:* Local state is ephemeral, not shared, and not locked. Two concurrent applies against local state produce corruption. Remote state with DynamoDB locking serialises applies and gives you a versioned audit trail.
+   *Why:* Local state is ephemeral and unlocked — concurrent applies corrupt it. Remote state with locking serialises and audits.
 
 3. **IAM changes follow least privilege. A wildcard `*` on `Action` or `Resource` is flagged and must be justified.**
-   *Why:* Over-broad IAM grants are the leading cause of blast-radius expansion in cloud incidents. A compromised credential with `s3:*` on `*` reaches every bucket in the account, not just the one the service needs.
+   *Why:* Over-broad IAM grants are the leading cause of blast-radius expansion in cloud incidents.
 
 4. **Networking changes (security groups, subnets, NACLs, routes) are reviewed by someone who can describe the blast radius before merge.**
-   *Why:* An overly permissive security group ingress rule or a missing route can silently expose a service or sever connectivity. The reviewer must understand the network topology, not just the diff.
+   *Why:* An over-permissive SG or missing route silently exposes or severs. Reviewer must understand topology, not just the diff.
 
 5. **Drift between code and live infrastructure is treated as a bug — reconcile it or formally document why the drift is allowed.**
-   *Why:* Untracked drift means your IaC no longer describes reality. The next apply may destroy manually created resources or miss configuration that's load-bearing. Drift is technical debt with an explosive payload.
+   *Why:* Untracked drift means your IaC no longer describes reality. The next apply may destroy manually created resources or miss configuration that's load-bearing.
 
 6. **Destructive changes to stateful resources (RDS, S3 with data, DynamoDB) require `lifecycle { prevent_destroy = true }` plus a manual override process.**
    *Why:* Accidental deletion of a database or a populated S3 bucket can result in permanent data loss. The `prevent_destroy` lifecycle guard forces a two-step process: remove the guard, plan, review, apply — no single-step accidents.
 
 7. **Secrets are not stored in IaC state; references to AWS Secrets Manager or Parameter Store only.**
-   *Why:* Terraform state is JSON, often stored in S3, and readable by anyone with S3 read access on the bucket. A secret baked into state is accessible to every service account that can read state, indefinitely.
+   *Why:* State JSON is readable by anyone with S3 read on the bucket — a baked-in secret is exposed indefinitely.
 
 ## Red flags
 
@@ -55,7 +55,7 @@ resource "aws_db_instance" "main" {
   # No lifecycle protection — a single `terraform apply` can delete this
 }
 ```
-A rename of the resource block, a change to a `forces replacement` attribute (like `engine_version` with no snapshot policy), or a module refactor can produce a `destroy + create` in the plan. With no guard, a distracted reviewer ships it.
+A rename of the resource block, a change to a `forces replacement` attribute (like `engine_version` with no snapshot policy), or a module refactor can produce a `destroy + create` in the plan.
 
 **Good — lifecycle guard on stateful resource:**
 ```hcl
@@ -71,7 +71,7 @@ resource "aws_db_instance" "main" {
   }
 }
 ```
-If a plan ever contains a `destroy` for this resource, Terraform aborts with an explicit error rather than silently proceeding. The only way to delete it is to remove `prevent_destroy`, re-plan, and apply in two separate commits — a deliberate, reviewable act.
+Plans containing `destroy` abort. Deletion requires removing the guard in a separate commit — deliberate and reviewable.
 
 ### Scoped IAM policy vs `*:*`
 
@@ -90,7 +90,7 @@ resource "aws_iam_policy" "orders_service" {
   })
 }
 ```
-This grants the orders service full administrative access to every AWS resource in the account. A single compromised token can delete databases, read secrets, spin up EC2 instances, and exfiltrate data from any S3 bucket.
+This grants the orders service full administrative access to every AWS resource in the account.
 
 **Good — scoped to exact actions and resources:**
 ```hcl
@@ -123,8 +123,6 @@ resource "aws_iam_policy" "orders_service" {
 }
 ```
 The blast radius of a compromised token is limited to the SQS queue and the one secret the service legitimately needs.
-
-For plan-reading walkthroughs, remote state + locking deep-dives, the IAM least-privilege process, full stateful-resource patterns (including `deletion_protection` and forced-replacement migration), and drift detection commands, see `references/patterns.md`.
 
 ## Interactions with other skills
 

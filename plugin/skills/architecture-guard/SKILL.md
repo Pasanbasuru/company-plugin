@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Keep the monorepo's shape healthy — packages have clear owners, dependencies flow one direction, shared code is stable. Changes that cross package or service boundaries get reviewed against dependency rules before they calcify into spaghetti. This skill activates whenever a diff introduces a new cross-package edge, removes a boundary, or proposes a new top-level package.
+Keep the monorepo's shape healthy — packages have clear owners, dependencies flow one direction, shared code is stable.
 
 ## Core rules
 
@@ -67,13 +67,13 @@ The dependency graph has exactly four layers, top to bottom:
 3. **Shared packages** (`packages/shared-*`, `packages/ui`, `packages/utils`) — general-purpose code with no domain opinion.
 4. **Foundation packages** (`packages/logging`, `packages/types`, `packages/config`) — zero-dependency primitives every layer can import.
 
-The rule is simple: arrows only point downward. An app can import from feature, shared, or foundation. A feature package can import from shared or foundation. A shared package can import from foundation only. Foundation packages import from nothing inside the monorepo.
+Arrows only point downward. An app can import from feature, shared, or foundation. A feature package can import from shared or foundation. A shared package can import from foundation only. Foundation packages import from nothing inside the monorepo.
 
 **Detecting a violation.** Check `package.json` dependencies for any entry that names a package above the current layer. Also inspect `tsconfig.json` references — TypeScript project references (`"references": [...]`) must follow the same arrow direction; a composite project that references a higher layer is a build-time error waiting to happen.
 
 ## Shared-types package pattern
 
-Introduce a single `@acme/contracts` (or `@acme/shared-types`) package at the foundation layer. Place all cross-service DTOs, event payloads, and API response/request types there. This package must depend on nothing inside the monorepo — it is a pure leaf, so every service can import it without pulling in unrelated code.
+Introduce a single `@acme/contracts` (or `@acme/shared-types`) package at the foundation layer. Place all cross-service DTOs, event payloads, and API response/request types there. Must depend on nothing inside the monorepo (a pure leaf).
 
 Services that currently import from each other (`import { CreateOrderDto } from '@acme/order-service/src/...'`) must be migrated: the DTO moves to `@acme/contracts`, both services import from there, and the direct service-to-service import is deleted. The HTTP/event contract semantics (versioning, evolution) are the responsibility of `integration-contract-safety`, not this skill.
 
@@ -96,7 +96,7 @@ Three tools cover cycle detection at different layers:
 - **dependency-cruiser**: `npx depcruise --validate .dependency-cruiser.js packages/` — enforces declared rules (e.g., "no package may import from an app") and exits non-zero on violation.
 - **TypeScript `--build` mode**: `npx tsc --build --dry` — when composite projects form a cycle, the compiler refuses to build and reports the loop explicitly; this is the fastest feedback loop in CI.
 
-Run all three during a new-package PR and in the pre-merge CI pipeline. A single green run from all three is a necessary (not sufficient) sign that the dependency graph is still a DAG.
+Run all three during a new-package PR and in the pre-merge CI pipeline.
 
 ## Interactions with other skills
 
@@ -104,7 +104,7 @@ Run all three during a new-package PR and in the pre-merge CI pipeline. A single
 - **Hands off to:** nextjs-app-structure-guard for intra-Next.js file structure
 - **Hands off to:** nestjs-service-boundary-guard for intra-NestJS module boundaries
 - **Hands off to:** integration-contract-safety for the actual HTTP/event contract semantics across services
-- **Does not duplicate:** `integration-contract-safety`'s contract-versioning concerns — this skill owns where types live; that skill owns how they evolve over the wire.
+- **Does not duplicate:** `integration-contract-safety`'s contract-versioning concerns.
 
 ## Review checklist (invoke when reviewing existing code)
 
