@@ -12,19 +12,19 @@ Make AWS deploys boring — safe defaults, predictable rollout, fast recovery. T
 
 ## Core rules
 
-1. **Task and function execution roles are distinct; neither grants `*` actions.** — *Why:* a single overpermissioned role means a compromised container or function can read every secret, write to every bucket, and call every API in the account. Separating task role (what the app needs) from execution role (what ECS/Lambda needs to start the container — ECR pull, Secrets Manager fetch, CloudWatch Logs write) limits blast radius to one surface.
+1. **Task and function execution roles are distinct; neither grants `*` actions.** — *Why:* a single overpermissioned role means a compromised container or function can read every secret, write to every bucket, and call every API in the account. Separating task role (what the app needs) from execution role (what ECS/Lambda needs to start the container — ECR pull, Secrets Manager fetch, CloudWatch Logs write).
 
-2. **Secrets are injected via Secrets Manager ARN references in the task definition `secrets` field (or Lambda environment resolved at deploy time), never as plaintext in the `environment` field.** — *Why:* plaintext values are stored in the task definition JSON, visible in CloudTrail, the ECS console, and any CI log that prints the definition. A Secrets Manager ARN reference means the value is fetched by the ECS agent at container launch and never materialises in state files or logs.
+2. **Secrets are injected via Secrets Manager ARN references in the task definition `secrets` field (or Lambda environment resolved at deploy time), never as plaintext in the `environment` field.** — *Why:* plaintext is stored in task-definition JSON and visible in CloudTrail, console, and CI logs.
 
-3. **ECS rolling deploys set `minimumHealthyPercent` and `maximumPercent` explicitly; higher-risk services use CodeDeploy blue/green.** — *Why:* AWS defaults (`minimumHealthyPercent: 100`, `maximumPercent: 200`) work for small clusters but can stall on single-instance services or exhaust capacity on large ones. Explicit values are a contract. Blue/green adds a stable test traffic window and an instant rollback path without re-deploying.
+3. **ECS rolling deploys set `minimumHealthyPercent` and `maximumPercent` explicitly; higher-risk services use CodeDeploy blue/green.** — *Why:* AWS defaults (`minimumHealthyPercent: 100`, `maximumPercent: 200`) work for small clusters but can stall on single-instance services or exhaust capacity on large ones. Blue/green adds a stable test traffic window and an instant rollback path.
 
-4. **Lambda user-facing functions are promoted through an alias with traffic shifting (linear or canary), not by pointing traffic directly at `$LATEST`.** — *Why:* `$LATEST` is mutable — every publish overwrites it. An alias is a stable pointer; weighted routing lets you shift 10 % of traffic to the new version, watch error rates for 10 minutes, then shift the rest or roll back by resetting the alias weight to 0 % for the new version.
+4. **Lambda user-facing functions are promoted through an alias with traffic shifting (linear or canary), not by pointing traffic directly at `$LATEST`.** — *Why:* `$LATEST` is mutable; aliases are stable. Weighted aliasing canaries 10%, watches errors, then cuts over or resets.
 
-5. **Health checks reflect real readiness — DB connectivity, critical dependency reachability — not just a static HTTP 200.** — *Why:* a health check that always returns 200 during container startup means ECS (and the ALB) marks the task healthy before the application can actually serve requests. Under load this produces a surge of 502s until the app finishes initialising. A readiness probe that verifies a DB connection catches misconfigured credentials, wrong endpoint, and network ACL problems before real traffic arrives.
+5. **Health checks reflect real readiness — DB connectivity, critical dependency reachability — not just a static HTTP 200.** — *Why:* Static-200 health checks mark tasks healthy before the app can serve, producing 502 surges. A real readiness probe catches bad creds, wrong endpoints, ACL issues at deploy time.
 
-6. **Schema migrations run before app rollout and are backwards-compatible with the previous version (expand/contract pattern).** — *Why:* deploying a new app version that assumes a column exists before the migration has run causes immediate 500s. Running a migration that drops or renames a column while the old app version is still handling requests causes the same. Expand/contract separates the risk: add without breaking, then deploy, then clean up.
+6. **Schema migrations run before app rollout and are backwards-compatible with the previous version (expand/contract pattern).** — *Why:* Deploying new app before migration → 500s; dropping a column while old app serves → 500s. Expand/contract separates the risk.
 
-7. **Log group retention is set explicitly (CloudWatch Logs retention policy) — no group is left at the default "never expire".** — *Why:* unset retention means logs accumulate indefinitely. CloudWatch Logs storage is billed per GB; a verbose service can silently accumulate significant cost over months. Explicit retention (30 days for non-compliance workloads, 90–365 days where audit trails are required) is a deployment contract, not an afterthought.
+7. **Log group retention is set explicitly (CloudWatch Logs retention policy) — no group is left at the default "never expire".** — *Why:* unset retention means logs accumulate indefinitely. CloudWatch Logs storage is billed per GB; a verbose service can silently accumulate significant cost over months. Explicit retention (30 days for non-compliance workloads, 90–365 days where audit trails are required).
 
 ## Red flags
 
@@ -47,8 +47,6 @@ Bad — secret value is embedded in the task definition:
 }
 ```
 
-This value is stored in the task definition revision, visible in the ECS console, and emitted to CloudTrail on every `RegisterTaskDefinition` call.
-
 Good — ARN reference resolved by the ECS agent at launch time:
 
 ```json
@@ -58,7 +56,7 @@ Good — ARN reference resolved by the ECS agent at launch time:
 }
 ```
 
-The ECS task execution role needs `secretsmanager:GetSecretValue` on this ARN (and `kms:Decrypt` if a CMK is used). The plaintext value never appears in the task definition JSON or in CloudTrail's `RegisterTaskDefinition` event.
+The ECS task execution role needs `secretsmanager:GetSecretValue` on this ARN (and `kms:Decrypt` if a CMK is used).
 
 ### Health check: readiness probe hitting DB vs static `/ping`
 
@@ -69,7 +67,7 @@ Bad — health check that always succeeds regardless of app state:
 app.get('/ping', (_req, res) => res.status(200).json({ ok: true }));
 ```
 
-The ALB target group health check points at `/ping`. ECS marks the task healthy as soon as the HTTP listener starts. If `DATABASE_URL` is wrong the app will start returning 500s on every real request, but the health check keeps saying the task is healthy.
+ECS marks healthy on listener bind; bad `DATABASE_URL` returns 500 on real traffic while health check stays green.
 
 Good — readiness check that verifies critical dependencies before accepting traffic:
 
@@ -86,7 +84,7 @@ app.get('/ready', async (_req, res) => {
 
 Point the ALB target group health check at `/ready`. ECS will not mark the task healthy — and will not route traffic to it — until the DB connection succeeds. A failed `SELECT 1` surfaces misconfigured credentials, wrong endpoint, or a network ACL problem during the deploy, not during peak traffic.
 
-Keep `/ping` as a separate liveness endpoint (returns 200 immediately, used only by ECS task health — not the ALB) to distinguish "process is alive" from "process is ready to serve".
+Keep `/ping` as a separate liveness endpoint (returns 200 immediately, used only by ECS task health — not the ALB).
 
 ---
 
@@ -94,9 +92,7 @@ Keep `/ping` as a separate liveness endpoint (returns 200 immediately, used only
 
 ECS rolling deploys are controlled by two service-level parameters and one deployment circuit breaker.
 
-**`minimumHealthyPercent`** — the lower bound on running task count (as a percentage of desired count) during a deploy. ECS will not terminate old tasks if doing so would push the running count below this threshold.
-
-**`maximumPercent`** — the upper bound. ECS will not launch new tasks if doing so would exceed this percentage of desired count.
+**`minimumHealthyPercent`** — minimum running tasks (% of desired) during a deploy; ECS won't terminate below this. **`maximumPercent`** — maximum running tasks; ECS won't surge above this.
 
 Recommended defaults for a service with `desiredCount: 2`:
 
@@ -107,7 +103,7 @@ deployment_configuration {
 }
 ```
 
-For `desiredCount: 1` (dev/staging single-instance), set `minimumHealthyPercent: 0` and `maximumPercent: 200`. This is a brief downtime window but is acceptable for non-production. Never use `0/200` in production without understanding the implication: old and new versions run simultaneously during rollout.
+For `desiredCount: 1` (dev/staging single-instance), set `minimumHealthyPercent: 0` and `maximumPercent: 200`. Brief downtime; do not use in prod.
 
 **Deployment circuit breaker** — enable it:
 
@@ -118,7 +114,7 @@ deployment_circuit_breaker {
 }
 ```
 
-With `rollback = true`, ECS automatically reverts to the previous stable task definition if the new tasks fail health checks during rollout. Without it, a failed deploy stalls indefinitely and requires a manual `update-service` call.
+ECS auto-reverts on failed health checks; without it, deploys stall.
 
 **Blue/green via CodeDeploy** is appropriate when:
 - The service handles payments, authentication, or writes that cannot be retried safely.
@@ -164,12 +160,11 @@ aws lambda update-alias \
   --function-name my-fn \
   --name prod \
   --routing-config '{}'
-# (function-version stays on the old version until the full shift commit above)
 ```
 
 **CodeDeploy for Lambda** automates this as `Linear10PercentEvery1Minute` or `Canary10Percent5Minutes` deployment preferences and integrates CloudWatch alarms as automatic rollback triggers. Use it for functions that back user-facing APIs or that process financial events.
 
-**Do not shift traffic for async-only functions** (SQS consumers, EventBridge rules) using alias weights — both versions will consume from the queue simultaneously, which can cause duplicate processing if the function is not idempotent. For async functions, deploy atomically and rely on the circuit breaker + DLQ for error isolation.
+Don't shift traffic for async-only functions — both versions consume from the queue and may double-process.
 
 ---
 
@@ -177,7 +172,7 @@ aws lambda update-alias \
 
 AWS health checks operate at three distinct levels; conflating them leads to either false-healthy tasks or unnecessary restarts.
 
-**Liveness** — "is the process still running?" Implemented as the ECS task health check (Docker `HEALTHCHECK` or ECS task definition `healthCheck`). Should be cheap: check that the HTTP listener is bound, or that the main process is alive. If this fails, ECS replaces the container.
+**Liveness** — "is the process still running?" Implemented as the ECS task health check (Docker `HEALTHCHECK` or ECS task definition `healthCheck`). Should be cheap: check that the HTTP listener is bound, or that the main process is alive.
 
 ```json
 {
@@ -191,7 +186,7 @@ AWS health checks operate at three distinct levels; conflating them leads to eit
 }
 ```
 
-`startPeriod` gives the container time to initialise before health check failures count against the retry limit. Set it to at least your observed P95 cold-start time.
+Set `startPeriod` to at least your P95 cold-start time.
 
 **Readiness** — "can this instance serve traffic?" Implemented as the ALB target group health check. Should verify that the application is connected to its dependencies and ready to handle real requests. Point it at `/ready` (or `/health/ready`), not `/ping`.
 
@@ -204,13 +199,11 @@ ALB target group settings to tune:
 
 **Startup** — a separate higher-tolerance check during the initial startup window. ALB does not have a native startup probe concept; use `startPeriod` in the ECS health check and ensure `minimumHealthyPercent` keeps old tasks alive until new ones clear the ALB readiness check.
 
-A common mistake is checking too many dependencies in `/ready`. If a non-critical downstream service (e.g. an analytics sink) is down, the readiness check should not fail — the app can still serve requests. Only check dependencies whose failure means the endpoint cannot return a correct response.
+A common mistake is checking too many dependencies in `/ready`. Only check dependencies whose failure means the endpoint cannot return a correct response.
 
 ---
 
 ## Expand/contract schema migrations
-
-A deploy that changes the database schema while the previous app version is still running will cause downtime or data corruption unless the migration is designed to be backwards-compatible. The expand/contract pattern solves this.
 
 **Phase 1 — expand (additive only).** The migration adds the new column, table, or index without removing or renaming anything. The old app version ignores the new column; the new app version writes to it.
 
@@ -222,7 +215,7 @@ ALTER TABLE "user" ADD COLUMN full_name TEXT;
 UPDATE "user" SET full_name = name;
 ```
 
-Deploy the new app version. It reads and writes `full_name`. The old version still reads and writes `name`. Both coexist safely.
+Deploy the new app version. It reads and writes `full_name`. The old version still reads and writes `name`.
 
 **Phase 2 — contract (cleanup).** Once the old app version is fully drained (all instances replaced), the old column is safe to remove.
 
@@ -231,17 +224,15 @@ Deploy the new app version. It reads and writes `full_name`. The old version sti
 ALTER TABLE "user" DROP COLUMN name;
 ```
 
-Never combine expand and contract in a single migration that runs atomically with a deploy. The window between "migration committed" and "all containers replaced" is where concurrent old-version requests will fail if the column they depend on is already gone.
+Never combine — old containers will hit missing columns during rollout.
 
-**Index creation.** Use `CREATE INDEX CONCURRENTLY` on Postgres. A standard `CREATE INDEX` takes an `AccessExclusiveLock` that blocks reads and writes for the duration. `CONCURRENTLY` takes a weaker lock and builds the index in the background — safe for a running service, though it takes longer and cannot run inside a transaction block.
+**Index creation.** Use `CREATE INDEX CONCURRENTLY` on Postgres. `CONCURRENTLY` takes a weaker lock and builds the index in the background — safe for a running service, though it takes longer and cannot run inside a transaction block.
 
 **Prisma migrations.** Prisma's migration engine does not use `CONCURRENTLY` by default. For large tables, edit the generated migration SQL to use `CREATE INDEX CONCURRENTLY` and run it outside of Prisma's transaction wrapper (`--skip-generate` with a raw SQL step).
 
 ---
 
 ## Log retention
-
-Every CloudWatch Logs log group created by an ECS service or Lambda function defaults to "Never expire" unless a retention policy is applied explicitly. Left unchecked, this becomes a cost and compliance problem.
 
 **Set retention in the task definition or IaC, not after the fact:**
 
@@ -261,11 +252,7 @@ Recommended retention tiers:
 | Production, audit trail required | 90–365 days (align with compliance policy) |
 | Security / access logs | 365 days minimum (check your compliance framework) |
 
-**Lambda log groups** are auto-created by the Lambda service on first invocation. They are not created by your IaC unless you explicitly define them. If the log group does not exist in Terraform/CDK before the function runs, the retention policy will not be applied until you next run `terraform apply`. Prefer pre-creating the log group as an explicit resource and granting the Lambda execution role `logs:CreateLogStream` and `logs:PutLogEvents` on the pre-created group ARN.
-
-**CloudWatch Logs Insights queries** are cheaper when the log group has a shorter retention window — fewer log events to scan. Setting retention also reduces the risk of accidentally retaining PII in application logs beyond your data retention policy.
-
-Log metric filters and alarms (e.g. alerting on `ERROR` count exceeding a threshold) should be defined alongside the log group resource, not as separate manual console steps. An alarm without a log group resource dependency can silently fail to attach after a log group is recreated.
+**Lambda log groups** are auto-created on first invocation. Pre-create the log group as an explicit IaC resource so retention applies from day one.
 
 ---
 

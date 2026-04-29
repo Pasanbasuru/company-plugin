@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Keep the test portfolio useful — fast where it matters, real where correctness requires it, minimal where it doesn't. Apply this skill when authoring new tests, restructuring an existing suite, reviewing a PR's test plan, or deciding whether a given test belongs at the unit, integration, or e2e layer. The goal is a suite that is trustworthy (few false negatives), maintainable (few fragile assertions), and fast enough to run on every commit.
+Keep the test portfolio useful — fast where it matters, real where correctness requires it, minimal where it doesn't.
 
 ## Core rules
 
@@ -167,28 +167,26 @@ it('expires a session after 15 minutes', () => {
 
 ## Test pyramid (concrete ratios)
 
-A healthy backend service in this codebase should aim for roughly **70 % unit / 25 % integration / 5 % e2e** by test count. These are guide rails, not hard targets, but deviations in either direction are a signal.
+A healthy backend service in this codebase should aim for roughly **70 % unit / 25 % integration / 5 % e2e** by test count.
 
-**Too many unit tests, too few integration tests** means the wiring between layers goes unverified. You may have perfect coverage of individual functions while the repository layer silently violates a DB constraint that only appears at runtime.
-
-**Too many integration tests, too few unit tests** means the suite is slow and gives broad coverage but shallow signal on specific logic branches. A failing integration test rarely tells you exactly which function is broken without further debugging.
-
-**Too many e2e tests** means the suite is fragile and slow. Playwright tests are valuable for proving that a login flow, a checkout journey, or a file upload works end-to-end through a real browser — they are not appropriate for testing every validation error or every conditional rendering branch.
+| Pattern | Symptom | Fix |
+|---|---|---|
+| Too many unit tests | Refactors break tests; coverage of integration paths is thin | Replace with integration tests at trust boundaries |
+| Too many integration tests | Slow CI; flake | Move pure-logic checks to unit |
+| Too many e2e tests | Long feedback loop; brittle to UI churn | Cap to critical user flows |
 
 Concretely, for a NestJS service with Prisma:
 - Unit tests belong in `*.spec.ts` files co-located with the module. They import the class under test directly, inject stub dependencies, and complete in under 50 ms each.
 - Integration tests belong in `*.integration.spec.ts` or a dedicated `test/integration/` directory. They spin up a Testcontainers Postgres instance, run migrations, and exercise the full NestJS application with `supertest` or NestJS's `Test.createTestingModule`.
 - E2E tests belong in `test/e2e/` and run against a fully deployed instance (staging, or a local `docker-compose` stack). They use Playwright and cover 5–10 critical journeys maximum.
 
-A useful heuristic: if a test needs to assert that a record was persisted with the correct foreign key, it belongs at the integration layer. If it only needs to assert on a function return value given some input, it belongs at the unit layer.
-
 ---
 
 ## Testcontainers setup for Postgres
 
-Use `@testcontainers/postgresql` (from the `testcontainers` monorepo). The container starts once per test file using `beforeAll`, runs `prisma migrate deploy` against the container URL, and tears down in `afterAll`. Vitest's `globalSetup` can share a single container across all integration test files if startup time matters.
+Use `@testcontainers/postgresql` (from the `testcontainers` monorepo).
 
-**Per-test isolation** is achieved by wrapping each test in a transaction that rolls back rather than deleting rows, which is faster and avoids constraint-order issues:
+**Per-test isolation:** wrap each test in a transaction that rolls back.
 
 ```ts
 import { PrismaClient } from '@prisma/client';
@@ -205,7 +203,7 @@ afterEach(async () => {
 });
 ```
 
-If your code under test opens its own Prisma client connection (common in NestJS service injection), use a test module that provides the same `PrismaClient` instance so both the test and the production code participate in the same transaction:
+Provide the same `PrismaClient` to the NestJS test module so both share the transaction:
 
 ```ts
 const module = await Test.createTestingModule({
@@ -216,7 +214,7 @@ const module = await Test.createTestingModule({
 }).compile();
 ```
 
-**Environment variables:** set `DATABASE_URL` from `container.getConnectionUri()` before the Prisma client is instantiated. The cleanest pattern is a Vitest `globalSetup` file that writes to `process.env` before any test module is imported:
+Set `DATABASE_URL` in Vitest `globalSetup` before any test module imports Prisma:
 
 ```ts
 // vitest.global-setup.ts
@@ -244,9 +242,7 @@ export default defineConfig({
 
 ## Factories and test data
 
-Every test should create only the rows it cares about and override only the fields it is testing. The factory pattern achieves this at low maintenance cost.
-
-Use **Fishery** (`fishery` on npm) for structured factory definitions. Define factories close to the domain models, not scattered across test files:
+Use **Fishery** (`fishery` on npm) for structured factory definitions.
 
 ```ts
 // test/factories/customer.factory.ts
@@ -291,36 +287,34 @@ export function makeOrderFactory(prisma: PrismaClient) {
 }
 ```
 
-Keep factories honest: if a default value would violate a DB constraint, fix the factory default rather than adding `try/catch` in the test. The factory is the contract for what a valid record looks like.
+Keep factories honest: if a default value would violate a DB constraint, fix the factory default rather than adding `try/catch` in the test.
 
-Avoid **global fixtures** (JSON files, SQL seed scripts) for test data. They couple tests to each other's state, make the suite order-dependent, and require all tests to maintain fields irrelevant to their concern. The only acceptable use of a seed script is for lookup/reference data that never changes between tests (e.g., a country table, a permission set).
+Avoid global fixtures (JSON, SQL seeds) — they couple tests and create order-dependence; only OK for never-changing reference data.
 
 ---
 
 ## Flake hunting
 
-A flaky test is one that does not produce the same result given the same code on repeated runs. Flakiness has three primary causes: timing, shared state, and non-deterministic data.
+| Cause | Symptom | Fix |
+|---|---|---|
+| Timing | Intermittent timeouts; speed-dependent | Replace `setTimeout` with `vi.useFakeTimers()` or condition-based waits |
+| Shared state | Order-dependent failures | Reset state in `beforeEach`; transaction-rollback |
+| Non-determinism | `Date.now()`, `Math.random()`, network | Inject seeds; mock at boundary |
 
-**Timing flakiness** appears as intermittent timeouts or assertions that fail depending on how fast the machine is. Symptoms: `expect(value).toBe(x)` passes locally but fails in CI. Fix: replace `sleep`/`setTimeout` waits with `vi.useFakeTimers()` for pure logic, or with Testing Library's `waitFor` / Playwright's `expect(locator).toBeVisible()` for UI. Never assert on timestamps from `Date.now()` without first freezing time.
-
-**Shared state flakiness** appears as tests that pass in isolation but fail in a full suite run. Symptoms: tests pass with `--testNamePattern` but fail without it. Fix: ensure each test sets up and tears down its own state. For integration tests, use the transaction-rollback pattern above. For unit tests, clear all mocks in `afterEach` with `vi.clearAllMocks()`.
-
-**Non-deterministic data flakiness** appears when a factory uses `Math.random()` or `Date.now()` in a way that changes the test's behavior. Symptoms: rare, hard to reproduce. Fix: use the `sequence` counter from Fishery instead of random values. Seed `Math.random` if you need controlled randomness:
+Seed `Math.random` if you need controlled randomness:
 
 ```ts
 import seedrandom from 'seedrandom';
 const rng = seedrandom('fixed-seed-for-tests');
 ```
 
-**Quarantine protocol:** when a flake is identified, open a ticket, mark the test with `it.skip` (with a comment linking the ticket), and commit. Do not re-run CI repeatedly trying to get the test to pass. A skipped test is visible; a silently retried test hides the problem.
+**Quarantine protocol:** when a flake is identified, open a ticket, mark the test with `it.skip` (with a comment linking the ticket), and commit. Do not re-run CI repeatedly trying to get the test to pass.
 
-**Detection tooling:** Vitest's `--reporter=verbose` and `--retry=2` flag (used sparingly) can surface flakes in CI. Any test that requires a retry to pass is a flake by definition and must be quarantined.
+**Detection tooling:** Vitest's `--reporter=verbose` and `--retry=2` flag (used sparingly) can surface flakes in CI.
 
 ---
 
 ## What to mock, what to keep real
-
-The decision of what to mock should be driven by ownership and controllability, not convenience.
 
 **Mock when:**
 - The dependency is a third-party service your team does not own (Stripe, SendGrid, AWS S3, Twilio). These services have rate limits, cost money per call, and cannot be reliably controlled in tests.
@@ -341,9 +335,7 @@ The decision of what to mock should be driven by ownership and controllability, 
 | Integration test (repository / service) | Postgres (Testcontainers), NestJS DI, Prisma | Stripe, SendGrid, S3, any external API |
 | E2E test (Playwright) | Full stack (app + real Postgres) | Nothing — use a dedicated test environment |
 
-A common mistake is mocking a service that is owned by the same team because it "makes the test simpler." This produces a test that verifies the mock, not the integration. If calling the real service is slow, the correct fix is to move the test to the integration layer with Testcontainers, not to replace the service with a stub.
-
-For TypeScript-level mocking in unit tests, prefer `vi.fn()` with explicit return values over auto-mocking entire modules (`vi.mock(...)`). Auto-mocking silently returns `undefined` for every method, which hides calls that the test did not anticipate. An explicit `vi.fn().mockResolvedValue(...)` forces the test author to think about what each call should return.
+Prefer explicit `vi.fn().mockResolvedValue(...)` over `vi.mock(...)` auto-mocks (auto-mocks silently return `undefined`).
 
 ---
 

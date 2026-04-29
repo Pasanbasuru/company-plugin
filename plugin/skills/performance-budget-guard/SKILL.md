@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Keep performance from regressing one small decision at a time — every change is checked against concrete budgets before merge. Performance problems are rarely caused by a single catastrophic decision; they accumulate across many "harmless" choices: importing a full utility library for one function, placing `React.memo` everywhere, skipping `sizes` on an image, or letting a DB query run on every request without a cache. This skill makes the cost of each decision visible at the point it is introduced, not after a production incident.
+Keep performance from regressing one small decision at a time — every change is checked against concrete budgets before merge.
 
 ## Core rules
 
@@ -51,7 +51,7 @@ const chunks = chunk(items, 3);
 const uniqIds = uniq(ids);
 ```
 
-Better still: for simple cases, use the platform — `Array.from({ length: Math.ceil(items.length / 3) }, (_, i) => items.slice(i * 3, i * 3 + 3))` ships zero bytes and has no import boundary. Before adding any utility dependency, check whether a one-liner or a small local helper eliminates the need entirely.
+Better still: for simple cases, use the platform — `Array.from({ length: Math.ceil(items.length / 3) }, (_, i) => items.slice(i * 3, i * 3 + 3))` ships zero bytes and has no import boundary.
 
 ### Next.js `<Image priority sizes="...">` vs raw `<img>`
 
@@ -102,11 +102,11 @@ export const UserList = React.memo(function UserList({ users }: { users: User[] 
 // UserCard, UserAvatar, UserBadge are left unwrapped — their render cost is trivial
 ```
 
-The rule of thumb: profile first, memo second. If the component renders in under 1 ms and is not in a tight loop, `React.memo` adds more overhead than it saves.
+The rule of thumb: profile first, memo second.
 
 ## Core Web Vitals budgets and measurement
 
-Core Web Vitals are the three user-facing performance signals that Google uses in ranking and that directly correlate with conversion and retention. The targets are: LCP (Largest Contentful Paint) under 2.5 s, INP (Interaction to Next Paint) under 200 ms, and CLS (Cumulative Layout Shift) below 0.1. These are not aspirations — they are budgets. A change that pushes LCP past 2.5 s on a key route is a regression with the same seriousness as a functional bug.
+Core Web Vitals are the three user-facing performance signals that Google uses in ranking and that directly correlate with conversion and retention. The targets are: LCP (Largest Contentful Paint) under 2.5 s, INP (Interaction to Next Paint) under 200 ms, and CLS (Cumulative Layout Shift) below 0.1. These are not aspirations — they are budgets.
 
 Measurement happens at three levels. In the browser during development, use the `web-vitals` library to instrument real metric values:
 
@@ -118,7 +118,7 @@ onINP(console.log);
 onCLS(console.log);
 ```
 
-Ship this instrumentation to production and route the data to your analytics pipeline so you have real-user measurement (RUM) over time, not just synthetic snapshots.
+Ship this instrumentation to production and route the data to your analytics pipeline so you have real-user measurement (RUM) over time.
 
 In CI, Lighthouse CI (`@lhci/cli`) runs a headless Lighthouse audit on every pull request and compares results against a stored baseline:
 
@@ -147,11 +147,11 @@ In CI, Lighthouse CI (`@lhci/cli`) runs a headless Lighthouse audit on every pul
 }
 ```
 
-In production, surface p75 and p95 Core Web Vitals from your RUM pipeline in a dashboard and alert when a 7-day moving average crosses the budget. A synthetic pass in CI is necessary but not sufficient — real users on real devices on real networks are the ground truth.
+In production, surface p75 and p95 Core Web Vitals from your RUM pipeline in a dashboard and alert when a 7-day moving average crosses the budget.
 
 ## Bundle budgets in CI
 
-The browser must parse and execute every byte of JavaScript before the page becomes interactive. A bundle that was 130 KB at the last release and is 220 KB today did not get there in one step — it grew across many pull requests, each of which looked harmless in isolation. Enforcing a per-route budget in CI closes this loop.
+The browser must parse and execute every byte of JavaScript before the page becomes interactive. Enforcing a per-route budget in CI closes this loop.
 
 Use `size-limit` to define budgets per entry point:
 
@@ -182,15 +182,21 @@ export default withBundleAnalyzer({
 });
 ```
 
-Run `ANALYZE=true next build` locally to generate an interactive treemap. Look for: duplicate packages at different versions, `moment` or `lodash` included in full, large icon libraries included wholesale rather than individually, and polyfills that are not needed for your browser target. The treemap makes the fix obvious once the cause is visible.
+Run `ANALYZE=true next build` locally to generate an interactive treemap. Look for: duplicate packages at different versions, `moment` or `lodash` included in full, large icon libraries included wholesale rather than individually, and polyfills that are not needed for your browser target.
 
 When reviewing a PR that adds a new `npm install`, check `bundlephobia.com` for the package's gzipped size and side-effect status. A package marked `sideEffects: false` in its `package.json` is fully tree-shakable; a package without that field may pull in more than you expect regardless of import style.
 
 ## Query p95 budgets
 
-A database query that averages 50 ms can spike to 800 ms at p95 on a busy Tuesday. Users in the tail percentile are real users, often your most active ones, and their experience is invisible unless you instrument for it. Every new query added to a hot path — a route that handles more than a few requests per second — requires a p95 latency estimate before the PR merges.
+A database query that averages 50 ms can spike to 800 ms at p95 on a busy Tuesday. Every new query added to a hot path — a route that handles more than a few requests per second — requires a p95 latency estimate before the PR merges.
 
-Establish budgets per query tier. A reasonable starting point: read queries on a hot API route should complete in under 100 ms at p95; write queries on a transactional path should complete in under 200 ms at p95; background or batch queries have no strict p95 budget but must not hold locks. These numbers are starting points — adjust them based on your actual SLOs and the cost a slow query imposes on the user.
+Establish budgets per query tier:
+
+| Query type | p95 budget |
+|---|---|
+| Read on hot API route | < 100 ms |
+| Write on transactional path | < 200 ms |
+| Background / batch | No strict p95; must not hold locks |
 
 Measure in two places. First, in development, use Prisma's query event logging to see actual durations:
 
@@ -209,13 +215,13 @@ prisma.$on('query', (e) => {
 
 Second, in production, emit query duration as a CloudWatch custom metric and build a p95 alarm. When `SELECT` on the orders table crosses 100 ms p95, the alarm fires before users start complaining. Pair this with the query text (sanitised of PII) in the log so the on-call engineer can identify the culprit without diving into slow-query logs manually.
 
-When a query is approaching its budget, the remedies in order of preference are: add a missing index, narrow the query to return fewer columns or rows, add a cache layer in front of the query, or redesign the data access pattern. Introducing a cache should be the last step, not the first — a cache on top of a fundamentally slow query is a leaky fix that will fail under invalidation pressure.
+When a query is approaching its budget, the remedies in order of preference are: add a missing index, narrow the query to return fewer columns or rows, add a cache layer in front of the query, or redesign the data access pattern. Cache last, not first — caches on slow queries fail under invalidation pressure.
 
 ## Memoization: when it helps
 
-React re-renders are not expensive by default. A component that renders a `<div>` with a few text nodes costs microseconds. Memoization only pays off when: (a) the component renders something expensive — a large list, a canvas, a heavy computation — and (b) its parent re-renders frequently for reasons unrelated to the component's props. Both conditions must be true.
+React re-renders are not expensive by default. Memoization only pays off when: (a) the component renders something expensive — a large list, a canvas, a heavy computation — and (b) its parent re-renders frequently for reasons unrelated to the component's props. Both conditions must be true.
 
-`useMemo` is for values whose computation is genuinely expensive relative to the comparison cost. The comparison itself is not free — it walks the dependency array on every render. A `useMemo` that wraps a `.filter()` on a 10-item array is almost certainly slower than the raw call, because the comparison overhead exceeds the filter cost.
+`useMemo` is for values whose computation is genuinely expensive relative to the comparison cost. The comparison itself is not free — it walks the dependency array on every render.
 
 ```tsx
 // React 19 — use the compiler's automatic memoization where possible;
@@ -233,11 +239,11 @@ const expensiveCoords = useMemo(
 
 React 19 introduced the React Compiler, which automatically applies memoization at the bytecode level for components written to its rules. When the compiler is enabled (available in Next 15 via `experimental.reactCompiler: true`), most manual `useMemo` and `useCallback` calls become redundant. Before reaching for either hook, check whether the compiler is already handling the case.
 
-The right sequence: profile with React DevTools Profiler → identify components that render more than 50 times in a second or take more than 2 ms per render → apply `memo`/`useMemo` to those specific cases → re-profile to confirm the improvement. Never memoize first.
+The right sequence: profile with React DevTools Profiler → identify components that render more than 50 times in a second or take more than 2 ms per render → apply `memo`/`useMemo` to those specific cases → re-profile to confirm the improvement.
 
 ## Image optimization
 
-Images are routinely the largest assets on a page and the primary cause of LCP and CLS failures. The Next.js `<Image>` component addresses both concerns: it converts images to WebP/AVIF at the CDN layer, generates `srcset` entries for every defined breakpoint, and reserves the correct amount of space in the layout before the image loads.
+The Next.js `<Image>` component addresses both concerns: it converts images to WebP/AVIF at the CDN layer, generates `srcset` entries for every defined breakpoint, and reserves the correct amount of space in the layout before the image loads.
 
 The `sizes` attribute is the most commonly misconfigured field. It tells the browser which source to request based on the viewport width. An incorrect `sizes` causes the browser to download a full-width image for a thumbnail slot, or vice versa:
 
@@ -253,15 +259,15 @@ The `sizes` attribute is the most commonly misconfigured field. It tells the bro
 />
 ```
 
-The `priority` prop disables lazy loading and injects a `<link rel="preload">` into the document head. Use it on the single image that is the page's LCP candidate — typically the hero image or the above-the-fold product image. Do not apply it to all images; doing so defeats the purpose of lazy loading and increases the initial page weight.
+The `priority` prop disables lazy loading and injects a `<link rel="preload">` into the document head. Use it on the single image that is the page's LCP candidate — typically the hero image or the above-the-fold product image. Do not apply it to all images.
 
 For user-uploaded images stored in S3 or a similar object store, configure the Next.js `remotePatterns` allow-list and ensure your CDN sits in front of the Next.js image optimization endpoint so it is only called once per image-size combination, not on every request.
 
-Animated GIFs deserve special attention: a 3 MB animated GIF causes a significant LCP delay and burns mobile data. Replace them with looping `<video>` elements (`autoPlay muted loop playsInline`) using WebM + MP4, which are an order of magnitude smaller for equivalent visual quality.
+Animated GIFs: a 3 MB animated GIF causes a significant LCP delay and burns mobile data. Replace them with looping `<video>` elements (`autoPlay muted loop playsInline`) using WebM + MP4, which are an order of magnitude smaller for equivalent visual quality.
 
 ## Cache layer topology
 
-A performant application has caches at multiple levels, each serving a different purpose. The failure modes are: missing a cache where one is needed, caching data that should not be shared across users, caching without a TTL, and forgetting to invalidate after a mutation. Naming every cache in your architecture and giving each one explicit rules eliminates all four.
+A performant application has caches at multiple levels, each serving a different purpose. The failure modes are: missing a cache where one is needed, caching data that should not be shared across users, caching without a TTL, and forgetting to invalidate after a mutation.
 
 The layers in a typical Next 15 application, outermost to innermost:
 
@@ -286,7 +292,7 @@ revalidateTag('products');
 
 **Prisma / connection pool** — the database connection pool itself is a resource that must be sized. A connection pool that is too small causes query queueing under load; one that is too large exhausts the database's max connections. Monitor pool utilization alongside query p95 in CloudWatch. Prisma Accelerate (or a PgBouncer proxy in front of Postgres) handles connection multiplexing when the application scales to multiple instances.
 
-Every cache must have a written invalidation story. If you cannot answer "what causes this cache to become invalid and how does that invalidation propagate?" before merging, the cache is not ready to ship.
+Every cache must have a written invalidation story before merge.
 
 ## Interactions with other skills
 

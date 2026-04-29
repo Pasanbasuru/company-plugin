@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Ensure every request is authenticated correctly and authorized on the server for the specific resource, not just the endpoint. Authentication confirms who is making a request; authorization confirms whether that identity is allowed to perform the requested action on the specific piece of data involved. Both must happen server-side on every request — UI guards, hidden buttons, and frontend route checks are advisory only. This skill focuses on application-level auth: session and token mechanics, RBAC/ABAC modelling, CSRF mitigations, step-up flows, and safe error responses.
+Ensure every request is authenticated correctly and authorized on the server for the specific resource, not just the endpoint.
 
 ## Core rules
 
@@ -170,51 +170,48 @@ async changeEmail(@Body() dto: ChangeEmailDto, @CurrentUser() user: User) {
 
 ## Session vs token trade-offs
 
-Sessions store state server-side: the server holds the authoritative record of whether a session is valid. This makes revocation instant — invalidating a row in the session store terminates access immediately, with no grace period. The cost is horizontal scalability: every server in a cluster needs access to the same session store (typically Redis), which adds infrastructure and a potential single point of failure. Sessions are also simpler to implement securely because the only sensitive value in the browser is an opaque ID stored in an HttpOnly cookie, with no JWT claims to forge or misconfigure.
-
-JWTs push state to the client. The access token is self-describing: any server can validate it by verifying the signature and claims, with no database round-trip. That property makes JWTs attractive for stateless microservices and API gateways. The trade-off is that a valid token cannot be revoked before its `exp` claim — revoking requires either keeping a denylist (which reintroduces server state) or accepting that a stolen token is usable until expiry. Keeping access-token TTL short (≤15 minutes) limits the blast radius. Refresh tokens should be opaque, stored hashed in a database, rotated on every use, and transmitted only to a dedicated refresh endpoint via an HttpOnly cookie, never exposed to JavaScript.
-
-For most web applications the right default is: short-lived JWTs for API access, opaque refresh tokens stored HttpOnly, and a Redis-backed token denylist for high-value revocation events (logout, password change, suspicious activity detection). Pure session-cookie architectures are also correct — they are not outdated, just require a shared session store. The wrong choice is a single long-lived JWT with no refresh mechanism: it combines the statelessness downside (no revocation) with long exposure windows.
+- Sessions: instant revocation; needs shared store.
+- JWTs: stateless; cannot revoke before expiry.
+- Default: short JWT + opaque refresh.
+- Wrong: long-lived JWT, no refresh.
 
 ## RBAC, ABAC, and resource scoping
 
-Role-based access control (RBAC) assigns permissions to roles and roles to users. It is easy to reason about and audit but coarse-grained: every `MANAGER` gets the same permissions regardless of which resources they own. In multi-tenant or ownership-centric applications — an e-commerce platform, a SaaS with workspaces, a healthcare record system — RBAC alone creates horizontal privilege escalation: a manager can read any other manager's orders, not just their own.
+Role-based access control (RBAC) assigns permissions to roles and roles to users. RBAC alone creates horizontal privilege escalation in multi-tenant systems.
 
-Attribute-based access control (ABAC) evaluates policies against attributes of the subject (user), the resource, and the environment (time, IP, device). An ABAC rule such as `user.tenantId === resource.tenantId && user.role === 'MANAGER'` closes the horizontal gap. The practical implementation in a NestJS + Prisma stack is to embed the ownership check in the database query itself: `prisma.order.findFirst({ where: { id, ownerId: userId } })`. If the query returns `null`, the resource either does not exist or the requester does not own it — the guard returns `false` either way, avoiding a separate enumeration call.
+Attribute-based access control (ABAC) evaluates policies against attributes of the subject (user), the resource, and the environment (time, IP, device). An ABAC rule such as `user.tenantId === resource.tenantId && user.role === 'MANAGER'` closes the horizontal gap. The practical implementation in a NestJS + Prisma stack is to embed the ownership check in the database query itself: `prisma.order.findFirst({ where: { id, ownerId: userId } })`.
 
-Caution: never expose the authorization logic only in a guard decorator while the service layer fetches data unconditionally. The service must also scope queries to the requesting user's tenant or ownership, because guards can be bypassed by internal calls, background jobs, or future refactors that forget to apply the guard. Defence in depth means the query itself is scoped, even when a guard also runs.
+Caution: scope queries at the service layer too — guards can be bypassed by internal callers.
 
-For Next.js middleware, RBAC routing checks (redirect unauthenticated users, block non-admins from `/admin`) are appropriate at the middleware layer. Resource-level ABAC checks still belong in the server action or API route handler where the actual data operation occurs — middleware does not have access to the specific resource being requested.
+Next.js middleware: RBAC routing only; resource ABAC belongs in the handler (middleware can't see the resource).
 
 ## CSRF strategy
 
-Cross-site request forgery exploits the browser's automatic inclusion of cookies in cross-origin requests. A malicious page served from `evil.com` can cause a user's browser to POST to `api.example.com/transfer`, and the browser will attach the auth cookie, authenticating the forged request. There are two mainstream defences.
+There are two mainstream defences.
 
-The first is `SameSite=Strict` (or `SameSite=Lax` for GET-heavy flows). With `Strict`, the browser will not attach the cookie on any cross-site navigation, including top-level navigations. With `Lax`, the cookie is attached on top-level GET navigations but not on cross-site POST/PUT/DELETE requests — which covers the most common CSRF vectors. `SameSite=Lax` is the minimum for any auth cookie on a modern application. `SameSite=Strict` should be preferred for sensitive cookies (session, refresh token) when the UX cost (cookie not sent after clicking an external link) is acceptable.
+SameSite=Lax minimum; Strict for session/refresh cookies.
 
-The second is the synchronizer token pattern: the server generates a CSRF token, stores it server-side (in the session or signed in a separate cookie), and requires the client to echo it in a request header (`X-CSRF-Token`) or form field. Because cross-origin requests cannot read the cookie's value (same-origin policy), an attacker cannot forge the header. This pattern is required when `SameSite` cannot be used (legacy browser support, cross-subdomain auth) or when defence in depth is desired. In Next.js applications, the `csrf` / `edge-csrf` package or a custom middleware that validates a double-submit cookie is the standard approach.
+Server stores a token; client echoes it in a header. Cross-origin requests can't read the cookie, so attackers can't forge the header.
 
-Never rely solely on checking the `Referer` header — it is sometimes stripped by browsers or proxies, making the check unreliable. Never use CORS alone as a CSRF defence; CORS restricts browser access to response bodies, not request submission.
+Don't rely on Referer or CORS as CSRF defence.
 
 ## Step-up authentication
 
-Step-up authentication requires a user who already has a valid session to prove their identity again before performing a sensitive action. The rationale is threat modelling, not paranoia: a session cookie can be stolen by XSS, a shared device, or a shoulder-surf. Requiring re-authentication for account takeover vectors (change email, change password, add MFA device, delete account, view payment methods) means a stolen session grants read-only comfort, not the ability to lock the legitimate owner out.
+Step-up authentication requires a user who already has a valid session to prove their identity again before performing a sensitive action. Stolen sessions shouldn't enable account takeover (email/password change, MFA changes, deletion).
 
-The implementation pattern in NestJS is a `StepUpGuard` that reads a `currentPassword` or a TOTP code from the request body, verifies it against the database, and either passes or throws `UnauthorizedException`. The guard should be applied at the route level and must run after the primary `JwtAuthGuard` so that `req.user` is populated before the password check. The verification call must use a constant-time comparison (argon2/bcrypt verify) to prevent timing attacks.
-
-For TOTP-based step-up (used when the account has MFA enrolled), generate a challenge on GET, verify the submitted OTP code on POST, and record a short-lived `stepUpAt` timestamp in the session. Routes that require step-up check that `stepUpAt` is within the last N minutes (typically 5–10), so the user is not asked to re-authenticate on every page action within a short window. Invalidate the `stepUpAt` timestamp on session rotation.
+For TOTP-based step-up (used when the account has MFA enrolled), generate a challenge on GET, verify the submitted OTP code on POST, and record a short-lived `stepUpAt` timestamp in the session. Routes that require step-up check that `stepUpAt` is within the last N minutes (typically 5–10). Invalidate the `stepUpAt` timestamp on session rotation.
 
 Never accept the original JWT's `iat` (issued-at) as a step-up proof — it only tells you when the token was issued, not when the user last re-entered their credentials within this session.
 
 ## Auth error responses (no enumeration)
 
-Account enumeration allows an attacker to build a list of valid email addresses by observing differential responses from login, registration, or password-reset endpoints. A response that says "no account with that email" confirms the negative space and accelerates targeted attacks. A response that says "we sent a reset link if that email is registered" reveals nothing.
+Account enumeration allows an attacker to build a list of valid email addresses by observing differential responses from login, registration, or password-reset endpoints.
 
 All three flows — login, registration, password reset — must return identical HTTP status codes, response bodies, and timing for both the found and not-found cases. For login, return `401 Unauthorized` with a generic message such as `"Invalid credentials"` regardless of whether the email exists or the password is wrong. For password reset, always return `200 OK` with `"If that email is registered, you will receive a reset link"`. For registration, if the email is already taken, return `200 OK` (or `201 Created`) with the same success message as a normal signup, and send the existing account holder a "someone tried to register with your email" notification out-of-band.
 
-Timing attacks are a subtler form of enumeration: if a "user not found" path returns in 2 ms and a "wrong password" path returns in 80 ms (due to bcrypt), an attacker can distinguish them statistically. Mitigate with a constant-time dummy hash operation on the "user not found" path: run `argon2.verify(DUMMY_HASH, providedPassword)` and discard the result before returning the generic error. This equalises the response time regardless of whether a user record was found.
+Equalise timing: run a dummy hash on the user-not-found path.
 
-In Next.js API routes or server actions, do not return different HTTP status codes for these cases. Use `next/headers` `cookies()` and `redirect()` carefully — a redirect only on success is itself a timing and state signal.
+In Next.js API routes or server actions, do not return different HTTP status codes for these cases. Redirect only on success leaks state — emit a uniform response shape regardless of outcome.
 
 ## Interactions with other skills
 
