@@ -52,7 +52,8 @@ Single atomic commit. The rename, description rewrite, body restructure, and cro
 
 - **Verifier code changes.** The verifier expectations are fitted, not relaxed.
 - **Body persona phrasing edits.** "You are a senior engineer at Anthropic … you think the way Karpathy thinks …" — the Anthropic phrasing is editorial flavor, not a structural concern of this rename. Logan can revisit in a future cosmetic pass; out of scope here.
-- **Other parked follow-ups.** Items #4 (bootstrap rework) and #6 (baseline runtime inheritance) get their own specs.
+- **Item #6 (`_baseline` runtime inheritance gap).** `plugin/` currently has ~29 references pointing at the repo-root `templates/baseline-standards.md` — 23 `## Assumes baseline-standards. Adds:` headings, 5 explicit body-text mentions, 1 README prose mention. By a strict "plugin/ must be self-contained" standard, those are all defects. They predate this work and are tracked as item #6. **This spec deliberately does NOT add a 24th `## Assumes baseline-standards. Adds:` line** to `org-ai-tooling` SKILL.md — the new skill stays self-contained on that axis. The existing 23 violations remain parked under item #6 and will be addressed in a separate spec.
+- **Item #4 (bootstrap rework).** Separate spec.
 - **Sync mechanism for the two copies.** A pre-commit hook that diffs `plugin/skills/<name>` against `.claude/skills/<name>` would catch drift, but the duplication is rare (one skill today) and cheap to grep manually. YAGNI.
 
 ## 5. Locked decisions
@@ -90,7 +91,6 @@ Maps the existing content onto the four required sections. The skill keeps its K
 | Existing section | Action | New section |
 |---|---|---|
 | `## Overview` + `**Core principle:**` | Keep, light edit | `## Purpose & scope` |
-| (none) | New | `## Assumes baseline-standards. Adds:` (one line: "harness primitive selection and Karpathy-style minimal-architecture sensibility for Claude Code tooling work") |
 | `## The Mindset` (7 numbered principles) | Rename heading; reformat each principle as one-line imperative + `*Why:*` line + supporting prose | `## Core rules` |
 | `## Decision Framework` (tree diagram) | Move to `references/patterns.md` | (referenced from Core rules) |
 | `## Red Flags — you are NOT in this mindset` (table) | Rename heading; reshape table from `Symptom \| Meaning` to `Thought \| Reality` (template-required) | `## Red flags` |
@@ -146,7 +146,7 @@ Live docs (1–5) update; historical artifacts (6–9) are immutable per the pro
 
 | Path | Changes |
 |---|---|
-| `plugin/skills/org-ai-tooling/SKILL.md` | Frontmatter `name: org-ai-tooling`. Description rewrite per §5.2. Body restructure per §5.3. Add `## Assumes baseline-standards. Adds:` line. |
+| `plugin/skills/org-ai-tooling/SKILL.md` | Frontmatter `name: org-ai-tooling`. Description rewrite per §5.2. Body restructure per §5.3. Do NOT add a `## Assumes baseline-standards. Adds:` line — see §4 for rationale (avoid extending item #6's cross-boundary references; the section is not verifier-required). |
 | `.claude/skills/org-ai-tooling/SKILL.md` | Identical to above. |
 | `plugin/README.md` | Catalog row L143–L147: `<code>anthropic-tooling-dev</code>` → `<code>org-ai-tooling</code>`; description text "Guidance for Claude Code harness work…" stays accurate; remove "(placement under review post-0.4.0)" caveat since it is now resolved. |
 | `CLAUDE.md` (root) | "Skill-loading discipline" non-negotiable list: `anthropic-tooling-dev` → `org-ai-tooling`. |
