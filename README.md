@@ -6,26 +6,26 @@ The shipped plugin lives entirely under [`plugin/`](./plugin/); see [`plugin/REA
 
 ## What the plugin does
 
-Ships ~30 skill-format guardrails ("guards") that activate when an agent works on a consumer project, organized by concern:
+Ships ~24 skill-format guardrails ("guards") that activate when an agent works on a consumer project, organized by concern:
 
-- **Architecture & structure** — Next.js app structure, NestJS service boundaries, frontend implementation, mobile implementation
+- **Architecture & structure** — monorepo dependency boundaries, Next.js app structure, NestJS service boundaries, frontend implementation, mobile implementation
 - **Data** — Prisma access patterns, state integrity
 - **Integration & async** — contract safety, queue/retry, resilience
 - **Security & config** — auth/permissions, secrets, supply chain
-- **Quality** — TypeScript rigor, test strategy, coverage gaps, regression risk
+- **Quality** — TypeScript rigor, test strategy, coverage gaps
 - **Frontend quality** — accessibility, performance budget
-- **Ops & risk** — change-risk evaluation, rollback planning, infra change, AWS deploy, CI/CD, observability-first debugging
-- **Skill authoring** — authoring + verification skills used when consumers extend their setup
+- **Ops & risk** — change-risk evaluation (covers blast radius, rollback path, deploy strategy, monitoring, stakeholders), infra change, AWS deploy, CI/CD, observability-first debugging
 
-Every skill builds on a shared `_baseline` so cross-cutting TypeScript / security / observability / testing / a11y / perf / resilience standards aren't duplicated. SessionStart + UserPromptSubmit hooks inject a skills roster into every session; a PostToolUse hook logs Write/Edit activity. A placeholder `.mcp.json` (github, ci-cd, observability, cloud, database) is shipped for consumers to fill in, plus a `bootstrap-new-project.sh` onboarding script.
+Every skill builds on shared baseline standards (kept in `templates/baseline-standards.md` in this source repo, referenced by every domain skill's `## Assumes baseline-standards. Adds:` header) so cross-cutting TypeScript / security / observability / testing / a11y / perf / resilience standards aren't duplicated. A pair of lightweight hooks (SessionStart + UserPromptSubmit) inject a brief skill-loading-discipline reminder; no MCP servers and no loggers ship with the plugin in 0.4.0.
 
-The full mechanism inventory — exact skill list, hook config, MCP servers, external plugin dependencies — lives in [`plugin/README.md`](./plugin/README.md).
+The full mechanism inventory — exact skill list, hook config, recommended companion plugins — lives in [`plugin/README.md`](./plugin/README.md).
 
 ## Repository layout
 
 | Path | Purpose | Shipped to consumers |
 |---|---|---|
-| `plugin/` | Plugin runtime — manifest, skills, hooks, MCP template, onboarding scripts | Yes |
+| `plugin/` | Plugin runtime — manifest, skills, hooks, onboarding scripts | Yes |
+| `templates/` | Skill-author infrastructure: scaffolds and standards reference for skills authored in this repo | No |
 | `docs/` | Design notes, plans, specs, audits, workflows | No |
 | `docs/superpowers/{plans,specs,workflows,audits}/` | Structured maintainer artifacts (dated `YYYY-MM-DD-<topic>.md`) | No |
 | `scripts/` | Skill-verifier (TypeScript) + vitest harness | No |
@@ -44,7 +44,7 @@ claude --plugin-dir /absolute/path/to/global-plugin/plugin
 Inside Claude Code:
 
 - `/help` lists `global-plugin` skills.
-- `/mcp` lists the (placeholder) MCP servers.
+- `/mcp` is empty (the plugin ships no MCP servers; configure your own in your project's `.mcp.json`).
 - `/global-plugin:architecture-guard` triggers a skill.
 
 To exercise the plugin the way a consumer would (without this repo's `CLAUDE.md` polluting the session), run the command above from a clean directory — never from this repo root.

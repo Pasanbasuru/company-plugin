@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Every `pnpm add` is a supply-chain decision. A dependency ships its entire transitive closure into your production bundle, its `postinstall` script runs with full filesystem access on every developer machine and CI runner, and its maintainers can push a new version at any time. This skill applies whenever a dependency is added, upgraded, or removed; whenever a lockfile is regenerated; when a CVE report surfaces; or when a license audit is needed. It does not own how CI pipelines are structured (use `cicd-pipeline-safety`) or how bundle size is budgeted (use `performance-budget-guard`); it owns the policy from `pnpm add` to merge.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 Dependency supply-chain policy — lockfile discipline, SCA in CI, version pinning rules, new-dependency evaluation criteria, licence enforcement, peer-dep resolution, and postinstall script auditing.
 
@@ -262,7 +262,7 @@ node node_modules/some-package/scripts/postinstall.js
 
 - **Owns:** dependency policy — lockfile discipline, SCA, license enforcement, new-dep evaluation, supply-chain hygiene.
 - **Hands off to:** `cicd-pipeline-safety` for where the audit and licence steps run and how they are gated; `performance-budget-guard` for the bundle-size impact of a new dependency; `secrets-and-config-safety` for secrets accidentally committed via a dependency's config file.
-- **Does not duplicate:** `_baseline`'s initial stack selection; `architecture-guard`'s enforcement of which internal packages may import which others.
+- **Does not duplicate:** `templates/baseline-standards.md`'s initial stack selection; `architecture-guard`'s enforcement of which internal packages may import which others.
 
 ## Review checklist
 

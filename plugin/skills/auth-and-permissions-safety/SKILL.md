@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Ensure every request is authenticated correctly and authorized on the server for the specific resource, not just the endpoint. Authentication confirms who is making a request; authorization confirms whether that identity is allowed to perform the requested action on the specific piece of data involved. Both must happen server-side on every request — UI guards, hidden buttons, and frontend route checks are advisory only. This skill focuses on application-level auth: session and token mechanics, RBAC/ABAC modelling, CSRF mitigations, step-up flows, and safe error responses.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 Application-level authN/authZ rules on top of baseline's security floor — resource-scoped checks, session/token mechanics, CSRF, step-up.
 

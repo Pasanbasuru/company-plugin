@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Prevent silent breaking changes across service boundaries — consumers find out in production otherwise. Governs every point where code crosses a team or service line: REST/HTTP APIs, webhooks, async event payloads, and machine-readable schema files. Prescribes how to distinguish additive from breaking changes, version and sign payloads, and keep contract tests wired in CI so breakage is caught before deployment.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 cross-service contract discipline — versioning, breaking-change taxonomy, webhook signing, event schema evolution, and contract testing.
 

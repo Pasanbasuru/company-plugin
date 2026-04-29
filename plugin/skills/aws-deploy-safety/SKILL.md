@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Make AWS deploys boring — safe defaults, predictable rollout, fast recovery. This skill applies at the moment a change is pushed toward a running service: a new task definition revision, a Lambda `$LATEST` promotion, an App Runner deployment, or a secrets reference swap. It does not replace infrastructure provisioning review (`infra-safe-change`) or pipeline integrity checks (`cicd-pipeline-safety`); it owns the deploy mechanics layer between the two.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 AWS-specific deploy mechanics — rolling vs blue/green strategy, Lambda alias traffic shifting, health check readiness design, expand/contract migrations, and CloudWatch log retention at deploy time.
 

@@ -24,6 +24,9 @@ If you can't tell which mode you're in, ask: "is this question about how we ship
 /                                # source repo root
 ├── docs/                        # design notes, plans, specs, audits, workflows
 │   └── superpowers/{plans,specs,workflows,audits}
+├── templates/                   # skill-author scaffolds + cross-cutting standards
+│   ├── new-skill-template.md    # verifier-GREEN skill scaffold
+│   └── baseline-standards.md    # baseline rules referenced by domain skills
 ├── scripts/                     # skill-verifier (TypeScript) + vitest tests
 │   ├── verify-skill.ts          # entrypoint
 │   ├── verify/                  # parser, runner, checks, types
@@ -33,9 +36,7 @@ If you can't tell which mode you're in, ask: "is this question about how we ship
 └── plugin/                      # PLUGIN RUNTIME — what consumers install
     ├── .claude-plugin/plugin.json
     ├── skills/                  # ~30 skills, each `<name>/SKILL.md`
-    │   └── _baseline/SKILL.md   # cross-cutting standards every skill builds on
-    ├── hooks/hooks.json         # SessionStart/UserPromptSubmit/PostToolUse
-    ├── .mcp.json                # placeholder MCP servers (consumers replace)
+    ├── hooks/hooks.json         # SessionStart/UserPromptSubmit
     ├── scripts/                 # consumer-onboarding tools (bootstrap script)
     └── templates/
 ```
@@ -85,7 +86,7 @@ Prefer mechanisms that make staleness *structurally impossible or loudly visible
 - Write evals before tuning. The skill-verifier under `scripts/verify/` is the deterministic eval; for skill *behavior* (does the skill actually trigger and produce the right guidance?), `claude -p "query" --output-format json` + a shell loop is a working eval harness in 20 lines. Prompt quality without evals is cargo-culting.
 - Push determinism down (hooks, scripts), keep judgment up (the model). Schema validation, frontmatter linting, blocking unsafe writes — `PreToolUse` hook or verifier check, not a prompt instruction.
 - Treat context as the scarce resource. Lean `SKILL.md`s with progressive disclosure to `references/`; subagents (`context: fork`) for research that would bloat main context; prompt caching on stable system-prompt prefixes.
-- Skills should reference `_baseline` rather than re-stating the cross-cutting TypeScript / security / observability / testing / a11y / perf / resilience standards. Adding the same paragraph to ten skills is a maintenance trap — put it in `_baseline` and have skills say "additionally, this skill...".
+- Skills should reference `templates/baseline-standards.md` rather than re-stating the cross-cutting TypeScript / security / observability / testing / a11y / perf / resilience standards. Adding the same paragraph to ten skills is a maintenance trap — put it in `templates/baseline-standards.md` and have skills say "additionally, this skill...".
 
 ## Skill-loading discipline (ALWAYS — non-negotiable)
 

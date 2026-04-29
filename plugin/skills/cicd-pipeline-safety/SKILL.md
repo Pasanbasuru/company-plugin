@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 The CI pipeline is a production system. Its failures become silent regressions — a flipped tag poisons every subsequent deploy, a leaked secret persists in logs long after rotation, and a `pull_request_target` misconfiguration hands untrusted code the keys to your cloud account. This skill applies whenever a GitHub Actions workflow file, reusable workflow, environment configuration, or branch protection rule is created or modified. It does not own what the deploy does once it reaches AWS (use `aws-deploy-safety`) or how third-party dependencies are kept current (use `supply-chain-and-dependencies`); it owns pipeline integrity from trigger to artifact.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 CI/CD pipeline integrity — OIDC-based AWS credential issuance, action SHA pinning, environment-scoped secrets, required-check enforcement, fork PR isolation, and build artifact traceability.
 

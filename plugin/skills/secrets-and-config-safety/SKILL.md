@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Keep secrets out of source, out of logs, and out of the client bundle; keep config predictable across environments. This skill covers the application-code layer: how secrets are sourced, how environment variables are validated at startup, how Next.js client/server boundaries are respected, and how config values that change per environment are managed without drifting. It does not cover how Secrets Manager or Parameter Store are provisioned (that is `infra-safe-change`) or how CI pipelines inject secrets (that is `cicd-pipeline-safety`).
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 Application-level secret sourcing and config discipline — Zod env validation at startup, Next.js `NEXT_PUBLIC_*` boundary enforcement, secret rotation-ready patterns, and config store vs env var separation.
 

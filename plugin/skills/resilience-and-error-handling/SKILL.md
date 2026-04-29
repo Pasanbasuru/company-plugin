@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Software fails — networks partition, third-party services degrade, tail latency is always worse than median. Code that assumes the happy path breaks users. This skill prescribes the patterns that make code fail *well*: bounded waits, safe retries, fast-fail under load, isolated failure surfaces, and typed error contracts that force callers to handle every outcome. Apply whenever you touch a `fetch` call, HTTP client, SDK integration, `try/catch`, a React component that can throw, or any function returning recoverable failure.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 In-process resilience patterns — explicit timeouts, exponential backoff with jitter, idempotency keys for external POSTs, circuit breakers with fallbacks, React error boundaries, typed error contracts, and graceful degradation strategies.
 

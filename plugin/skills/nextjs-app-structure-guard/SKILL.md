@@ -9,7 +9,7 @@ allowed-tools: Read, Grep, Glob, Bash
 ## Purpose & scope
 Keep App Router code aligned with its rendering model: Server Components by default, client components pushed to the leaves, middleware kept narrow, and route handlers kept thin. This skill triggers on any change touching App Router files — pages, layouts, route handlers, middleware, server actions, or components that cross the server/client boundary. The goal is to prevent accidental client-bundle bloat, secret leakage, and untestable business logic hiding in framework glue files.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 Next.js App Router specific rendering, routing, and caching rules — RSC/client boundary placement, route handler shape, middleware scope, server action safety, and explicit cache policy per fetch.
 
 ## Core rules

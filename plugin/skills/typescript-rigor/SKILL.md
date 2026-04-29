@@ -8,9 +8,9 @@ allowed-tools: Read, Grep, Glob, Bash
 
 ## Purpose & scope
 
-Enforce strong type discipline beyond `_baseline`: model correctness-by-construction at boundaries and in domain code so invalid states are unrepresentable. Apply this skill when a type-system choice eliminates a class of bug outright — not as a box-ticking exercise. Boundary parsing, branded IDs, discriminated unions, and typed errors are the primary levers.
+Enforce strong type discipline beyond `templates/baseline-standards.md`: model correctness-by-construction at boundaries and in domain code so invalid states are unrepresentable. Apply this skill when a type-system choice eliminates a class of bug outright — not as a box-ticking exercise. Boundary parsing, branded IDs, discriminated unions, and typed errors are the primary levers.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 type-system rigour on top of baseline TS strictness.
 
@@ -111,7 +111,7 @@ app.post('/users', (req, res) => {
 
 ## Compiler options
 
-Options that go beyond `_baseline`'s floor; add these to `tsconfig.json`:
+Options that go beyond `templates/baseline-standards.md`'s floor; add these to `tsconfig.json`:
 
 - `"noPropertyAccessFromIndexSignature": true` — forces `obj['key']` syntax for index-signature access, making accidental property reads visible.
 - `"noImplicitReturns": true` — every code path in a function must return a value; prevents silently returning `undefined`.
@@ -189,7 +189,7 @@ Removing `any` from an existing codebase is incremental work, not a big bang.
 
 - **Owns:** type-system usage, boundary parsing typing.
 - **Hands off to:** `prisma-data-access-guard` for Prisma-generated types; `nestjs-service-boundary-guard` for DTO validation placement; `integration-contract-safety` for cross-service type contracts.
-- **Does not duplicate:** `_baseline`'s `strict: true` requirement — this skill adds rigour on top.
+- **Does not duplicate:** `templates/baseline-standards.md`'s `strict: true` requirement — this skill adds rigour on top.
 
 ## Review checklist (invoke when reviewing existing code)
 

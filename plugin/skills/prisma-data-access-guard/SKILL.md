@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Prevent data-access landmines: N+1 queries, unsafe raw SQL, partial-failure writes, and migrations that lock production tables. Apply this skill any time a query, transaction, migration file, or `schema.prisma` change is authored or reviewed. The goal is correctness, safety, and predictable performance at the Prisma/Postgres layer.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 Prisma 6 / PostgreSQL 16 data-access discipline on top of baseline SQL safety.
 

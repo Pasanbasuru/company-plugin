@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Keep performance from regressing one small decision at a time — every change is checked against concrete budgets before merge. Performance problems are rarely caused by a single catastrophic decision; they accumulate across many "harmless" choices: importing a full utility library for one function, placing `React.memo` everywhere, skipping `sizes` on an image, or letting a DB query run on every request without a cache. This skill makes the cost of each decision visible at the point it is introduced, not after a production incident.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 Concrete budgets for JS bundle size, Core Web Vitals, query p95 latency, and cache TTLs — verified in CI and at review time.
 

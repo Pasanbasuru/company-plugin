@@ -12,7 +12,7 @@ Queues are at-least-once by default — duplicate and out-of-order messages are 
 
 Apply this skill whenever touching SQS consumers, EventBridge rules, Lambda event-source mappings, BullMQ workers, or any other async job processor.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 Queue-specific delivery semantics — at-least-once handling, idempotency keys, DLQs, visibility timeout tuning, FIFO ordering caveats, and payload versioning at the consumer boundary.
 

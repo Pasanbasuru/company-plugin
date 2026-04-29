@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Debug production by reading the system, not by guessing — and write code that can be debugged that way. At 3 AM the only reliable evidence is what the system emitted: structured logs, metric time-series, distributed traces. Rich, correlated signals let you reconstruct what happened in minutes; free-text strings force you to redeploy with extra `console.log` calls, which is slow and risky. Apply when investigating a live issue, reviewing a hot-path handler, or writing code for a shared environment.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 Debugging discipline and culture — structured logging depth, correlation IDs end-to-end, alarm/runbook design, metrics that matter (p95/p99 over p50), and a systematic debugging playbook for production incidents.
 

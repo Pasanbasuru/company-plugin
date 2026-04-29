@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Prevent the class of bug where the database says one thing and a user's screen says another — stale caches, missed invalidations, optimistic updates that never reconcile, and server-rendered pages that silently serve day-old data. Apply this skill whenever a mutation, server action, or API route writes data that any TanStack Query cache, Next.js full-route cache, or optimistic UI layer also holds. The goal is a single source of truth: the server's persisted state, reflected accurately and promptly to every connected client.
 
-## Assumes `_baseline`. Adds:
+## Assumes `baseline-standards`. Adds:
 
 TanStack Query v5 / React 19 / Next.js 15 state and cache consistency discipline on top of baseline.
 
