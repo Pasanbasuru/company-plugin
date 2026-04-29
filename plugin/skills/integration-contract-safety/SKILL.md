@@ -1,6 +1,6 @@
 ---
 name: integration-contract-safety
-description: Use when changing a public HTTP API, webhook payload, event schema, or any boundary another team/service depends on. Do NOT use for internal intra-module calls (use `nestjs-service-boundary-guard`). Covers API versioning, breaking-change detection, schema evolution, webhook/event contracts, consumer migration.
+description: Use when reviewing or editing a public HTTP API, webhook payload, event schema, or any boundary another team/service depends on. Do NOT use for internal intra-module calls (use `nestjs-service-boundary-guard`). Covers API versioning, breaking-change detection, schema evolution, webhook/event contracts, consumer migration.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

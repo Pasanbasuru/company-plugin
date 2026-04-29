@@ -1,6 +1,6 @@
 ---
 name: observability-first-debugging
-description: Use when debugging a production or staging issue, or when adding code to a hot path that should be observable. Do NOT use for local-only debugging of new code (use your IDE). Covers logs/metrics/traces-first method, structured logging, correlation ID propagation, alarm design.
+description: Use when debugging a production or staging issue, monitoring a hot path, or instrumenting code that should be observable. Do NOT use for local-only debugging of new code (use your IDE). Covers logs/metrics/traces-first method, structured logging, correlation ID propagation, alarm design.
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
